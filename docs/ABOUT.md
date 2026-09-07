@@ -182,3 +182,11 @@ Notebooks now have a complete local lifecycle in the sidebar. NODI lists them al
 Every active note now exposes an accessible notebook selector. Moving a note persists `notebook_id`, refreshes the relevant query-backed lists immediately, and keeps notebook navigation in the sidebar synchronized; new notes also inherit the notebook currently being viewed.
 
 ![NODI after NB-002](about/screenshots/nb-002-move-note.png)
+
+## 022 — NB-003 Notebook stacks
+
+**Completed:** September 7, 2026
+
+Notebooks can now be grouped into named stacks without drag-and-drop. Stack creation, renaming, confirmed deletion, and notebook assignment are keyboard accessible; deleting a stack leaves its notebooks intact and ungrouped through a database trigger applied in migration 3.
+
+![NODI after NB-003](about/screenshots/nb-003-notebook-stacks.png)

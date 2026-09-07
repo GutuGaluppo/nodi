@@ -4,6 +4,7 @@ pub const DATABASE_URL: &str = "sqlite:nodi.db";
 
 const INITIAL_SCHEMA: &str = include_str!("../migrations/0001_initial_schema.sql");
 const SEARCH_CLEANUP: &str = include_str!("../migrations/0002_search_cleanup.sql");
+const NOTEBOOK_STACK_CLEANUP: &str = include_str!("../migrations/0003_notebook_stack_cleanup.sql");
 
 pub fn all() -> Vec<Migration> {
     vec![
@@ -17,6 +18,12 @@ pub fn all() -> Vec<Migration> {
             version: 2,
             description: "search cleanup",
             sql: SEARCH_CLEANUP,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 3,
+            description: "notebook stack cleanup",
+            sql: NOTEBOOK_STACK_CLEANUP,
             kind: MigrationKind::Up,
         },
     ]
@@ -84,7 +91,7 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 2);
+        assert_eq!(applied_count, 3);
     }
 
     #[tokio::test]
@@ -150,6 +157,46 @@ mod tests {
             .expect("related table should be readable");
             assert_eq!(count, 0, "{table} should not retain note data");
         }
+    }
+
+    #[tokio::test]
+    async fn deleting_a_stack_keeps_its_notebooks_and_unlinks_them() {
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .expect("in-memory database should open");
+        migration_runner()
+            .await
+            .run(&pool)
+            .await
+            .expect("migrations should succeed");
+
+        sqlx::query(
+            "INSERT INTO notebook_stacks (id, name, created_at, updated_at) VALUES ('s1', 'Work', 'now', 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("stack fixture should be inserted");
+        sqlx::query(
+            "INSERT INTO notebooks (id, name, stack_id, created_at, updated_at) VALUES ('nb1', 'Projects', 's1', 'now', 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("notebook fixture should be inserted");
+
+        sqlx::query("DELETE FROM notebook_stacks WHERE id = 's1'")
+            .execute(&pool)
+            .await
+            .expect("stack should be deleted");
+
+        let stack_id = sqlx::query_scalar::<_, Option<String>>(
+            "SELECT stack_id FROM notebooks WHERE id = 'nb1'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("notebook should remain readable");
+        assert_eq!(stack_id, None);
     }
 
     #[tokio::test]

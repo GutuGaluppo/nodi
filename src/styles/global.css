@@ -149,6 +149,15 @@ h1 {
   justify-content: space-between;
 }
 
+.sidebar-header-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.stack-button {
+  font-size: 0.9rem;
+}
+
 .sidebar-section-label {
   margin: 0;
 }
@@ -214,6 +223,65 @@ h1 {
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   font-size: 0.65rem;
+}
+
+.notebook-row-actions select {
+  width: 32px;
+  padding: 0;
+  border: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  font-size: 0.65rem;
+}
+
+.notebook-groups {
+  margin-top: var(--space-2);
+}
+
+.notebook-groups > .notebook-list {
+  margin-top: 0;
+}
+
+.notebook-stack {
+  margin-top: var(--space-3);
+}
+
+.notebook-stack > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-2);
+}
+
+.notebook-stack h3 {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.notebook-stack-actions {
+  display: flex;
+  opacity: 0;
+}
+
+:where(.notebook-stack:hover) :where(.notebook-stack-actions),
+:where(.notebook-stack-actions:focus-within) {
+  opacity: 1;
+}
+
+.notebook-stack header button {
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+}
+
+.notebook-stack header button:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
 }
 
 .notebook-form {

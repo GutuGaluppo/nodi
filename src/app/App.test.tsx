@@ -6,8 +6,16 @@ import {
   createNotebook,
   deleteNotebook,
   listNotebooks,
+  moveNotebookToStack,
   renameNotebook,
 } from "../db/repositories/notebookRepository";
+import type { NotebookStack } from "../db/repositories/notebookStackRepository";
+import {
+  createNotebookStack,
+  deleteNotebookStack,
+  listNotebookStacks,
+  renameNotebookStack,
+} from "../db/repositories/notebookStackRepository";
 import type { Note, NoteSummary } from "../db/repositories/noteRepository";
 import {
   createNote,
@@ -36,6 +44,14 @@ vi.mock("../db/repositories/notebookRepository", () => ({
   createNotebook: vi.fn(),
   renameNotebook: vi.fn(),
   deleteNotebook: vi.fn(),
+  moveNotebookToStack: vi.fn(),
+}));
+
+vi.mock("../db/repositories/notebookStackRepository", () => ({
+  listNotebookStacks: vi.fn(),
+  createNotebookStack: vi.fn(),
+  renameNotebookStack: vi.fn(),
+  deleteNotebookStack: vi.fn(),
 }));
 
 const newNote: Note = {
@@ -72,6 +88,13 @@ const notebook: Notebook = {
   deletedAt: null,
 };
 
+const stack: NotebookStack = {
+  id: "stack-1",
+  name: "Work",
+  createdAt: "2026-09-07T12:00:00.000Z",
+  updatedAt: "2026-09-07T12:00:00.000Z",
+};
+
 describe("NODI app", () => {
   beforeEach(() => {
     vi.mocked(listNotes).mockReset().mockResolvedValue([]);
@@ -87,6 +110,11 @@ describe("NODI app", () => {
     vi.mocked(createNotebook).mockReset().mockResolvedValue(notebook);
     vi.mocked(renameNotebook).mockReset().mockResolvedValue(undefined);
     vi.mocked(deleteNotebook).mockReset().mockResolvedValue(undefined);
+    vi.mocked(moveNotebookToStack).mockReset().mockResolvedValue(undefined);
+    vi.mocked(listNotebookStacks).mockReset().mockResolvedValue([]);
+    vi.mocked(createNotebookStack).mockReset().mockResolvedValue(stack);
+    vi.mocked(renameNotebookStack).mockReset().mockResolvedValue(undefined);
+    vi.mocked(deleteNotebookStack).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -116,7 +144,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(22);
+    expect(screen.getAllByRole("img")).toHaveLength(23);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -184,6 +212,51 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("region", { name: "Projects" }),
     ).toBeInTheDocument();
+  });
+
+  it("creates a stack, groups a notebook, renames it, and confirms deletion", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listNotebooks)
+      .mockResolvedValueOnce([notebook])
+      .mockResolvedValue([{ ...notebook, stackId: "stack-1" }]);
+    vi.mocked(listNotebookStacks)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([stack])
+      .mockResolvedValueOnce([{ ...stack, name: "Studio" }])
+      .mockResolvedValue([]);
+    render(<App />);
+
+    await user.click(
+      await screen.findByRole("button", { name: "Create stack" }),
+    );
+    await user.type(
+      screen.getByRole("textbox", { name: "New stack name" }),
+      "Work",
+    );
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(createNotebookStack).toHaveBeenCalledWith("Work");
+
+    await user.selectOptions(
+      await screen.findByRole("combobox", { name: "Stack for Projects" }),
+      "stack-1",
+    );
+    expect(moveNotebookToStack).toHaveBeenCalledWith("nb-1", "stack-1");
+
+    await user.click(
+      await screen.findByRole("button", { name: "Rename stack Work" }),
+    );
+    const name = screen.getByRole("textbox", { name: "Stack name" });
+    await user.clear(name);
+    await user.type(name, "Studio");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(renameNotebookStack).toHaveBeenCalledWith("stack-1", "Studio");
+
+    await user.click(
+      await screen.findByRole("button", { name: "Delete stack Studio" }),
+    );
+    expect(deleteNotebookStack).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Delete stack" }));
+    expect(deleteNotebookStack).toHaveBeenCalledWith("stack-1");
   });
 
   it("moves the selected note with the notebook selector", async () => {

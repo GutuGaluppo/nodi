@@ -14,6 +14,7 @@ import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tok
 import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
 import nb001Screenshot from "../../../docs/about/screenshots/nb-001-notebooks.png";
 import nb002Screenshot from "../../../docs/about/screenshots/nb-002-move-note.png";
+import nb003Screenshot from "../../../docs/about/screenshots/nb-003-notebook-stacks.png";
 import note001Screenshot from "../../../docs/about/screenshots/note-001-note-repository.png";
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
@@ -201,6 +202,14 @@ const evolution = [
     description:
       "A keyboard-accessible selector now moves notes between notebooks and the unfiled library, persists the relationship, and refreshes filtered lists immediately.",
     screenshot: nb002Screenshot,
+  },
+  {
+    id: "NB-003",
+    title: "Projects gather into stacks",
+    date: "September 7, 2026",
+    description:
+      "Notebook stacks now support a complete local lifecycle and group notebooks visibly in the sidebar, with an accessible selector for moving notebooks and safe unlinking when a stack is deleted.",
+    screenshot: nb003Screenshot,
   },
 ];
 

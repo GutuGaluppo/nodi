@@ -106,3 +106,21 @@ export async function deleteNotebook(id: string): Promise<void> {
     );
   }
 }
+
+export async function moveNotebookToStack(
+  id: string,
+  stackId: string | null,
+): Promise<void> {
+  try {
+    const database = await initializeDatabase();
+    const result = await database.execute(
+      "UPDATE notebooks SET stack_id = $1, updated_at = $2 WHERE id = $3 AND deleted_at IS NULL",
+      [stackId, new Date().toISOString(), id],
+    );
+    if (result.rowsAffected === 0) {
+      throw new DatabaseError("The notebook was not found.");
+    }
+  } catch (cause) {
+    rethrow(cause, "Could not move the notebook to that stack.");
+  }
+}

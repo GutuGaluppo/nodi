@@ -78,4 +78,15 @@ describe("notebookRepository", () => {
     );
     expect(db.execute).not.toHaveBeenCalled();
   });
+
+  it("moves a notebook into or out of a stack", async () => {
+    const { moveNotebookToStack } = await import("./notebookRepository");
+
+    await moveNotebookToStack("nb-1", "stack-1");
+    await moveNotebookToStack("nb-1", null);
+
+    expect(db.execute.mock.calls[0][0]).toContain("SET stack_id = $1");
+    expect(db.execute.mock.calls[0][1][0]).toBe("stack-1");
+    expect(db.execute.mock.calls[1][1][0]).toBeNull();
+  });
 });
