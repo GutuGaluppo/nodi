@@ -28,3 +28,11 @@ ABOUT was added as a permanent, accessible timeline inside NODI. Capturing the c
 The interface remains intentionally stable while the project gains a reliable development loop: TypeScript checking, Biome linting and formatting, Vitest component tests, and Playwright browser-level tests.
 
 ![NODI after FND-002](about/screenshots/fnd-002-tooling.png)
+
+## 004 — FND-003 Project structure
+
+**Completed:** September 7, 2026
+
+The visible baseline stays stable while application startup, global styles, and ABOUT move into clear, one-directional project layers. Future feature directories will be created only when they contain real implementation, avoiding empty speculative abstractions.
+
+![NODI after FND-003](about/screenshots/fnd-003-project-structure.png)

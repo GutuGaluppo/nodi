@@ -1,6 +1,5 @@
 import { useState } from "react";
-import About from "./About";
-import "./App.css";
+import About from "../features/about/About";
 
 function App() {
   const [showAbout, setShowAbout] = useState(false);

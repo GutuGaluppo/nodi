@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import App from "./App";
 
-describe("App", () => {
+describe("NODI app", () => {
   it("renders the NODI baseline", () => {
     render(<App />);
 
@@ -25,7 +25,7 @@ describe("App", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(3);
+    expect(screen.getAllByRole("img")).toHaveLength(4);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
