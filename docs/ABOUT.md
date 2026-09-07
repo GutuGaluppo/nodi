@@ -58,3 +58,11 @@ The ABOUT timeline and its historical screenshots remain readable and visually c
 The native window becomes NODI's stable three-column workspace: a 232px sidebar, a 320px note list, and a flexible editor canvas. Semantic regions, visible focus, honest empty states, and a 900px minimum window width establish the foundation for note features without exposing unfinished destinations.
 
 ![NODI after FND-005](about/screenshots/fnd-005-desktop-shell.png)
+
+## 007 — DB-001 SQLite connection
+
+**Completed:** September 7, 2026
+
+NODI now opens its SQLite database in the macOS application data directory before rendering the workspace. Foreign-key enforcement, write-ahead logging, and a five-second busy timeout establish a reliable local source of truth without placing user data inside the project repository.
+
+![NODI after DB-001](about/screenshots/db-001-sqlite-connection.png)

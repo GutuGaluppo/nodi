@@ -1,3 +1,4 @@
+import db001Screenshot from "../../../docs/about/screenshots/db-001-sqlite-connection.png";
 import doc001Screenshot from "../../../docs/about/screenshots/doc-001-about-rule.png";
 import fnd001Screenshot from "../../../docs/about/screenshots/fnd-001-native-shell.png";
 import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.png";
@@ -66,6 +67,14 @@ const evolution = [
     description:
       "The native window becomes a stable three-column workspace with a 232px sidebar, 320px note list, and flexible editor canvas.",
     screenshot: fnd005Screenshot,
+  },
+  {
+    id: "DB-001",
+    title: "A local source of truth",
+    date: "September 7, 2026",
+    description:
+      "NODI now opens its SQLite database in the macOS application data directory and applies foreign keys, WAL, and a five-second busy timeout before the workspace becomes available.",
+    screenshot: db001Screenshot,
   },
 ];
 

@@ -7,12 +7,12 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:1420",
+    baseURL: "http://localhost:1422",
     trace: "on-first-retry",
   },
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:1420",
-    reuseExistingServer: !process.env.CI,
+    command: "VITE_E2E=true pnpm exec vite --port 1422 --strictPort",
+    url: "http://localhost:1422",
+    reuseExistingServer: false,
   },
 });
