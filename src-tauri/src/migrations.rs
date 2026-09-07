@@ -5,6 +5,7 @@ pub const DATABASE_URL: &str = "sqlite:nodi.db";
 const INITIAL_SCHEMA: &str = include_str!("../migrations/0001_initial_schema.sql");
 const SEARCH_CLEANUP: &str = include_str!("../migrations/0002_search_cleanup.sql");
 const NOTEBOOK_STACK_CLEANUP: &str = include_str!("../migrations/0003_notebook_stack_cleanup.sql");
+const SHORTCUT_INTEGRITY: &str = include_str!("../migrations/0004_shortcut_integrity.sql");
 
 pub fn all() -> Vec<Migration> {
     vec![
@@ -24,6 +25,12 @@ pub fn all() -> Vec<Migration> {
             version: 3,
             description: "notebook stack cleanup",
             sql: NOTEBOOK_STACK_CLEANUP,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "shortcut integrity",
+            sql: SHORTCUT_INTEGRITY,
             kind: MigrationKind::Up,
         },
     ]
@@ -91,7 +98,7 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 3);
+        assert_eq!(applied_count, 4);
     }
 
     #[tokio::test]
@@ -137,16 +144,30 @@ mod tests {
             .execute(&pool)
             .await
             .expect("search fixture should be inserted");
+        sqlx::query(
+            "INSERT INTO shortcuts (id, target_type, target_id, sort_order, created_at) VALUES ('sc1', 'note', 'n1', 0, 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("shortcut fixture should be inserted");
 
         sqlx::query("DELETE FROM notes WHERE id = 'n1'")
             .execute(&pool)
             .await
             .expect("note should be deleted");
 
-        for table in ["notes", "attachments", "note_tags", "notes_fts"] {
+        for table in [
+            "notes",
+            "attachments",
+            "note_tags",
+            "notes_fts",
+            "shortcuts",
+        ] {
             let count = sqlx::query_scalar::<_, i64>(&format!(
                 "SELECT COUNT(*) FROM {table} WHERE {} = 'n1'",
-                if table == "attachments" || table == "note_tags" || table == "notes_fts" {
+                if table == "shortcuts" {
+                    "target_id"
+                } else if table == "attachments" || table == "note_tags" || table == "notes_fts" {
                     "note_id"
                 } else {
                     "id"

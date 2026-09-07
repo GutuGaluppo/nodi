@@ -206,3 +206,11 @@ Tags now provide a compact local vocabulary in the sidebar. Their repository enf
 Notes can now carry any number of tags through an accessible metadata control. Adding and removing relationships leaves note content untouched, refreshes query-backed views immediately, and each tag in the sidebar opens a filtered, keyboard-navigable library.
 
 ![NODI after TAG-002](about/screenshots/tag-002-note-tags.png)
+
+## 025 — SHORT-001 Favorites
+
+**Completed:** September 7, 2026
+
+Notes and notebooks can now be starred into a persistent Shortcuts section and opened in one action. Duplicate targets are prevented by migration 4, removal never touches source data, and database triggers automatically clean shortcuts when their target is permanently deleted.
+
+![NODI after SHORT-001](about/screenshots/short-001-favorites.png)

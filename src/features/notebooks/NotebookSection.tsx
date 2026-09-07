@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import type { Notebook } from "../../db/repositories/notebookRepository";
 import type { NotebookStack } from "../../db/repositories/notebookStackRepository";
+import ShortcutToggle from "../shortcuts/ShortcutToggle";
 import {
   useCreateNotebook,
   useDeleteNotebook,
@@ -56,6 +57,11 @@ function NotebookRows({
             {notebook.name}
           </button>
           <span className="notebook-row-actions">
+            <ShortcutToggle
+              targetType="notebook"
+              targetId={notebook.id}
+              label={notebook.name}
+            />
             <select
               aria-label={`Stack for ${notebook.name}`}
               title={`Stack for ${notebook.name}`}

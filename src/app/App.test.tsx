@@ -31,6 +31,11 @@ import {
   listTagsForNote,
   removeTagFromNote,
 } from "../db/repositories/noteTagRepository";
+import {
+  addShortcut,
+  listShortcuts,
+  removeShortcut,
+} from "../db/repositories/shortcutRepository";
 import type { Tag } from "../db/repositories/tagRepository";
 import {
   createTag,
@@ -77,6 +82,12 @@ vi.mock("../db/repositories/tagRepository", () => ({
   createTag: vi.fn(),
   renameTag: vi.fn(),
   deleteTag: vi.fn(),
+}));
+
+vi.mock("../db/repositories/shortcutRepository", () => ({
+  listShortcuts: vi.fn(),
+  addShortcut: vi.fn(),
+  removeShortcut: vi.fn(),
 }));
 
 const newNote: Note = {
@@ -154,6 +165,9 @@ describe("NODI app", () => {
     vi.mocked(listTagsForNote).mockReset().mockResolvedValue([]);
     vi.mocked(addTagToNote).mockReset().mockResolvedValue(undefined);
     vi.mocked(removeTagFromNote).mockReset().mockResolvedValue(undefined);
+    vi.mocked(listShortcuts).mockReset().mockResolvedValue([]);
+    vi.mocked(addShortcut).mockReset().mockResolvedValue(undefined);
+    vi.mocked(removeShortcut).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -183,7 +197,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(25);
+    expect(screen.getAllByRole("img")).toHaveLength(26);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -385,6 +399,60 @@ describe("NODI app", () => {
       await screen.findByRole("button", { name: "Remove tag ideas" }),
     );
     expect(removeTagFromNote).toHaveBeenCalledWith("new-1", "tag-1");
+  });
+
+  it("adds notes and notebooks to persistent shortcuts", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listNotebooks).mockResolvedValue([notebook]);
+    vi.mocked(listNotes).mockResolvedValue([newNoteSummary]);
+    vi.mocked(listShortcuts)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: "shortcut-1",
+          targetType: "note",
+          targetId: "new-1",
+          label: "Untitled",
+          sortOrder: 0,
+          createdAt: "created",
+        },
+      ])
+      .mockResolvedValue([
+        {
+          id: "shortcut-1",
+          targetType: "note",
+          targetId: "new-1",
+          label: "Untitled",
+          sortOrder: 0,
+          createdAt: "created",
+        },
+        {
+          id: "shortcut-2",
+          targetType: "notebook",
+          targetId: "nb-1",
+          label: "Projects",
+          sortOrder: 1,
+          createdAt: "created",
+        },
+      ]);
+    render(<App />);
+
+    await user.click(await screen.findByRole("option", { name: /Untitled/ }));
+    await user.click(
+      await screen.findByRole("button", { name: "Add Untitled to shortcuts" }),
+    );
+    expect(addShortcut).toHaveBeenCalledWith("note", "new-1");
+    expect(
+      await screen.findByRole("button", { name: "Untitled" }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Add Projects to shortcuts" }),
+    );
+    expect(addShortcut).toHaveBeenCalledWith("notebook", "nb-1");
+    expect(
+      await screen.findAllByRole("button", { name: "Projects" }),
+    ).toHaveLength(2);
   });
 
   it("creates, selects, and focuses a new note from the sidebar", async () => {

@@ -18,6 +18,7 @@ import nb003Screenshot from "../../../docs/about/screenshots/nb-003-notebook-sta
 import note001Screenshot from "../../../docs/about/screenshots/note-001-note-repository.png";
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
+import short001Screenshot from "../../../docs/about/screenshots/short-001-favorites.png";
 import tag001Screenshot from "../../../docs/about/screenshots/tag-001-tags.png";
 import tag002Screenshot from "../../../docs/about/screenshots/tag-002-note-tags.png";
 import trash001Screenshot from "../../../docs/about/screenshots/trash-001-soft-deletion.png";
@@ -228,6 +229,14 @@ const evolution = [
     description:
       "Notes can now carry multiple tags, add or remove them without touching content, and appear instantly in a keyboard-accessible tag-filtered library.",
     screenshot: tag002Screenshot,
+  },
+  {
+    id: "SHORT-001",
+    title: "What matters stays close",
+    date: "September 7, 2026",
+    description:
+      "Notes and notebooks can now be starred into a persistent Shortcuts section, opened in one action, removed without affecting their source, and cleaned automatically when a target is deleted.",
+    screenshot: short001Screenshot,
   },
 ];
 

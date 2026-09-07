@@ -4,6 +4,7 @@ import EditorPane from "../../features/editor/EditorPane";
 import NotebookSection from "../../features/notebooks/NotebookSection";
 import { useNotebooks } from "../../features/notebooks/notebookQueries";
 import NoteList from "../../features/notes/NoteList";
+import ShortcutSection from "../../features/shortcuts/ShortcutSection";
 import TagSection from "../../features/tags/TagSection";
 import { useTags } from "../../features/tags/tagQueries";
 import ThemeSelector from "../ui/ThemeSelector";
@@ -69,6 +70,14 @@ function DesktopShell({
         >
           <span aria-hidden="true">+</span> New note
         </button>
+
+        <ShortcutSection
+          onOpenNote={(id) => {
+            onNavigate("notes");
+            onSelectNote(id);
+          }}
+          onOpenNotebook={onSelectNotebook}
+        />
 
         <nav className="primary-navigation" aria-label="Primary navigation">
           <p className="section-label">Workspace</p>

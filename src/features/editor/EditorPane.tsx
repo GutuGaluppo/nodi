@@ -5,6 +5,7 @@ import { useNote } from "../notes/useNote";
 import { usePermanentlyDeleteNote } from "../notes/usePermanentlyDeleteNote";
 import { useRestoreNote } from "../notes/useRestoreNote";
 import { useTrashNote } from "../notes/useTrashNote";
+import ShortcutToggle from "../shortcuts/ShortcutToggle";
 import NoteTagPicker from "../tags/NoteTagPicker";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
@@ -74,18 +75,29 @@ function EditorPane({
           <div className="editor-title-row">
             <NoteTitle key={selectedNote.id} note={selectedNote} />
             {view === "notes" ? (
-              <button
-                className="subtle-action danger-action"
-                type="button"
-                disabled={trashNote.isPending}
-                onClick={() => {
-                  trashNote.mutate(selectedNote.id, {
-                    onSuccess: onNoteRemoved,
-                  });
-                }}
-              >
-                {trashNote.isPending ? "Moving…" : "Move to Trash"}
-              </button>
+              <div className="editor-note-actions">
+                <ShortcutToggle
+                  targetType="note"
+                  targetId={selectedNote.id}
+                  label={
+                    selectedNote.title.trim() === ""
+                      ? "Untitled"
+                      : selectedNote.title
+                  }
+                />
+                <button
+                  className="subtle-action danger-action"
+                  type="button"
+                  disabled={trashNote.isPending}
+                  onClick={() => {
+                    trashNote.mutate(selectedNote.id, {
+                      onSuccess: onNoteRemoved,
+                    });
+                  }}
+                >
+                  {trashNote.isPending ? "Moving…" : "Move to Trash"}
+                </button>
+              </div>
             ) : (
               <div className="editor-note-actions">
                 <button
