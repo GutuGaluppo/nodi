@@ -26,6 +26,13 @@ import {
   softDeleteNote,
   updateNote,
 } from "../db/repositories/noteRepository";
+import type { Tag } from "../db/repositories/tagRepository";
+import {
+  createTag,
+  deleteTag,
+  listTags,
+  renameTag,
+} from "../db/repositories/tagRepository";
 import App from "./App";
 
 vi.mock("../db/repositories/noteRepository", () => ({
@@ -52,6 +59,13 @@ vi.mock("../db/repositories/notebookStackRepository", () => ({
   createNotebookStack: vi.fn(),
   renameNotebookStack: vi.fn(),
   deleteNotebookStack: vi.fn(),
+}));
+
+vi.mock("../db/repositories/tagRepository", () => ({
+  listTags: vi.fn(),
+  createTag: vi.fn(),
+  renameTag: vi.fn(),
+  deleteTag: vi.fn(),
 }));
 
 const newNote: Note = {
@@ -95,6 +109,13 @@ const stack: NotebookStack = {
   updatedAt: "2026-09-07T12:00:00.000Z",
 };
 
+const tag: Tag = {
+  id: "tag-1",
+  name: "ideas",
+  createdAt: "2026-09-07T12:00:00.000Z",
+  updatedAt: "2026-09-07T12:00:00.000Z",
+};
+
 describe("NODI app", () => {
   beforeEach(() => {
     vi.mocked(listNotes).mockReset().mockResolvedValue([]);
@@ -115,6 +136,10 @@ describe("NODI app", () => {
     vi.mocked(createNotebookStack).mockReset().mockResolvedValue(stack);
     vi.mocked(renameNotebookStack).mockReset().mockResolvedValue(undefined);
     vi.mocked(deleteNotebookStack).mockReset().mockResolvedValue(undefined);
+    vi.mocked(listTags).mockReset().mockResolvedValue([]);
+    vi.mocked(createTag).mockReset().mockResolvedValue(tag);
+    vi.mocked(renameTag).mockReset().mockResolvedValue(undefined);
+    vi.mocked(deleteTag).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -144,7 +169,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(23);
+    expect(screen.getAllByRole("img")).toHaveLength(24);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -273,6 +298,40 @@ describe("NODI app", () => {
     );
 
     expect(updateNote).toHaveBeenCalledWith("new-1", { notebookId: "nb-1" });
+  });
+
+  it("creates, renames, and confirms deletion of a tag", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listTags)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([tag])
+      .mockResolvedValueOnce([{ ...tag, name: "research" }])
+      .mockResolvedValue([]);
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: "Create tag" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "New tag name" }),
+      "ideas",
+    );
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(createTag).toHaveBeenCalledWith("ideas");
+
+    await user.click(
+      await screen.findByRole("button", { name: "Rename tag ideas" }),
+    );
+    const name = screen.getByRole("textbox", { name: "Tag name" });
+    await user.clear(name);
+    await user.type(name, "research");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(renameTag).toHaveBeenCalledWith("tag-1", "research");
+
+    await user.click(
+      await screen.findByRole("button", { name: "Delete tag research" }),
+    );
+    expect(deleteTag).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Delete tag" }));
+    expect(deleteTag).toHaveBeenCalledWith("tag-1");
   });
 
   it("creates, selects, and focuses a new note from the sidebar", async () => {

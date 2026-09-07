@@ -4,6 +4,7 @@ import EditorPane from "../../features/editor/EditorPane";
 import NotebookSection from "../../features/notebooks/NotebookSection";
 import { useNotebooks } from "../../features/notebooks/notebookQueries";
 import NoteList from "../../features/notes/NoteList";
+import TagSection from "../../features/tags/TagSection";
 import ThemeSelector from "../ui/ThemeSelector";
 
 interface DesktopShellProps {
@@ -88,6 +89,8 @@ function DesktopShell({
           selectedNotebookId={selectedNotebookId}
           onSelectNotebook={onSelectNotebook}
         />
+
+        <TagSection />
 
         <footer className="sidebar-footer">
           <ThemeSelector value={theme} onChange={onThemeChange} />

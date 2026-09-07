@@ -18,6 +18,7 @@ import nb003Screenshot from "../../../docs/about/screenshots/nb-003-notebook-sta
 import note001Screenshot from "../../../docs/about/screenshots/note-001-note-repository.png";
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
+import tag001Screenshot from "../../../docs/about/screenshots/tag-001-tags.png";
 import trash001Screenshot from "../../../docs/about/screenshots/trash-001-soft-deletion.png";
 import trash002Screenshot from "../../../docs/about/screenshots/trash-002-restore.png";
 import trash003Screenshot from "../../../docs/about/screenshots/trash-003-permanent-delete.png";
@@ -210,6 +211,14 @@ const evolution = [
     description:
       "Notebook stacks now support a complete local lifecycle and group notebooks visibly in the sidebar, with an accessible selector for moving notebooks and safe unlinking when a stack is deleted.",
     screenshot: nb003Screenshot,
+  },
+  {
+    id: "TAG-001",
+    title: "A lightweight vocabulary",
+    date: "September 7, 2026",
+    description:
+      "Tags now have a complete local lifecycle in the sidebar, with alphabetical listing, keyboard-friendly creation and renaming, confirmed deletion, uniqueness protection, and clear error recovery.",
+    screenshot: tag001Screenshot,
   },
 ];
 

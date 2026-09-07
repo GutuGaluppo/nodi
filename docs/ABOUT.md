@@ -190,3 +190,11 @@ Every active note now exposes an accessible notebook selector. Moving a note per
 Notebooks can now be grouped into named stacks without drag-and-drop. Stack creation, renaming, confirmed deletion, and notebook assignment are keyboard accessible; deleting a stack leaves its notebooks intact and ungrouped through a database trigger applied in migration 3.
 
 ![NODI after NB-003](about/screenshots/nb-003-notebook-stacks.png)
+
+## 023 — TAG-001 Tags
+
+**Completed:** September 7, 2026
+
+Tags now provide a compact local vocabulary in the sidebar. Their repository enforces non-empty, unique names and supports alphabetical listing, creation, inline renaming, and confirmed deletion; deleting a tag safely removes only its note relationships through the existing cascade.
+
+![NODI after TAG-001](about/screenshots/tag-001-tags.png)

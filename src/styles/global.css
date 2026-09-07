@@ -138,8 +138,16 @@ h1 {
 }
 
 .notebook-section {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
+  max-height: 42%;
+  overflow-y: auto;
+}
+
+.tag-section {
+  flex: 1;
+  min-height: 88px;
+  margin-top: var(--space-5);
   overflow-y: auto;
 }
 
@@ -272,16 +280,57 @@ h1 {
   opacity: 1;
 }
 
-.notebook-stack header button {
+:where(.notebook-stack header button) {
   padding: var(--space-1);
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   font-size: 0.65rem;
 }
 
-.notebook-stack header button:hover {
+:where(.notebook-stack header button:hover) {
   color: var(--color-text);
   background: var(--color-hover);
+}
+
+.tag-list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-list li {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding-left: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.tag-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tag-row-actions {
+  display: flex;
+  margin-left: auto;
+  opacity: 0;
+}
+
+:where(.tag-list li:hover) :where(.tag-row-actions),
+:where(.tag-row-actions:focus-within) {
+  opacity: 1;
+}
+
+:where(.tag-row-actions button) {
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
 }
 
 .notebook-form {
