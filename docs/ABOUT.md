@@ -20,3 +20,11 @@ The first NODI window: a clean Tauri 2, React, TypeScript, and Vite baseline run
 ABOUT was added as a permanent, accessible timeline inside NODI. Capturing the current native window and adding an evolution entry is now part of every implementation task's Definition of Done.
 
 ![NODI after DOC-001](about/screenshots/doc-001-about-rule.png)
+
+## 003 — FND-002 Tooling
+
+**Completed:** September 7, 2026
+
+The interface remains intentionally stable while the project gains a reliable development loop: TypeScript checking, Biome linting and formatting, Vitest component tests, and Playwright browser-level tests.
+
+![NODI after FND-002](about/screenshots/fnd-002-tooling.png)

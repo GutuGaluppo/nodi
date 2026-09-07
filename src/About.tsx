@@ -1,5 +1,6 @@
-import fnd001Screenshot from "../docs/about/screenshots/fnd-001-native-shell.png";
 import doc001Screenshot from "../docs/about/screenshots/doc-001-about-rule.png";
+import fnd001Screenshot from "../docs/about/screenshots/fnd-001-native-shell.png";
+import fnd002Screenshot from "../docs/about/screenshots/fnd-002-tooling.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -21,6 +22,14 @@ const evolution = [
     description:
       "ABOUT was added as a permanent, accessible timeline, and visual documentation became part of every task's Definition of Done.",
     screenshot: doc001Screenshot,
+  },
+  {
+    id: "FND-002",
+    title: "A reliable development loop",
+    date: "September 7, 2026",
+    description:
+      "The interface remains intentionally stable while type checking, linting, component tests, and browser-level tests now protect every next step.",
+    screenshot: fnd002Screenshot,
   },
 ];
 
