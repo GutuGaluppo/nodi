@@ -1,4 +1,5 @@
 import db001Screenshot from "../../../docs/about/screenshots/db-001-sqlite-connection.png";
+import db002Screenshot from "../../../docs/about/screenshots/db-002-migration-runner.png";
 import doc001Screenshot from "../../../docs/about/screenshots/doc-001-about-rule.png";
 import fnd001Screenshot from "../../../docs/about/screenshots/fnd-001-native-shell.png";
 import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.png";
@@ -75,6 +76,14 @@ const evolution = [
     description:
       "NODI now opens its SQLite database in the macOS application data directory and applies foreign keys, WAL, and a five-second busy timeout before the workspace becomes available.",
     screenshot: db001Screenshot,
+  },
+  {
+    id: "DB-002",
+    title: "A schema that evolves safely",
+    date: "September 7, 2026",
+    description:
+      "The local database now applies one immutable, transactional initial migration before the workspace opens, records version 1, and skips it on subsequent launches.",
+    screenshot: db002Screenshot,
   },
 ];
 

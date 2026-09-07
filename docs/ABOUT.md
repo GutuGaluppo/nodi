@@ -66,3 +66,11 @@ The native window becomes NODI's stable three-column workspace: a 232px sidebar,
 NODI now opens its SQLite database in the macOS application data directory before rendering the workspace. Foreign-key enforcement, write-ahead logging, and a five-second busy timeout establish a reliable local source of truth without placing user data inside the project repository.
 
 ![NODI after DB-001](about/screenshots/db-001-sqlite-connection.png)
+
+## 008 — DB-002 Migration runner
+
+**Completed:** September 7, 2026
+
+NODI now applies an immutable initial migration before opening the workspace. The migration creates the eight stable core tables inside a transaction, records schema version `1`, becomes a no-op on subsequent launches, and rolls back without recording a version if any statement fails.
+
+![NODI after DB-002](about/screenshots/db-002-migration-runner.png)

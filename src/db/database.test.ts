@@ -38,8 +38,8 @@ describe("initializeDatabase", () => {
     expect(firstConnection).toBe(secondConnection);
   });
 
-  it("surfaces a typed error and permits a later retry", async () => {
-    sql.load.mockRejectedValueOnce(new Error("unavailable"));
+  it("surfaces a loading or migration failure and permits a later retry", async () => {
+    sql.load.mockRejectedValueOnce(new Error("migration failed"));
     const { initializeDatabase } = await import("./database");
     const { DatabaseError } = await import("../lib/errors/DatabaseError");
 
