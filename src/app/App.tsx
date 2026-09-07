@@ -20,6 +20,7 @@ function Workspace({
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
 }) {
+  const [activeView, setActiveView] = useState<"notes" | "trash">("notes");
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editorFocusRequest, setEditorFocusRequest] = useState<string | null>(
     null,
@@ -40,6 +41,12 @@ function Workspace({
   }, []);
 
   const handleEditorFocused = useCallback(() => {
+    setEditorFocusRequest(null);
+  }, []);
+
+  const handleNavigate = useCallback((view: "notes" | "trash") => {
+    setActiveView(view);
+    setSelectedNoteId(null);
     setEditorFocusRequest(null);
   }, []);
 
@@ -67,6 +74,9 @@ function Workspace({
       editorPaneRef={editorPaneRef}
       focusEditor={editorFocusRequest === selectedNoteId}
       onEditorFocused={handleEditorFocused}
+      activeView={activeView}
+      onNavigate={handleNavigate}
+      onNoteRemoved={() => setSelectedNoteId(null)}
     />
   );
 }

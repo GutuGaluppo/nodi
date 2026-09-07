@@ -158,6 +158,10 @@ h1 {
   font-weight: 550;
 }
 
+.nav-item + .nav-item {
+  margin-top: var(--space-1);
+}
+
 .nav-item:hover {
   color: var(--color-text);
   background: var(--color-hover);

@@ -3,14 +3,16 @@ import NoteListItem from "./NoteListItem";
 import { useNotes } from "./useNotes";
 
 interface NoteListProps {
+  view: "notes" | "trash";
   selectedNoteId: string | null;
   onSelectNote: (id: string) => void;
 }
 
 const MOVEMENT_KEYS = new Set(["ArrowDown", "ArrowUp", "Home", "End"]);
 
-function NoteList({ selectedNoteId, onSelectNote }: NoteListProps) {
-  const notes = useNotes();
+function NoteList({ view, selectedNoteId, onSelectNote }: NoteListProps) {
+  const title = view === "trash" ? "Trash" : "Notes";
+  const notes = useNotes({ deleted: view === "trash" ? "only" : "exclude" });
   const itemRefs = useRef(new Map<string, HTMLDivElement>());
 
   const data = notes.data ?? [];
@@ -53,21 +55,23 @@ function NoteList({ selectedNoteId, onSelectNote }: NoteListProps) {
       <header className="pane-header">
         <div>
           <p className="section-label">Library</p>
-          <h2 id="notes-heading">Notes</h2>
+          <h2 id="notes-heading">{title}</h2>
         </div>
         <span className="item-count">
           <span aria-hidden="true">{count}</span>
-          <span className="visually-hidden">{count} notes</span>
+          <span className="visually-hidden">
+            {count} {view === "trash" ? "trashed notes" : "notes"}
+          </span>
         </span>
       </header>
 
       {notes.isPending ? (
         <div className="pane-status" role="status">
-          Loading your notes…
+          Loading {view === "trash" ? "Trash" : "your notes"}…
         </div>
       ) : notes.isError ? (
         <div className="pane-status" role="alert">
-          <p>Your notes could not be loaded. Your data was not changed.</p>
+          <p>{title} could not be loaded. Your data was not changed.</p>
           <button
             className="primary-button"
             type="button"
@@ -80,14 +84,20 @@ function NoteList({ selectedNoteId, onSelectNote }: NoteListProps) {
         </div>
       ) : count === 0 ? (
         <div className="pane-empty-state">
-          <p className="empty-state-title">No notes yet</p>
-          <p>Your notes will appear here as the library takes shape.</p>
+          <p className="empty-state-title">
+            {view === "trash" ? "Trash is empty" : "No notes yet"}
+          </p>
+          <p>
+            {view === "trash"
+              ? "Deleted notes will appear here."
+              : "Your notes will appear here as the library takes shape."}
+          </p>
         </div>
       ) : (
         <div
           className="note-list"
           role="listbox"
-          aria-label="Notes"
+          aria-label={title}
           onKeyDown={handleKeyDown}
         >
           {data.map((note) => (

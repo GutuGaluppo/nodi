@@ -15,6 +15,7 @@ import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-sh
 import note001Screenshot from "../../../docs/about/screenshots/note-001-note-repository.png";
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
+import trash001Screenshot from "../../../docs/about/screenshots/trash-001-soft-deletion.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -156,6 +157,14 @@ const evolution = [
     description:
       "Save failures now keep the full draft in memory, announce a non-destructive error beside the editor, and provide an explicit retry path for both body and title.",
     screenshot: edit004Screenshot,
+  },
+  {
+    id: "TRASH-001",
+    title: "Deleted does not mean lost",
+    date: "September 7, 2026",
+    description:
+      "Move to Trash now removes a note from the active library, preserves its complete record and content, and exposes it in a dedicated, keyboard-accessible Trash view.",
+    screenshot: trash001Screenshot,
   },
 ];
 

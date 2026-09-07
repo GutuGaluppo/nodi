@@ -142,3 +142,11 @@ Writing now saves itself. Every editor transaction updates local state immediate
 A failed database write never clears the editor. NODI keeps the complete draft in memory, announces a visible non-destructive error, and offers an explicit “Try again” action for both body and title; a successful retry returns the subtle status to “Saved”.
 
 ![NODI after EDIT-004](about/screenshots/edit-004-save-error-recovery.png)
+
+## 017 — TRASH-001 Soft deletion
+
+**Completed:** September 7, 2026
+
+“Move to Trash” now performs a reversible soft deletion. The note disappears from the normal library, retains its complete title and Tiptap body in SQLite, and appears in a dedicated Trash view with the same accessible list navigation.
+
+![NODI after TRASH-001](about/screenshots/trash-001-soft-deletion.png)

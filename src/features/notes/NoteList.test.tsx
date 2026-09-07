@@ -37,6 +37,7 @@ function renderNoteList(
   const view = render(
     <QueryClientProvider client={createQueryClient()}>
       <NoteList
+        view="notes"
         selectedNoteId={props.selectedNoteId ?? null}
         onSelectNote={onSelectNote}
       />

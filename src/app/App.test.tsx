@@ -6,6 +6,7 @@ import {
   createNote,
   getNoteById,
   listNotes,
+  softDeleteNote,
   updateNote,
 } from "../db/repositories/noteRepository";
 import App from "./App";
@@ -15,6 +16,7 @@ vi.mock("../db/repositories/noteRepository", () => ({
   createNote: vi.fn(),
   getNoteById: vi.fn(),
   updateNote: vi.fn(),
+  softDeleteNote: vi.fn(),
   EMPTY_NOTE_CONTENT_JSON: '{"type":"doc","content":[{"type":"paragraph"}]}',
 }));
 
@@ -51,6 +53,7 @@ describe("NODI app", () => {
     vi.mocked(updateNote)
       .mockReset()
       .mockResolvedValue({ ...newNote, title: "Updated" });
+    vi.mocked(softDeleteNote).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -80,7 +83,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(17);
+    expect(screen.getAllByRole("img")).toHaveLength(18);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -125,5 +128,24 @@ describe("NODI app", () => {
     await user.keyboard("{Control>}n{/Control}");
 
     expect(createNote).toHaveBeenCalledOnce();
+  });
+
+  it("moves a selected note to Trash and removes it from the active list", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listNotes)
+      .mockResolvedValueOnce([newNoteSummary])
+      .mockResolvedValue([]);
+    render(<App />);
+
+    await user.click(await screen.findByRole("option", { name: /Untitled/ }));
+    await user.click(
+      await screen.findByRole("button", { name: "Move to Trash" }),
+    );
+
+    expect(softDeleteNote).toHaveBeenCalledWith("new-1");
+    expect(
+      await screen.findByRole("region", { name: "Nothing selected" }),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
   });
 });

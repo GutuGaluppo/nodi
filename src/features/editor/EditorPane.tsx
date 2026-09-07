@@ -1,5 +1,6 @@
 import type { Ref } from "react";
 import { useNote } from "../notes/useNote";
+import { useTrashNote } from "../notes/useTrashNote";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
 
@@ -8,6 +9,8 @@ interface EditorPaneProps {
   ref?: Ref<HTMLElement>;
   focusEditor: boolean;
   onEditorFocused: () => void;
+  view: "notes" | "trash";
+  onNoteRemoved: () => void;
 }
 
 /**
@@ -20,8 +23,12 @@ function EditorPane({
   ref,
   focusEditor,
   onEditorFocused,
+  view,
+  onNoteRemoved,
 }: EditorPaneProps) {
   const note = useNote(noteId);
+  const trashNote = useTrashNote();
+  const selectedNote = note.data;
 
   return (
     <section
@@ -41,7 +48,7 @@ function EditorPane({
           <p className="section-label">Editor</p>
           <h2 id="editor-heading">Opening…</h2>
         </div>
-      ) : note.isError || note.data == null ? (
+      ) : note.isError || selectedNote == null ? (
         <div className="editor-empty-state" role="alert">
           <p className="section-label">Editor</p>
           <h2 id="editor-heading">This note could not be opened</h2>
@@ -50,12 +57,33 @@ function EditorPane({
       ) : (
         <div className="editor-scroll">
           <h2 id="editor-heading" className="visually-hidden">
-            {note.data.title.trim() === "" ? "Untitled" : note.data.title}
+            {selectedNote.title.trim() === "" ? "Untitled" : selectedNote.title}
           </h2>
-          <NoteTitle key={note.data.id} note={note.data} />
+          <div className="editor-title-row">
+            <NoteTitle key={selectedNote.id} note={selectedNote} />
+            {view === "notes" ? (
+              <button
+                className="subtle-action danger-action"
+                type="button"
+                disabled={trashNote.isPending}
+                onClick={() => {
+                  trashNote.mutate(selectedNote.id, {
+                    onSuccess: onNoteRemoved,
+                  });
+                }}
+              >
+                {trashNote.isPending ? "Moving…" : "Move to Trash"}
+              </button>
+            ) : null}
+          </div>
+          {trashNote.isError ? (
+            <p className="inline-error" role="alert">
+              This note could not be moved. Your content was not changed.
+            </p>
+          ) : null}
           <AutosavingNoteEditor
-            key={note.data.id}
-            note={note.data}
+            key={selectedNote.id}
+            note={selectedNote}
             autoFocus={focusEditor}
             onAutoFocus={onEditorFocused}
           />

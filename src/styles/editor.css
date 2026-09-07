@@ -11,6 +11,35 @@
   margin: 0 auto;
 }
 
+.editor-title-row {
+  display: flex;
+  width: min(var(--editor-max-width), calc(100% - var(--space-16)));
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin: 0 auto;
+}
+
+.editor-title-row .note-title-field {
+  width: auto;
+  flex: 1;
+  margin: 0;
+}
+
+.subtle-action {
+  flex: none;
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.subtle-action:hover {
+  color: var(--color-text);
+}
+
+.danger-action:hover {
+  color: var(--color-danger);
+}
+
 .note-title-field input {
   width: 100%;
   border: 0;

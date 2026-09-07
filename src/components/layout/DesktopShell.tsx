@@ -14,6 +14,9 @@ interface DesktopShellProps {
   editorPaneRef: Ref<HTMLElement>;
   focusEditor: boolean;
   onEditorFocused: () => void;
+  activeView: "notes" | "trash";
+  onNavigate: (view: "notes" | "trash") => void;
+  onNoteRemoved: () => void;
 }
 
 function DesktopShell({
@@ -26,6 +29,9 @@ function DesktopShell({
   editorPaneRef,
   focusEditor,
   onEditorFocused,
+  activeView,
+  onNavigate,
+  onNoteRemoved,
 }: DesktopShellProps) {
   return (
     <main className="desktop-shell">
@@ -45,8 +51,21 @@ function DesktopShell({
 
         <nav className="primary-navigation" aria-label="Primary navigation">
           <p className="section-label">Workspace</p>
-          <button className="nav-item" type="button" aria-current="page">
+          <button
+            className="nav-item"
+            type="button"
+            aria-current={activeView === "notes" ? "page" : undefined}
+            onClick={() => onNavigate("notes")}
+          >
             Notes
+          </button>
+          <button
+            className="nav-item"
+            type="button"
+            aria-current={activeView === "trash" ? "page" : undefined}
+            onClick={() => onNavigate("trash")}
+          >
+            Trash
           </button>
         </nav>
 
@@ -62,13 +81,19 @@ function DesktopShell({
         </footer>
       </aside>
 
-      <NoteList selectedNoteId={selectedNoteId} onSelectNote={onSelectNote} />
+      <NoteList
+        view={activeView}
+        selectedNoteId={selectedNoteId}
+        onSelectNote={onSelectNote}
+      />
 
       <EditorPane
         ref={editorPaneRef}
         noteId={selectedNoteId}
         focusEditor={focusEditor}
         onEditorFocused={onEditorFocused}
+        view={activeView}
+        onNoteRemoved={onNoteRemoved}
       />
     </main>
   );
