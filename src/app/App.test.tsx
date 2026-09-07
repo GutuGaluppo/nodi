@@ -9,7 +9,11 @@ describe("NODI app", () => {
 
     expect(screen.getByRole("heading", { name: "NODI" })).toBeInTheDocument();
     expect(
-      screen.getByText("Local notes, ready for what comes next."),
+      screen.getByRole("complementary", { name: "Sidebar" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Notes" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Nothing selected" }),
     ).toBeInTheDocument();
   });
 
@@ -25,7 +29,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(6);
+    expect(screen.getAllByRole("img")).toHaveLength(7);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 

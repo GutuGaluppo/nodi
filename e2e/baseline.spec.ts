@@ -4,6 +4,13 @@ test("shows the NODI baseline and visual history", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "NODI" })).toBeVisible();
+  await expect(
+    page.getByRole("complementary", { name: "Sidebar" }),
+  ).toBeVisible();
+  await expect(page.getByRole("region", { name: "Notes" })).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Nothing selected" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "About" }).click();
   await expect(
     page.getByRole("heading", { name: "The making of NODI" }),
@@ -27,4 +34,24 @@ test("applies and restores the selected theme", async ({ page }) => {
     "aria-pressed",
     "true",
   );
+});
+
+test("keeps all three desktop columns visible at the minimum width", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 900, height: 600 });
+  await page.goto("/");
+
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const noteList = page.getByRole("region", { name: "Notes" });
+  const editor = page.getByRole("region", { name: "Nothing selected" });
+
+  await expect(sidebar).toHaveCSS("width", "232px");
+  await expect(noteList).toHaveCSS("width", "320px");
+  await expect(editor).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
 });

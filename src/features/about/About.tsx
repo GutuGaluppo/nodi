@@ -4,6 +4,7 @@ import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.pn
 import fnd003Screenshot from "../../../docs/about/screenshots/fnd-003-project-structure.png";
 import fnd004DarkScreenshot from "../../../docs/about/screenshots/fnd-004-dark-mode.png";
 import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
+import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -57,6 +58,14 @@ const evolution = [
     description:
       "The ABOUT timeline and its historical screenshots remain readable and visually consistent in NODI's Dark theme.",
     screenshot: fnd004DarkScreenshot,
+  },
+  {
+    id: "FND-005",
+    title: "The NODI workspace appears",
+    date: "September 7, 2026",
+    description:
+      "The native window becomes a stable three-column workspace with a 232px sidebar, 320px note list, and flexible editor canvas.",
+    screenshot: fnd005Screenshot,
   },
 ];
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import ThemeSelector from "../components/ui/ThemeSelector";
+import DesktopShell from "../components/layout/DesktopShell";
 import About from "../features/about/About";
 import {
   applyThemePreference,
@@ -22,20 +22,11 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
-      <div className="app-actions">
-        <ThemeSelector value={theme} onChange={setTheme} />
-        <button
-          className="text-button"
-          type="button"
-          onClick={() => setShowAbout(true)}
-        >
-          About
-        </button>
-      </div>
-      <h1>NODI</h1>
-      <p>Local notes, ready for what comes next.</p>
-    </main>
+    <DesktopShell
+      theme={theme}
+      onThemeChange={setTheme}
+      onOpenAbout={() => setShowAbout(true)}
+    />
   );
 }
 

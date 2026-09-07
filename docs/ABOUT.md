@@ -50,3 +50,11 @@ NODI gains a shared visual foundation for color, typography, spacing, borders, r
 The ABOUT timeline and its historical screenshots remain readable and visually consistent when NODI follows a dark appearance.
 
 ![NODI ABOUT in Dark mode](about/screenshots/fnd-004-dark-mode.png)
+
+## 006 — FND-005 Desktop shell
+
+**Completed:** September 7, 2026
+
+The native window becomes NODI's stable three-column workspace: a 232px sidebar, a 320px note list, and a flexible editor canvas. Semantic regions, visible focus, honest empty states, and a 900px minimum window width establish the foundation for note features without exposing unfinished destinations.
+
+![NODI after FND-005](about/screenshots/fnd-005-desktop-shell.png)

@@ -10,6 +10,12 @@
   -webkit-text-size-adjust: 100%;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
   min-height: 100%;
@@ -22,25 +28,6 @@ body {
   transition:
     color var(--transition-normal),
     background-color var(--transition-normal);
-}
-
-.app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.app-actions {
-  position: fixed;
-  z-index: 1;
-  top: calc(var(--space-6) + var(--space-1));
-  right: var(--space-8);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
 }
 
 button {
@@ -70,6 +57,179 @@ button:focus-visible {
 h1 {
   margin: 0;
   font-size: var(--font-size-title);
+}
+
+.desktop-shell {
+  display: grid;
+  grid-template-columns:
+    var(--sidebar-width) var(--note-list-width)
+    minmax(0, 1fr);
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.sidebar,
+.note-list-pane,
+.editor-pane {
+  min-width: 0;
+  min-height: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-4) var(--space-4);
+  overflow: auto;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.sidebar-header {
+  padding: 0 var(--space-2) var(--space-8);
+}
+
+.sidebar-header h1 {
+  font-size: 1.25rem;
+  letter-spacing: -0.025em;
+}
+
+.sidebar-header p,
+.pane-empty-state p,
+.editor-empty-state p {
+  color: var(--color-text-muted);
+}
+
+.sidebar-header p {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.primary-navigation {
+  flex: 1;
+}
+
+.section-label {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.nav-item,
+.sidebar-button {
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-weight: 550;
+}
+
+.nav-item:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
+}
+
+.nav-item[aria-current="page"] {
+  color: var(--color-accent-hover);
+  background: var(--color-accent-soft);
+}
+
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.note-list-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.pane-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-height: 68px;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pane-header .section-label {
+  margin-bottom: var(--space-1);
+}
+
+.pane-header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.item-count {
+  min-width: var(--space-6);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+  background: var(--color-surface-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--space-4);
+  text-align: center;
+}
+
+.pane-empty-state,
+.editor-empty-state {
+  margin: auto;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.pane-empty-state {
+  max-width: 220px;
+}
+
+.pane-empty-state p,
+.editor-empty-state p {
+  margin: var(--space-2) 0 0;
+  line-height: 1.55;
+}
+
+.pane-empty-state .empty-state-title {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.editor-pane {
+  display: flex;
+  overflow: auto;
+  background: var(--color-bg);
+}
+
+.editor-empty-state {
+  max-width: 360px;
+}
+
+.editor-empty-state h2 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  letter-spacing: -0.025em;
+}
+
+.editor-empty-state .section-label {
+  margin-bottom: var(--space-3);
+  color: var(--color-accent);
 }
 
 .theme-selector {
@@ -214,6 +374,18 @@ h1 {
 
   .timeline-entry {
     gap: var(--space-5);
+  }
+}
+
+@media (max-width: 980px) {
+  .sidebar {
+    padding-right: var(--space-3);
+    padding-left: var(--space-3);
+  }
+
+  .pane-empty-state,
+  .editor-empty-state {
+    padding: var(--space-5);
   }
 }
 
