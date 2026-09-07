@@ -44,3 +44,9 @@ The visible baseline stays stable while application startup, global styles, and 
 NODI gains a shared visual foundation for color, typography, spacing, borders, radii, and motion. An accessible theme selector supports System, Light, and Dark preferences, persists the choice locally, and applies the same tokens to ABOUT.
 
 ![NODI after FND-004](about/screenshots/fnd-004-design-tokens.png)
+
+### Dark mode
+
+The ABOUT timeline and its historical screenshots remain readable and visually consistent when NODI follows a dark appearance.
+
+![NODI ABOUT in Dark mode](about/screenshots/fnd-004-dark-mode.png)

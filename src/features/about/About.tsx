@@ -2,6 +2,7 @@ import doc001Screenshot from "../../../docs/about/screenshots/doc-001-about-rule
 import fnd001Screenshot from "../../../docs/about/screenshots/fnd-001-native-shell.png";
 import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.png";
 import fnd003Screenshot from "../../../docs/about/screenshots/fnd-003-project-structure.png";
+import fnd004DarkScreenshot from "../../../docs/about/screenshots/fnd-004-dark-mode.png";
 import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
 
 interface AboutProps {
@@ -48,6 +49,14 @@ const evolution = [
     description:
       "NODI gains shared design tokens and accessible System, Light, and Dark themes that persist across launches and also style ABOUT.",
     screenshot: fnd004Screenshot,
+  },
+  {
+    id: "FND-004 · DARK",
+    title: "The visual history after dark",
+    date: "September 7, 2026",
+    description:
+      "The ABOUT timeline and its historical screenshots remain readable and visually consistent in NODI's Dark theme.",
+    screenshot: fnd004DarkScreenshot,
   },
 ];
 
