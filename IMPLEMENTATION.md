@@ -1811,6 +1811,8 @@ A task is done only when:
 ✓ no unexplained dependency added
 ✓ persistent behavior tested when relevant
 ✓ docs updated when architecture changed
+✓ current NODI window captured for the visual evolution log
+✓ ABOUT page updated with a chronological task entry
 ```
 
 ---
@@ -2591,10 +2593,12 @@ For each feature:
 4. give Builder the approved task
 5. Builder runs pnpm check
 6. run the app manually
-7. Human reviews product behavior
-8. Verifier reviews diff
-9. fix only blocking issues
-10. commit
+7. capture only the current NODI window
+8. add the screenshot and task summary to ABOUT
+9. Human reviews product behavior
+10. Verifier reviews diff
+11. fix only blocking issues
+12. commit
 ```
 
 ---
@@ -2928,6 +2932,7 @@ Only after Milestone E should multi-device sync become a serious implementation 
 12. Never install dependencies without a clear reason.
 13. Never treat successful compilation as sufficient validation.
 14. Never implement sync before local reliability is proven.
+15. Never finish an implementation task without preserving its screen state in ABOUT.
 ```
 
 ---
@@ -3023,3 +3028,60 @@ a small set of source files
 
 If an agent needs the full repository and the entire conversation history to understand a small task, the architecture or documentation has become too implicit and must be corrected.
 
+---
+
+# 88. Visual evolution documentation
+
+The project must preserve a chronological visual history inside `ABOUT`.
+
+At the end of every implementation task, after validation and before the task commit:
+
+```text
+1. run the native macOS application
+2. navigate to the primary screen affected by the task
+3. capture only the NODI window
+4. store the image under docs/about/screenshots/
+5. add a chronological entry to docs/ABOUT.md
+6. add the same entry to the in-app ABOUT page
+7. verify that the screenshot renders and has useful alternative text
+```
+
+Screenshot naming convention:
+
+```text
+<task-id-lowercase>-<short-description>.png
+```
+
+Example:
+
+```text
+fnd-001-native-shell.png
+note-003-new-note.png
+search-002-search-results.png
+```
+
+Each ABOUT entry must contain:
+
+```text
+task ID
+completion date
+short title
+one concise description of the visible evolution
+screenshot
+commit hash when available
+```
+
+Rules:
+
+```text
+screenshots are permanent historical artifacts
+never replace or rewrite an earlier screenshot
+capture only the app window, never the full desktop
+do not include real or sensitive user content
+use representative local fixture content when a feature needs data
+non-visual tasks still receive a screenshot and an explanation of the invisible change
+the in-app ABOUT page must use the same design tokens and accessibility standards as NODI
+the ABOUT timeline must remain chronological and usable with keyboard and screen readers
+```
+
+The visual record is part of the Definition of Done, not an optional release note.

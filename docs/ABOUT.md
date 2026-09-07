@@ -1,0 +1,22 @@
+# ABOUT — The making of NODI
+
+This page is the durable source record for the visual history presented by the in-app **ABOUT** page.
+
+Every completed implementation task adds one chronological entry and one immutable screenshot of the current native NODI window. Screenshots are stored in `docs/about/screenshots/` and must never contain other applications or unrelated desktop content.
+
+## 001 — FND-001 Native shell
+
+**Completed:** September 7, 2026  
+**Commit:** `5b9d9ee`
+
+The first NODI window: a clean Tauri 2, React, TypeScript, and Vite baseline running natively on macOS.
+
+![NODI after FND-001](about/screenshots/fnd-001-native-shell.png)
+
+## 002 — DOC-001 Visual history rule
+
+**Completed:** September 7, 2026
+
+ABOUT was added as a permanent, accessible timeline inside NODI. Capturing the current native window and adding an evolution entry is now part of every implementation task's Definition of Done.
+
+![NODI after DOC-001](about/screenshots/doc-001-about-rule.png)
