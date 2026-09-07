@@ -8,7 +8,12 @@ import {
   useTags,
 } from "./tagQueries";
 
-function TagSection() {
+interface TagSectionProps {
+  selectedTagId: string | null;
+  onSelectTag: (id: string) => void;
+}
+
+function TagSection({ selectedTagId, onSelectTag }: TagSectionProps) {
   const tags = useTags();
   const createTag = useCreateTag();
   const renameTag = useRenameTag();
@@ -89,7 +94,14 @@ function TagSection() {
         <ul className="tag-list">
           {data.map((tag) => (
             <li key={tag.id}>
-              <span className="tag-name"># {tag.name}</span>
+              <button
+                className="tag-name"
+                type="button"
+                aria-current={selectedTagId === tag.id ? "page" : undefined}
+                onClick={() => onSelectTag(tag.id)}
+              >
+                # {tag.name}
+              </button>
               <span className="tag-row-actions">
                 <button
                   type="button"

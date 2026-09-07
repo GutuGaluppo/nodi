@@ -65,6 +65,8 @@ export interface ListNotesInput {
   deleted?: "exclude" | "only" | "include";
   /** Restrict to a notebook; pass `null` for notes with no notebook. */
   notebookId?: string | null;
+  /** Restrict to notes assigned to a tag. */
+  tagId?: string;
   limit?: number;
   offset?: number;
 }
@@ -214,6 +216,14 @@ export async function listNotes(
       clauses.push(`notebook_id = $${position}`);
       position += 1;
       values.push(input.notebookId);
+    }
+
+    if (input.tagId !== undefined) {
+      clauses.push(
+        `EXISTS (SELECT 1 FROM note_tags WHERE note_tags.note_id = notes.id AND note_tags.tag_id = $${position})`,
+      );
+      position += 1;
+      values.push(input.tagId);
     }
 
     const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";

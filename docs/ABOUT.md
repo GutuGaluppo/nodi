@@ -198,3 +198,11 @@ Notebooks can now be grouped into named stacks without drag-and-drop. Stack crea
 Tags now provide a compact local vocabulary in the sidebar. Their repository enforces non-empty, unique names and supports alphabetical listing, creation, inline renaming, and confirmed deletion; deleting a tag safely removes only its note relationships through the existing cascade.
 
 ![NODI after TAG-001](about/screenshots/tag-001-tags.png)
+
+## 024 — TAG-002 Note tags
+
+**Completed:** September 7, 2026
+
+Notes can now carry any number of tags through an accessible metadata control. Adding and removing relationships leaves note content untouched, refreshes query-backed views immediately, and each tag in the sidebar opens a filtered, keyboard-navigable library.
+
+![NODI after TAG-002](about/screenshots/tag-002-note-tags.png)

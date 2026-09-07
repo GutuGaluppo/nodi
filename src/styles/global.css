@@ -307,12 +307,18 @@ h1 {
 }
 
 .tag-name {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   white-space: nowrap;
   text-overflow: ellipsis;
+  text-align: left;
+}
+
+.tag-name[aria-current="page"] {
+  color: var(--color-accent-hover);
 }
 
 .tag-row-actions {

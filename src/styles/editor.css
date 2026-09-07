@@ -28,6 +28,61 @@
   font-size: var(--font-size-xs);
 }
 
+.note-metadata-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 var(--space-4);
+}
+
+.note-metadata-controls .note-notebook-control {
+  margin: 0;
+}
+
+.note-tags-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.note-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-lg);
+  color: var(--color-accent-hover);
+  background: var(--color-accent-soft);
+}
+
+.note-tag button {
+  color: inherit;
+  line-height: 1;
+}
+
+.note-tags-control select {
+  max-width: 150px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font: inherit;
+}
+
 .note-notebook-control select {
   max-width: 220px;
   padding: var(--space-1) var(--space-2);

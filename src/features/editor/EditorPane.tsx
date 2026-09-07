@@ -5,6 +5,7 @@ import { useNote } from "../notes/useNote";
 import { usePermanentlyDeleteNote } from "../notes/usePermanentlyDeleteNote";
 import { useRestoreNote } from "../notes/useRestoreNote";
 import { useTrashNote } from "../notes/useTrashNote";
+import NoteTagPicker from "../tags/NoteTagPicker";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
 
@@ -16,6 +17,7 @@ interface EditorPaneProps {
   view: "notes" | "trash";
   onNoteRemoved: () => void;
   activeNotebookId: string | null;
+  activeTagId: string | null;
 }
 
 /**
@@ -31,6 +33,7 @@ function EditorPane({
   view,
   onNoteRemoved,
   activeNotebookId,
+  activeTagId,
 }: EditorPaneProps) {
   const note = useNote(noteId);
   const trashNote = useTrashNote();
@@ -108,11 +111,18 @@ function EditorPane({
             )}
           </div>
           {view === "notes" ? (
-            <NoteNotebookSelect
-              note={selectedNote}
-              activeNotebookId={activeNotebookId}
-              onMovedAway={onNoteRemoved}
-            />
+            <div className="note-metadata-controls">
+              <NoteNotebookSelect
+                note={selectedNote}
+                activeNotebookId={activeNotebookId}
+                onMovedAway={onNoteRemoved}
+              />
+              <NoteTagPicker
+                note={selectedNote}
+                activeTagId={activeTagId}
+                onRemovedFromActiveTag={onNoteRemoved}
+              />
+            </div>
           ) : null}
           {trashNote.isError || restoreNote.isError ? (
             <p className="inline-error" role="alert">

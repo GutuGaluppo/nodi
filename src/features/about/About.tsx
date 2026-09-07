@@ -19,6 +19,7 @@ import note001Screenshot from "../../../docs/about/screenshots/note-001-note-rep
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import tag001Screenshot from "../../../docs/about/screenshots/tag-001-tags.png";
+import tag002Screenshot from "../../../docs/about/screenshots/tag-002-note-tags.png";
 import trash001Screenshot from "../../../docs/about/screenshots/trash-001-soft-deletion.png";
 import trash002Screenshot from "../../../docs/about/screenshots/trash-002-restore.png";
 import trash003Screenshot from "../../../docs/about/screenshots/trash-003-permanent-delete.png";
@@ -219,6 +220,14 @@ const evolution = [
     description:
       "Tags now have a complete local lifecycle in the sidebar, with alphabetical listing, keyboard-friendly creation and renaming, confirmed deletion, uniqueness protection, and clear error recovery.",
     screenshot: tag001Screenshot,
+  },
+  {
+    id: "TAG-002",
+    title: "Ideas connect across notebooks",
+    date: "September 7, 2026",
+    description:
+      "Notes can now carry multiple tags, add or remove them without touching content, and appear instantly in a keyboard-accessible tag-filtered library.",
+    screenshot: tag002Screenshot,
   },
 ];
 

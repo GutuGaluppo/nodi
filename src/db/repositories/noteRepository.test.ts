@@ -185,6 +185,17 @@ describe("noteRepository", () => {
       expect(db.select.mock.calls[0][1]).toEqual([]);
     });
 
+    it("filters by tag through a bound relationship lookup", async () => {
+      const { listNotes } = await importRepository();
+
+      await listNotes({ tagId: "tag-1" });
+
+      const [sql, values] = db.select.mock.calls[0];
+      expect(sql).toContain("EXISTS (SELECT 1 FROM note_tags");
+      expect(sql).toContain("note_tags.tag_id = $1");
+      expect(values).toEqual(["tag-1"]);
+    });
+
     it("passes limit and offset as bound parameters", async () => {
       const { listNotes } = await importRepository();
       await listNotes({ limit: 10, offset: 20 });

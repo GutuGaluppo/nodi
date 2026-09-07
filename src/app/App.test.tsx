@@ -26,6 +26,11 @@ import {
   softDeleteNote,
   updateNote,
 } from "../db/repositories/noteRepository";
+import {
+  addTagToNote,
+  listTagsForNote,
+  removeTagFromNote,
+} from "../db/repositories/noteTagRepository";
 import type { Tag } from "../db/repositories/tagRepository";
 import {
   createTag,
@@ -44,6 +49,12 @@ vi.mock("../db/repositories/noteRepository", () => ({
   restoreNote: vi.fn(),
   permanentlyDeleteNote: vi.fn(),
   EMPTY_NOTE_CONTENT_JSON: '{"type":"doc","content":[{"type":"paragraph"}]}',
+}));
+
+vi.mock("../db/repositories/noteTagRepository", () => ({
+  listTagsForNote: vi.fn(),
+  addTagToNote: vi.fn(),
+  removeTagFromNote: vi.fn(),
 }));
 
 vi.mock("../db/repositories/notebookRepository", () => ({
@@ -140,6 +151,9 @@ describe("NODI app", () => {
     vi.mocked(createTag).mockReset().mockResolvedValue(tag);
     vi.mocked(renameTag).mockReset().mockResolvedValue(undefined);
     vi.mocked(deleteTag).mockReset().mockResolvedValue(undefined);
+    vi.mocked(listTagsForNote).mockReset().mockResolvedValue([]);
+    vi.mocked(addTagToNote).mockReset().mockResolvedValue(undefined);
+    vi.mocked(removeTagFromNote).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -169,7 +183,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(24);
+    expect(screen.getAllByRole("img")).toHaveLength(25);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -332,6 +346,45 @@ describe("NODI app", () => {
     expect(deleteTag).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Delete tag" }));
     expect(deleteTag).toHaveBeenCalledWith("tag-1");
+  });
+
+  it("filters notes by a selected tag", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listTags).mockResolvedValue([tag]);
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: "# ideas" }));
+
+    await waitFor(() =>
+      expect(listNotes).toHaveBeenCalledWith({
+        deleted: "exclude",
+        tagId: "tag-1",
+      }),
+    );
+    expect(screen.getByRole("region", { name: "# ideas" })).toBeInTheDocument();
+  });
+
+  it("adds and removes multiple note tag relationships accessibly", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listTags).mockResolvedValue([tag]);
+    vi.mocked(listNotes).mockResolvedValue([newNoteSummary]);
+    vi.mocked(listTagsForNote)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([tag])
+      .mockResolvedValue([]);
+    render(<App />);
+
+    await user.click(await screen.findByRole("option", { name: /Untitled/ }));
+    await user.selectOptions(
+      await screen.findByRole("combobox", { name: "Add tag" }),
+      "tag-1",
+    );
+    expect(addTagToNote).toHaveBeenCalledWith("new-1", "tag-1");
+
+    await user.click(
+      await screen.findByRole("button", { name: "Remove tag ideas" }),
+    );
+    expect(removeTagFromNote).toHaveBeenCalledWith("new-1", "tag-1");
   });
 
   it("creates, selects, and focuses a new note from the sidebar", async () => {

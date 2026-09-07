@@ -24,6 +24,7 @@ function Workspace({
   const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(
     null,
   );
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editorFocusRequest, setEditorFocusRequest] = useState<string | null>(
     null,
@@ -50,6 +51,7 @@ function Workspace({
   const handleNavigate = useCallback((view: "notes" | "trash") => {
     setActiveView(view);
     setSelectedNotebookId(null);
+    setSelectedTagId(null);
     setSelectedNoteId(null);
     setEditorFocusRequest(null);
   }, []);
@@ -84,6 +86,15 @@ function Workspace({
       onSelectNotebook={(id) => {
         setActiveView("notes");
         setSelectedNotebookId(id);
+        setSelectedTagId(null);
+        setSelectedNoteId(null);
+        setEditorFocusRequest(null);
+      }}
+      selectedTagId={selectedTagId}
+      onSelectTag={(id) => {
+        setActiveView("notes");
+        setSelectedNotebookId(null);
+        setSelectedTagId(id);
         setSelectedNoteId(null);
         setEditorFocusRequest(null);
       }}

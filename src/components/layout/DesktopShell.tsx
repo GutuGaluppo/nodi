@@ -5,6 +5,7 @@ import NotebookSection from "../../features/notebooks/NotebookSection";
 import { useNotebooks } from "../../features/notebooks/notebookQueries";
 import NoteList from "../../features/notes/NoteList";
 import TagSection from "../../features/tags/TagSection";
+import { useTags } from "../../features/tags/tagQueries";
 import ThemeSelector from "../ui/ThemeSelector";
 
 interface DesktopShellProps {
@@ -21,6 +22,8 @@ interface DesktopShellProps {
   onNavigate: (view: "notes" | "trash") => void;
   selectedNotebookId: string | null;
   onSelectNotebook: (id: string) => void;
+  selectedTagId: string | null;
+  onSelectTag: (id: string) => void;
   onNoteRemoved: () => void;
 }
 
@@ -38,11 +41,17 @@ function DesktopShell({
   onNavigate,
   selectedNotebookId,
   onSelectNotebook,
+  selectedTagId,
+  onSelectTag,
   onNoteRemoved,
 }: DesktopShellProps) {
   const notebooks = useNotebooks();
   const selectedNotebookName = notebooks.data?.find(
     (notebook) => notebook.id === selectedNotebookId,
+  )?.name;
+  const tags = useTags();
+  const selectedTagName = tags.data?.find(
+    (tag) => tag.id === selectedTagId,
   )?.name;
 
   return (
@@ -67,7 +76,9 @@ function DesktopShell({
             className="nav-item"
             type="button"
             aria-current={
-              activeView === "notes" && selectedNotebookId === null
+              activeView === "notes" &&
+              selectedNotebookId === null &&
+              selectedTagId === null
                 ? "page"
                 : undefined
             }
@@ -90,7 +101,7 @@ function DesktopShell({
           onSelectNotebook={onSelectNotebook}
         />
 
-        <TagSection />
+        <TagSection selectedTagId={selectedTagId} onSelectTag={onSelectTag} />
 
         <footer className="sidebar-footer">
           <ThemeSelector value={theme} onChange={onThemeChange} />
@@ -110,6 +121,8 @@ function DesktopShell({
         onSelectNote={onSelectNote}
         notebookId={activeView === "notes" ? selectedNotebookId : null}
         notebookName={selectedNotebookName}
+        tagId={activeView === "notes" ? selectedTagId : null}
+        tagName={selectedTagName}
       />
 
       <EditorPane
@@ -120,6 +133,7 @@ function DesktopShell({
         view={activeView}
         onNoteRemoved={onNoteRemoved}
         activeNotebookId={activeView === "notes" ? selectedNotebookId : null}
+        activeTagId={activeView === "notes" ? selectedTagId : null}
       />
     </main>
   );

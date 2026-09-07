@@ -8,6 +8,8 @@ interface NoteListProps {
   onSelectNote: (id: string) => void;
   notebookId?: string | null;
   notebookName?: string;
+  tagId?: string | null;
+  tagName?: string;
 }
 
 const MOVEMENT_KEYS = new Set(["ArrowDown", "ArrowUp", "Home", "End"]);
@@ -18,14 +20,18 @@ function NoteList({
   onSelectNote,
   notebookId = null,
   notebookName,
+  tagId = null,
+  tagName,
 }: NoteListProps) {
   const title =
     view === "trash"
       ? "Trash"
       : (notebookName ?? (notebookId ? "Notebook" : "Notes"));
+  const displayTitle = tagName ? `# ${tagName}` : title;
   const notes = useNotes({
     deleted: view === "trash" ? "only" : "exclude",
     ...(view === "notes" && notebookId ? { notebookId } : {}),
+    ...(view === "notes" && tagId ? { tagId } : {}),
   });
   const itemRefs = useRef(new Map<string, HTMLDivElement>());
 
@@ -69,7 +75,7 @@ function NoteList({
       <header className="pane-header">
         <div>
           <p className="section-label">Library</p>
-          <h2 id="notes-heading">{title}</h2>
+          <h2 id="notes-heading">{displayTitle}</h2>
         </div>
         <span className="item-count">
           <span aria-hidden="true">{count}</span>
@@ -85,7 +91,7 @@ function NoteList({
         </div>
       ) : notes.isError ? (
         <div className="pane-status" role="alert">
-          <p>{title} could not be loaded. Your data was not changed.</p>
+          <p>{displayTitle} could not be loaded. Your data was not changed.</p>
           <button
             className="primary-button"
             type="button"
@@ -104,7 +110,7 @@ function NoteList({
           <p>
             {view === "trash"
               ? "Deleted notes will appear here."
-              : notebookId
+              : notebookId || tagId
                 ? "Notes moved to this notebook will appear here."
                 : "Your notes will appear here as the library takes shape."}
           </p>
@@ -113,7 +119,7 @@ function NoteList({
         <div
           className="note-list"
           role="listbox"
-          aria-label={title}
+          aria-label={displayTitle}
           onKeyDown={handleKeyDown}
         >
           {data.map((note) => (
