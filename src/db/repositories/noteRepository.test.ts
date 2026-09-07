@@ -294,13 +294,38 @@ describe("noteRepository", () => {
       db.select.mockResolvedValueOnce([]);
       const { searchNotes } = await importRepository();
 
-      await searchNotes("project", 20);
+      await searchNotes("project", {}, 20);
 
       const [sql, values] = db.select.mock.calls[0];
       expect(sql).toContain("notes_fts MATCH $1");
       expect(sql).toContain("ORDER BY bm25(notes_fts");
       expect(sql).toContain("notes.deleted_at IS NULL");
       expect(values).toEqual(['"project"*', 20]);
+    });
+
+    it("combines structured filters with bound FTS terms", async () => {
+      const { searchNotes } = await importRepository();
+
+      await searchNotes("roadmap", {
+        tag: "ideas",
+        notebook: "Projects",
+        created: "2026-09-01",
+        updated: "2026-09-07",
+      });
+
+      const [sql, values] = db.select.mock.calls[0];
+      expect(sql).toContain("tags.name = $2 COLLATE NOCASE");
+      expect(sql).toContain("notebooks.name = $3 COLLATE NOCASE");
+      expect(sql).toContain("date(notes.created_at) = date($4)");
+      expect(sql).toContain("date(notes.updated_at) = date($5)");
+      expect(values).toEqual([
+        '"roadmap"*',
+        "ideas",
+        "Projects",
+        "2026-09-01",
+        "2026-09-07",
+        50,
+      ]);
     });
 
     it("does not query the database for blank input", async () => {

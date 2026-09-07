@@ -230,3 +230,11 @@ Every note now has a synchronized FTS5 projection covering its title, plain-text
 `Cmd+K` now opens a focused search surface over the native workspace. Results arrive from the relevance-ranked FTS index and support mouse or keyboard navigation: Arrow Up/Down changes the active result, Enter opens it, and Escape closes search without changing the current note.
 
 ![NODI after SEARCH-002](about/screenshots/search-002-basic-search.png)
+
+## 028 — SEARCH-003 Search filters
+
+**Completed:** September 7, 2026
+
+Search now understands composable `tag:`, `notebook:`, `created:`, and `updated:` filters alongside ordinary text. Quoted notebook names are supported, active filters remain visible in the dialog, and every generated SQL condition uses bound values while free text retains FTS relevance ranking.
+
+![NODI after SEARCH-003](about/screenshots/search-003-filters.png)

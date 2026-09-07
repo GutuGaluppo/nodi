@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { parseSearchInput } from "./searchParser";
 import { useSearchNotes } from "./searchQueries";
 
 interface SearchDialogProps {
@@ -18,6 +19,8 @@ function SearchDialog({ onClose, onOpenNote }: SearchDialogProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const results = useSearchNotes(query);
   const notes = results.data ?? [];
+  const parsed = parseSearchInput(query);
+  const activeFilters = Object.entries(parsed.filters);
 
   useEffect(() => inputRef.current?.focus(), []);
 
@@ -78,6 +81,16 @@ function SearchDialog({ onClose, onOpenNote }: SearchDialogProps) {
           />
           <kbd>⌘ K</kbd>
         </form>
+
+        {activeFilters.length > 0 ? (
+          <ul className="search-filter-list" aria-label="Active search filters">
+            {activeFilters.map(([key, value]) => (
+              <li key={key}>
+                {key}: {value}
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         <div className="search-results" aria-live="polite">
           {!query.trim() ? (

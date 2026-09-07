@@ -20,6 +20,7 @@ import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-li
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import search001Screenshot from "../../../docs/about/screenshots/search-001-fts-index.png";
 import search002Screenshot from "../../../docs/about/screenshots/search-002-basic-search.png";
+import search003Screenshot from "../../../docs/about/screenshots/search-003-filters.png";
 import short001Screenshot from "../../../docs/about/screenshots/short-001-favorites.png";
 import tag001Screenshot from "../../../docs/about/screenshots/tag-001-tags.png";
 import tag002Screenshot from "../../../docs/about/screenshots/tag-002-note-tags.png";
@@ -255,6 +256,14 @@ const evolution = [
     description:
       "Command-K now opens a focused search surface with relevance-ranked results, accessible arrow navigation, Enter to open, Escape to close, and safe prefix matching across the synchronized index.",
     screenshot: search002Screenshot,
+  },
+  {
+    id: "SEARCH-003",
+    title: "Search gains a precise language",
+    date: "September 7, 2026",
+    description:
+      "Search now parses visible, composable tag, notebook, created-date, and updated-date filters while preserving free-text relevance ranking and binding every value safely in SQLite.",
+    screenshot: search003Screenshot,
   },
 ];
 

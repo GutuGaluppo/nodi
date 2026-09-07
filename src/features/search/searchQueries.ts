@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { searchNotes } from "../../db/repositories/noteRepository";
+import { parseSearchInput } from "./searchParser";
 
 export const searchKeys = {
   all: ["search"] as const,
@@ -8,9 +9,10 @@ export const searchKeys = {
 
 export function useSearchNotes(query: string) {
   const normalized = query.trim();
+  const parsed = parseSearchInput(normalized);
   return useQuery({
     queryKey: searchKeys.query(normalized),
-    queryFn: () => searchNotes(normalized),
+    queryFn: () => searchNotes(parsed.text, parsed.filters),
     enabled: normalized.length > 0,
   });
 }

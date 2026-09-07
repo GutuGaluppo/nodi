@@ -258,23 +258,71 @@ export function toFtsQuery(input: string): string {
     .join(" AND ");
 }
 
+export interface SearchFilters {
+  tag?: string;
+  notebook?: string;
+  created?: string;
+  updated?: string;
+}
+
 export async function searchNotes(
   query: string,
+  filters: SearchFilters = {},
   limit = 50,
 ): Promise<NoteSummary[]> {
   try {
     const normalized = toFtsQuery(query);
-    if (!normalized) return [];
+    if (!normalized && Object.values(filters).every((value) => !value)) {
+      return [];
+    }
     const database = await initializeDatabase();
+    const clauses = ["notes.deleted_at IS NULL"];
+    const values: unknown[] = [];
+    let position = 1;
+
+    if (normalized) {
+      clauses.push(`notes_fts MATCH $${position}`);
+      values.push(normalized);
+      position += 1;
+    }
+    if (filters.tag) {
+      clauses.push(
+        `EXISTS (
+          SELECT 1 FROM note_tags
+          INNER JOIN tags ON tags.id = note_tags.tag_id
+          WHERE note_tags.note_id = notes.id AND tags.name = $${position} COLLATE NOCASE
+        )`,
+      );
+      values.push(filters.tag);
+      position += 1;
+    }
+    if (filters.notebook) {
+      clauses.push(`notebooks.name = $${position} COLLATE NOCASE`);
+      values.push(filters.notebook);
+      position += 1;
+    }
+    if (filters.created) {
+      clauses.push(`date(notes.created_at) = date($${position})`);
+      values.push(filters.created);
+      position += 1;
+    }
+    if (filters.updated) {
+      clauses.push(`date(notes.updated_at) = date($${position})`);
+      values.push(filters.updated);
+      position += 1;
+    }
+    values.push(limit);
+
     const rows = await database.select<NoteSummaryRow[]>(
       `SELECT notes.id, notes.title, notes.content_text, notes.notebook_id, notes.is_pinned,
               notes.created_at, notes.updated_at, notes.deleted_at
        FROM notes_fts
        INNER JOIN notes ON notes.id = notes_fts.note_id
-       WHERE notes_fts MATCH $1 AND notes.deleted_at IS NULL
-       ORDER BY bm25(notes_fts, 0.0, 5.0, 2.0, 1.5, 1.5), notes.updated_at DESC
-       LIMIT $2`,
-      [normalized, limit],
+       LEFT JOIN notebooks ON notebooks.id = notes.notebook_id
+       WHERE ${clauses.join(" AND ")}
+       ORDER BY ${normalized ? "bm25(notes_fts, 0.0, 5.0, 2.0, 1.5, 1.5)," : ""} notes.updated_at DESC
+       LIMIT $${position}`,
+      values,
     );
     return rows.map(mapNoteSummary);
   } catch (cause) {
