@@ -1,12 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { initializeDatabase } from "../db/database";
+import { ensureDeviceId } from "../db/deviceId";
 import App from "./App";
 import StartupScreen from "./StartupScreen";
 import { applyThemePreference, getStoredThemePreference } from "./theme";
 import "../styles/tokens.css";
 import "../styles/themes.css";
 import "../styles/global.css";
+import "../styles/editor.css";
 
 applyThemePreference(getStoredThemePreference());
 
@@ -24,6 +26,7 @@ async function bootstrapApplication(): Promise<void> {
   try {
     if (import.meta.env.VITE_E2E !== "true") {
       await initializeDatabase();
+      await ensureDeviceId();
     }
 
     renderApplication(<App />);

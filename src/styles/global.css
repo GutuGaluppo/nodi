@@ -106,6 +106,32 @@ h1 {
   font-size: var(--font-size-sm);
 }
 
+.new-note-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-bottom: var(--space-6);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-weight: 600;
+  text-align: left;
+}
+
+.new-note-button span {
+  color: var(--color-accent);
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.new-note-button:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
 .primary-navigation {
   flex: 1;
 }
@@ -211,6 +237,89 @@ h1 {
   font-weight: 650;
 }
 
+.pane-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 260px;
+  margin: auto;
+  padding: var(--space-8);
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.note-list {
+  flex: 1;
+  margin: 0;
+  padding: var(--space-2);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.note-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.note-list-item + .note-list-item {
+  margin-top: var(--space-1);
+}
+
+.note-list-item:hover {
+  background: var(--color-hover);
+}
+
+.note-list-item[aria-selected="true"] {
+  background: var(--color-accent-soft);
+}
+
+.note-list-item:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.note-list-item-title {
+  overflow: hidden;
+  color: var(--color-text);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.note-list-item[aria-selected="true"] .note-list-item-title {
+  color: var(--color-accent-hover);
+}
+
+.note-list-item-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.note-list-item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.note-list-item-notebook {
+  color: var(--color-accent);
+}
+
 .editor-pane {
   display: flex;
   overflow: auto;
@@ -230,6 +339,33 @@ h1 {
 .editor-empty-state .section-label {
   margin-bottom: var(--space-3);
   color: var(--color-accent);
+}
+
+.editor-pane:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -3px;
+}
+
+.editor-placeholder {
+  max-width: var(--editor-max-width);
+  margin: var(--space-16) auto 0;
+  padding: 0 var(--space-8);
+}
+
+.editor-placeholder .section-label {
+  color: var(--color-accent);
+}
+
+.editor-placeholder h2 {
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-title);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.editor-placeholder p {
+  margin: var(--space-4) 0 0;
+  color: var(--color-text-muted);
 }
 
 .startup-screen {

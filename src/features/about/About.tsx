@@ -1,12 +1,17 @@
 import db001Screenshot from "../../../docs/about/screenshots/db-001-sqlite-connection.png";
 import db002Screenshot from "../../../docs/about/screenshots/db-002-migration-runner.png";
+import db003Screenshot from "../../../docs/about/screenshots/db-003-device-id.png";
 import doc001Screenshot from "../../../docs/about/screenshots/doc-001-about-rule.png";
+import edit001Screenshot from "../../../docs/about/screenshots/edit-001-tiptap-base-editor.png";
 import fnd001Screenshot from "../../../docs/about/screenshots/fnd-001-native-shell.png";
 import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.png";
 import fnd003Screenshot from "../../../docs/about/screenshots/fnd-003-project-structure.png";
 import fnd004DarkScreenshot from "../../../docs/about/screenshots/fnd-004-dark-mode.png";
 import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
 import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
+import note001Screenshot from "../../../docs/about/screenshots/note-001-note-repository.png";
+import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
+import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -84,6 +89,46 @@ const evolution = [
     description:
       "The local database now applies one immutable, transactional initial migration before the workspace opens, records version 1, and skips it on subsequent launches.",
     screenshot: db002Screenshot,
+  },
+  {
+    id: "DB-003",
+    title: "A stable local identity",
+    date: "September 7, 2026",
+    description:
+      "Each NODI installation now generates one UUID v7, persists it in settings, and reuses it when stamping every new note for future-safe revision tracking.",
+    screenshot: db003Screenshot,
+  },
+  {
+    id: "NOTE-001",
+    title: "One safe path to every note",
+    date: "September 7, 2026",
+    description:
+      "A parameterized repository now owns note creation, reading, listing, updates, soft deletion, restoration, and permanent deletion, with correct timestamps and revision increments.",
+    screenshot: note001Screenshot,
+  },
+  {
+    id: "NOTE-002",
+    title: "The library comes alive",
+    date: "September 7, 2026",
+    description:
+      "The middle column now reads notes through TanStack Query, presents loading, empty, and recoverable error states, and supports accessible keyboard selection in recency order.",
+    screenshot: note002Screenshot,
+  },
+  {
+    id: "NOTE-003",
+    title: "A note in one gesture",
+    date: "September 7, 2026",
+    description:
+      "New note and Command-N persist immediately, refresh the list, select the new record, and place the caret in its writing surface without restarting NODI.",
+    screenshot: note003Screenshot,
+  },
+  {
+    id: "EDIT-001",
+    title: "The writing surface",
+    date: "September 7, 2026",
+    description:
+      "Tiptap now renders canonical JSON with NODI's complete base extension set and an accessible toolbar for text, lists, links, highlights, tasks, and tables.",
+    screenshot: edit001Screenshot,
   },
 ];
 

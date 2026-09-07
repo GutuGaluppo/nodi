@@ -1,16 +1,31 @@
+import type { Ref } from "react";
 import type { ThemePreference } from "../../app/theme";
+import EditorPane from "../../features/editor/EditorPane";
+import NoteList from "../../features/notes/NoteList";
 import ThemeSelector from "../ui/ThemeSelector";
 
 interface DesktopShellProps {
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
   onOpenAbout: () => void;
+  onCreateNote: () => void;
+  selectedNoteId: string | null;
+  onSelectNote: (id: string) => void;
+  editorPaneRef: Ref<HTMLElement>;
+  focusEditor: boolean;
+  onEditorFocused: () => void;
 }
 
 function DesktopShell({
   theme,
   onThemeChange,
   onOpenAbout,
+  onCreateNote,
+  selectedNoteId,
+  onSelectNote,
+  editorPaneRef,
+  focusEditor,
+  onEditorFocused,
 }: DesktopShellProps) {
   return (
     <main className="desktop-shell">
@@ -19,6 +34,14 @@ function DesktopShell({
           <h1>NODI</h1>
           <p>Local notes</p>
         </header>
+
+        <button
+          className="new-note-button"
+          type="button"
+          onClick={onCreateNote}
+        >
+          <span aria-hidden="true">+</span> New note
+        </button>
 
         <nav className="primary-navigation" aria-label="Primary navigation">
           <p className="section-label">Workspace</p>
@@ -39,31 +62,14 @@ function DesktopShell({
         </footer>
       </aside>
 
-      <section className="note-list-pane" aria-labelledby="notes-heading">
-        <header className="pane-header">
-          <div>
-            <p className="section-label">Library</p>
-            <h2 id="notes-heading">Notes</h2>
-          </div>
-          <span className="item-count">
-            <span aria-hidden="true">0</span>
-            <span className="visually-hidden">0 notes</span>
-          </span>
-        </header>
+      <NoteList selectedNoteId={selectedNoteId} onSelectNote={onSelectNote} />
 
-        <div className="pane-empty-state">
-          <p className="empty-state-title">No notes yet</p>
-          <p>Your notes will appear here as the library takes shape.</p>
-        </div>
-      </section>
-
-      <section className="editor-pane" aria-labelledby="editor-heading">
-        <div className="editor-empty-state">
-          <p className="section-label">Editor</p>
-          <h2 id="editor-heading">Nothing selected</h2>
-          <p>Select a note to make this space yours.</p>
-        </div>
-      </section>
+      <EditorPane
+        ref={editorPaneRef}
+        noteId={selectedNoteId}
+        focusEditor={focusEditor}
+        onEditorFocused={onEditorFocused}
+      />
     </main>
   );
 }

@@ -1,10 +1,54 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Note, NoteSummary } from "../db/repositories/noteRepository";
+import {
+  createNote,
+  getNoteById,
+  listNotes,
+} from "../db/repositories/noteRepository";
 import App from "./App";
 
+vi.mock("../db/repositories/noteRepository", () => ({
+  listNotes: vi.fn(),
+  createNote: vi.fn(),
+  getNoteById: vi.fn(),
+  EMPTY_NOTE_CONTENT_JSON: '{"type":"doc","content":[{"type":"paragraph"}]}',
+}));
+
+const newNote: Note = {
+  id: "new-1",
+  title: "",
+  contentJson: '{"type":"doc","content":[{"type":"paragraph"}]}',
+  contentText: "",
+  notebookId: null,
+  isPinned: false,
+  createdAt: "2026-09-07T12:00:00.000Z",
+  updatedAt: "2026-09-07T12:00:00.000Z",
+  deletedAt: null,
+  revision: 1,
+  deviceId: "device-1",
+};
+
+const newNoteSummary: NoteSummary = {
+  id: "new-1",
+  title: "",
+  contentText: "",
+  notebookId: null,
+  isPinned: false,
+  createdAt: newNote.createdAt,
+  updatedAt: newNote.updatedAt,
+  deletedAt: null,
+};
+
 describe("NODI app", () => {
-  it("renders the NODI baseline", () => {
+  beforeEach(() => {
+    vi.mocked(listNotes).mockReset().mockResolvedValue([]);
+    vi.mocked(createNote).mockReset().mockResolvedValue(newNote);
+    vi.mocked(getNoteById).mockReset().mockResolvedValue(newNote);
+  });
+
+  it("renders the NODI baseline", async () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "NODI" })).toBeInTheDocument();
@@ -15,6 +59,8 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("region", { name: "Nothing selected" }),
     ).toBeInTheDocument();
+
+    expect(await screen.findByText("No notes yet")).toBeInTheDocument();
   });
 
   it("opens and closes the visual history", async () => {
@@ -29,7 +75,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(9);
+    expect(screen.getAllByRole("img")).toHaveLength(14);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -44,5 +90,35 @@ describe("NODI app", () => {
 
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(window.localStorage.getItem("nodi.theme")).toBe("dark");
+  });
+
+  it("creates, selects, and focuses a new note from the sidebar", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listNotes)
+      .mockResolvedValueOnce([])
+      .mockResolvedValue([newNoteSummary]);
+    render(<App />);
+    await screen.findByText("No notes yet");
+
+    await user.click(screen.getByRole("button", { name: "New note" }));
+
+    expect(createNote).toHaveBeenCalledOnce();
+
+    const listbox = await screen.findByRole("listbox", { name: "Notes" });
+    const option = await within(listbox).findByRole("option");
+    expect(option).toHaveAttribute("aria-selected", "true");
+
+    const editor = await screen.findByRole("textbox", { name: "Note body" });
+    await waitFor(() => expect(editor).toHaveFocus());
+  });
+
+  it("creates a note with the Cmd/Ctrl+N shortcut", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText("No notes yet");
+
+    await user.keyboard("{Control>}n{/Control}");
+
+    expect(createNote).toHaveBeenCalledOnce();
   });
 });

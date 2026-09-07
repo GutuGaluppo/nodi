@@ -74,3 +74,47 @@ NODI now opens its SQLite database in the macOS application data directory befor
 NODI now applies an immutable initial migration before opening the workspace. The migration creates the eight stable core tables inside a transaction, records schema version `1`, becomes a no-op on subsequent launches, and rolls back without recording a version if any statement fails.
 
 ![NODI after DB-002](about/screenshots/db-002-migration-runner.png)
+
+## 009 — DB-003 Device ID
+
+**Completed:** September 7, 2026
+
+NODI now gives every installation a stable local identity. On first launch it generates a UUID v7 (recorded as decision D-001) and stores it in the `settings` table; every later launch reuses the same value. The identifier is resolved during startup, right after migrations, so note creation can stamp each note with `device_id`, `revision`, and `updated_at` — preparing the schema for future multi-device sync without a redesign. No sync is implemented.
+
+The workspace is visually unchanged; the evolution is in the startup sequence.
+
+![NODI after DB-003](about/screenshots/db-003-device-id.png)
+
+## 010 — NOTE-001 Note repository
+
+**Completed:** September 7, 2026
+
+Every note read or write now flows through a single repository: create, read, list, update, soft delete, restore, and permanent delete. All SQL is parameterized. Creating a note generates a UUID v7, stamps `created_at`/`updated_at`/`device_id`, and starts at `revision` 1; every update bumps `revision` and refreshes `updated_at`. Deletion is soft by default — the row and its body are preserved and can be restored — while list queries return a lightweight summary and can scope to the active list or the Trash view. Decision D-002 records that repositories return camelCase domain objects rather than raw rows.
+
+No visible interface change yet; the notes list UI arrives with NOTE-002.
+
+![NODI after NOTE-001](about/screenshots/note-001-note-repository.png)
+
+## 011 — NOTE-002 Notes list
+
+**Completed:** September 7, 2026
+
+The middle column becomes a live notes list, fed from the repository through TanStack Query. It has honest loading, error (with a non-destructive retry), and empty states, shows each note's title, a two-line plain-text preview, a relative timestamp, and a notebook marker, and is fully keyboard operable as a single-select listbox — arrow keys, Home/End, and Enter move and choose. The query client is created once in a new `providers.tsx`, with retries disabled because a failed local read will not fix itself.
+
+![NODI after NOTE-002](about/screenshots/note-002-notes-list.png)
+
+## 012 — NOTE-003 New note
+
+**Completed:** September 7, 2026
+
+A "New note" action appears at the top of the sidebar, and ⌘N / Ctrl+N triggers it from anywhere in the workspace through a new central shortcut registry. Creating a note persists it immediately, adds it to the list without a reload, selects it, and moves focus to the editor column. The editor column itself becomes a small component that shows the selected note's title ("Untitled" when empty) ahead of the real Tiptap editor.
+
+![NODI after NOTE-003](about/screenshots/note-003-new-note.png)
+
+## 013 — EDIT-001 Tiptap base editor
+
+**Completed:** September 7, 2026
+
+The editor column becomes a real writing surface. The selected note's Tiptap JSON loads into a Tiptap editor with the fixed NODI extension set — paragraphs, headings, bold, italic, underline, highlight, links, bullet / numbered / task lists, and tables — plus a placeholder for empty notes. A sticky formatting toolbar exposes each capability with pressed-state feedback, and switching notes reloads the surface. Editing is in memory for now; autosave and save-error recovery arrive in EDIT-003 and EDIT-004.
+
+![NODI after EDIT-001](about/screenshots/edit-001-tiptap-base-editor.png)
