@@ -6,13 +6,27 @@ interface NoteListProps {
   view: "notes" | "trash";
   selectedNoteId: string | null;
   onSelectNote: (id: string) => void;
+  notebookId?: string | null;
+  notebookName?: string;
 }
 
 const MOVEMENT_KEYS = new Set(["ArrowDown", "ArrowUp", "Home", "End"]);
 
-function NoteList({ view, selectedNoteId, onSelectNote }: NoteListProps) {
-  const title = view === "trash" ? "Trash" : "Notes";
-  const notes = useNotes({ deleted: view === "trash" ? "only" : "exclude" });
+function NoteList({
+  view,
+  selectedNoteId,
+  onSelectNote,
+  notebookId = null,
+  notebookName,
+}: NoteListProps) {
+  const title =
+    view === "trash"
+      ? "Trash"
+      : (notebookName ?? (notebookId ? "Notebook" : "Notes"));
+  const notes = useNotes({
+    deleted: view === "trash" ? "only" : "exclude",
+    ...(view === "notes" && notebookId ? { notebookId } : {}),
+  });
   const itemRefs = useRef(new Map<string, HTMLDivElement>());
 
   const data = notes.data ?? [];
@@ -90,7 +104,9 @@ function NoteList({ view, selectedNoteId, onSelectNote }: NoteListProps) {
           <p>
             {view === "trash"
               ? "Deleted notes will appear here."
-              : "Your notes will appear here as the library takes shape."}
+              : notebookId
+                ? "Notes moved to this notebook will appear here."
+                : "Your notes will appear here as the library takes shape."}
           </p>
         </div>
       ) : (

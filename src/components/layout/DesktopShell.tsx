@@ -2,6 +2,7 @@ import type { Ref } from "react";
 import type { ThemePreference } from "../../app/theme";
 import EditorPane from "../../features/editor/EditorPane";
 import NotebookSection from "../../features/notebooks/NotebookSection";
+import { useNotebooks } from "../../features/notebooks/notebookQueries";
 import NoteList from "../../features/notes/NoteList";
 import ThemeSelector from "../ui/ThemeSelector";
 
@@ -17,6 +18,8 @@ interface DesktopShellProps {
   onEditorFocused: () => void;
   activeView: "notes" | "trash";
   onNavigate: (view: "notes" | "trash") => void;
+  selectedNotebookId: string | null;
+  onSelectNotebook: (id: string) => void;
   onNoteRemoved: () => void;
 }
 
@@ -32,8 +35,15 @@ function DesktopShell({
   onEditorFocused,
   activeView,
   onNavigate,
+  selectedNotebookId,
+  onSelectNotebook,
   onNoteRemoved,
 }: DesktopShellProps) {
+  const notebooks = useNotebooks();
+  const selectedNotebookName = notebooks.data?.find(
+    (notebook) => notebook.id === selectedNotebookId,
+  )?.name;
+
   return (
     <main className="desktop-shell">
       <aside className="sidebar" aria-label="Sidebar">
@@ -55,7 +65,11 @@ function DesktopShell({
           <button
             className="nav-item"
             type="button"
-            aria-current={activeView === "notes" ? "page" : undefined}
+            aria-current={
+              activeView === "notes" && selectedNotebookId === null
+                ? "page"
+                : undefined
+            }
             onClick={() => onNavigate("notes")}
           >
             Notes
@@ -70,7 +84,10 @@ function DesktopShell({
           </button>
         </nav>
 
-        <NotebookSection />
+        <NotebookSection
+          selectedNotebookId={selectedNotebookId}
+          onSelectNotebook={onSelectNotebook}
+        />
 
         <footer className="sidebar-footer">
           <ThemeSelector value={theme} onChange={onThemeChange} />
@@ -88,6 +105,8 @@ function DesktopShell({
         view={activeView}
         selectedNoteId={selectedNoteId}
         onSelectNote={onSelectNote}
+        notebookId={activeView === "notes" ? selectedNotebookId : null}
+        notebookName={selectedNotebookName}
       />
 
       <EditorPane
@@ -97,6 +116,7 @@ function DesktopShell({
         onEditorFocused={onEditorFocused}
         view={activeView}
         onNoteRemoved={onNoteRemoved}
+        activeNotebookId={activeView === "notes" ? selectedNotebookId : null}
       />
     </main>
   );

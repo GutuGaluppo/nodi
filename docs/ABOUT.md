@@ -174,3 +174,11 @@ Permanent deletion is now a deliberate, confirmed action. The accessible dialog 
 Notebooks now have a complete local lifecycle in the sidebar. NODI lists them alphabetically and supports keyboard-accessible creation, inline renaming, confirmed deletion, resilient loading, and non-destructive error feedback through one parameterized repository.
 
 ![NODI after NB-001](about/screenshots/nb-001-notebooks.png)
+
+## 021 — NB-002 Move note
+
+**Completed:** September 7, 2026
+
+Every active note now exposes an accessible notebook selector. Moving a note persists `notebook_id`, refreshes the relevant query-backed lists immediately, and keeps notebook navigation in the sidebar synchronized; new notes also inherit the notebook currently being viewed.
+
+![NODI after NB-002](about/screenshots/nb-002-move-note.png)

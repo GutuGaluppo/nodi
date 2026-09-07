@@ -8,7 +8,15 @@ import {
   useRenameNotebook,
 } from "./notebookQueries";
 
-function NotebookSection() {
+interface NotebookSectionProps {
+  selectedNotebookId: string | null;
+  onSelectNotebook: (id: string) => void;
+}
+
+function NotebookSection({
+  selectedNotebookId,
+  onSelectNotebook,
+}: NotebookSectionProps) {
   const notebooks = useNotebooks();
   const createNotebook = useCreateNotebook();
   const renameNotebook = useRenameNotebook();
@@ -108,7 +116,17 @@ function NotebookSection() {
         <ul className="notebook-list">
           {notebooks.data.map((notebook) => (
             <li key={notebook.id}>
-              <span title={notebook.name}>{notebook.name}</span>
+              <button
+                className="notebook-link"
+                type="button"
+                title={notebook.name}
+                aria-current={
+                  selectedNotebookId === notebook.id ? "page" : undefined
+                }
+                onClick={() => onSelectNotebook(notebook.id)}
+              >
+                {notebook.name}
+              </button>
               <span className="notebook-row-actions">
                 <button
                   type="button"

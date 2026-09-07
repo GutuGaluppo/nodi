@@ -116,7 +116,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(21);
+    expect(screen.getAllByRole("img")).toHaveLength(22);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -166,6 +166,40 @@ describe("NODI app", () => {
     expect(deleteNotebook).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Delete notebook" }));
     expect(deleteNotebook).toHaveBeenCalledWith("nb-1");
+  });
+
+  it("filters notes by the selected notebook", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listNotebooks).mockResolvedValue([notebook]);
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: "Projects" }));
+
+    await waitFor(() =>
+      expect(listNotes).toHaveBeenCalledWith({
+        deleted: "exclude",
+        notebookId: "nb-1",
+      }),
+    );
+    expect(
+      screen.getByRole("region", { name: "Projects" }),
+    ).toBeInTheDocument();
+  });
+
+  it("moves the selected note with the notebook selector", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listNotebooks).mockResolvedValue([notebook]);
+    vi.mocked(listNotes).mockResolvedValue([newNoteSummary]);
+    vi.mocked(updateNote).mockResolvedValue({ ...newNote, notebookId: "nb-1" });
+    render(<App />);
+
+    await user.click(await screen.findByRole("option", { name: /Untitled/ }));
+    await user.selectOptions(
+      await screen.findByRole("combobox", { name: "Notebook" }),
+      "nb-1",
+    );
+
+    expect(updateNote).toHaveBeenCalledWith("new-1", { notebookId: "nb-1" });
   });
 
   it("creates, selects, and focuses a new note from the sidebar", async () => {

@@ -21,6 +21,9 @@ function Workspace({
   onThemeChange: (theme: ThemePreference) => void;
 }) {
   const [activeView, setActiveView] = useState<"notes" | "trash">("notes");
+  const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(
+    null,
+  );
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editorFocusRequest, setEditorFocusRequest] = useState<string | null>(
     null,
@@ -29,11 +32,11 @@ function Workspace({
   const { mutateAsync: createNote } = useCreateNote();
 
   const handleCreateNote = useCallback(async () => {
-    const note = await createNote(undefined);
+    const note = await createNote({ notebookId: selectedNotebookId });
     setSelectedNoteId(note.id);
     setEditorFocusRequest(note.id);
     editorPaneRef.current?.focus();
-  }, [createNote]);
+  }, [createNote, selectedNotebookId]);
 
   const handleSelectNote = useCallback((id: string) => {
     setEditorFocusRequest(null);
@@ -46,6 +49,7 @@ function Workspace({
 
   const handleNavigate = useCallback((view: "notes" | "trash") => {
     setActiveView(view);
+    setSelectedNotebookId(null);
     setSelectedNoteId(null);
     setEditorFocusRequest(null);
   }, []);
@@ -76,6 +80,13 @@ function Workspace({
       onEditorFocused={handleEditorFocused}
       activeView={activeView}
       onNavigate={handleNavigate}
+      selectedNotebookId={selectedNotebookId}
+      onSelectNotebook={(id) => {
+        setActiveView("notes");
+        setSelectedNotebookId(id);
+        setSelectedNoteId(null);
+        setEditorFocusRequest(null);
+      }}
       onNoteRemoved={() => setSelectedNoteId(null)}
     />
   );

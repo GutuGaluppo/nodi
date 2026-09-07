@@ -182,13 +182,20 @@ h1 {
   border-radius: var(--radius-md);
 }
 
-.notebook-list li > span:first-child {
+.notebook-link {
+  flex: 1;
   min-width: 0;
+  padding: var(--space-2) 0;
   overflow: hidden;
   font-size: var(--font-size-sm);
   font-weight: 550;
   white-space: nowrap;
   text-overflow: ellipsis;
+  text-align: left;
+}
+
+.notebook-link[aria-current="page"] {
+  color: var(--color-accent-hover);
 }
 
 .notebook-row-actions {

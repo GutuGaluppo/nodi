@@ -1,5 +1,6 @@
 import { type Ref, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import NoteNotebookSelect from "../notebooks/NoteNotebookSelect";
 import { useNote } from "../notes/useNote";
 import { usePermanentlyDeleteNote } from "../notes/usePermanentlyDeleteNote";
 import { useRestoreNote } from "../notes/useRestoreNote";
@@ -14,6 +15,7 @@ interface EditorPaneProps {
   onEditorFocused: () => void;
   view: "notes" | "trash";
   onNoteRemoved: () => void;
+  activeNotebookId: string | null;
 }
 
 /**
@@ -28,6 +30,7 @@ function EditorPane({
   onEditorFocused,
   view,
   onNoteRemoved,
+  activeNotebookId,
 }: EditorPaneProps) {
   const note = useNote(noteId);
   const trashNote = useTrashNote();
@@ -104,6 +107,13 @@ function EditorPane({
               </div>
             )}
           </div>
+          {view === "notes" ? (
+            <NoteNotebookSelect
+              note={selectedNote}
+              activeNotebookId={activeNotebookId}
+              onMovedAway={onNoteRemoved}
+            />
+          ) : null}
           {trashNote.isError || restoreNote.isError ? (
             <p className="inline-error" role="alert">
               This note could not be {view === "notes" ? "moved" : "restored"}.

@@ -13,6 +13,7 @@ import fnd004DarkScreenshot from "../../../docs/about/screenshots/fnd-004-dark-m
 import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
 import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
 import nb001Screenshot from "../../../docs/about/screenshots/nb-001-notebooks.png";
+import nb002Screenshot from "../../../docs/about/screenshots/nb-002-move-note.png";
 import note001Screenshot from "../../../docs/about/screenshots/note-001-note-repository.png";
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
@@ -192,6 +193,14 @@ const evolution = [
     description:
       "The sidebar now owns a complete, keyboard-accessible notebook workflow: create, list, rename, confirm deletion, recover from errors, and persist every change locally.",
     screenshot: nb001Screenshot,
+  },
+  {
+    id: "NB-002",
+    title: "Notes find their context",
+    date: "September 7, 2026",
+    description:
+      "A keyboard-accessible selector now moves notes between notebooks and the unfiled library, persists the relationship, and refreshes filtered lists immediately.",
+    screenshot: nb002Screenshot,
   },
 ];
 

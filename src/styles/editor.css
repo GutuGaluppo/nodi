@@ -19,6 +19,25 @@
   margin: 0 auto;
 }
 
+.note-notebook-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.note-notebook-control select {
+  max-width: 220px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font: inherit;
+}
+
 .editor-title-row .note-title-field {
   width: auto;
   flex: 1;
