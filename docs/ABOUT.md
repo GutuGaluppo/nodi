@@ -126,3 +126,11 @@ The editor column becomes a real writing surface. The selected note's Tiptap JSO
 The editor title is now a real input. Changes persist when focus leaves the field or Enter is pressed, the notes list refreshes immediately through the shared query cache, and an empty title continues to appear as “Untitled”. A failed write leaves the draft intact and visible instead of discarding it.
 
 ![NODI after EDIT-002](about/screenshots/edit-002-note-title.png)
+
+## 015 — EDIT-003 Autosave
+
+**Completed:** September 7, 2026
+
+Writing now saves itself. Every editor transaction updates local state immediately, then a 450 ms debounce persists canonical Tiptap JSON and regenerates the plain-text projection used by previews. Pending changes also flush on blur, note switch, application background, and close; a quiet status announces dirty, saving, and saved states.
+
+![NODI after EDIT-003](about/screenshots/edit-003-autosave.png)

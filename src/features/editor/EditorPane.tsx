@@ -1,6 +1,6 @@
 import type { Ref } from "react";
-import NoteEditor from "../../editor/NoteEditor";
 import { useNote } from "../notes/useNote";
+import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
 
 interface EditorPaneProps {
@@ -53,7 +53,8 @@ function EditorPane({
             {note.data.title.trim() === "" ? "Untitled" : note.data.title}
           </h2>
           <NoteTitle key={note.data.id} note={note.data} />
-          <NoteEditor
+          <AutosavingNoteEditor
+            key={note.data.id}
             note={note.data}
             autoFocus={focusEditor}
             onAutoFocus={onEditorFocused}

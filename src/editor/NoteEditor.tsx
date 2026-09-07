@@ -1,5 +1,5 @@
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { Note } from "../db/repositories/noteRepository";
 import { EMPTY_NOTE_CONTENT_JSON } from "../db/repositories/noteRepository";
 import EditorToolbar from "./EditorToolbar";
@@ -17,6 +17,8 @@ interface NoteEditorProps {
   note: Note;
   autoFocus?: boolean;
   onAutoFocus?: () => void;
+  onChange?: (draft: { contentJson: string; contentText: string }) => void;
+  onBlur?: () => void;
 }
 
 /**
@@ -24,7 +26,14 @@ interface NoteEditorProps {
  * (`note.contentJson`). EDIT-001 renders and edits it in memory; autosave and
  * save-error recovery arrive with EDIT-003 and EDIT-004.
  */
-function NoteEditor({ note, autoFocus = false, onAutoFocus }: NoteEditorProps) {
+function NoteEditor({
+  note,
+  autoFocus = false,
+  onAutoFocus,
+  onChange,
+  onBlur,
+}: NoteEditorProps) {
+  const synchronizing = useRef(false);
   const editor = useEditor(
     {
       extensions: editorExtensions,
@@ -37,6 +46,15 @@ function NoteEditor({ note, autoFocus = false, onAutoFocus }: NoteEditorProps) {
           "aria-label": "Note body",
         },
       },
+      onUpdate: ({ editor: instance }) => {
+        if (!synchronizing.current) {
+          onChange?.({
+            contentJson: JSON.stringify(instance.getJSON()),
+            contentText: instance.getText({ blockSeparator: "\n" }),
+          });
+        }
+      },
+      onBlur,
     },
     [],
   );
@@ -44,7 +62,12 @@ function NoteEditor({ note, autoFocus = false, onAutoFocus }: NoteEditorProps) {
   // Reload the surface when a different note's body arrives. In EDIT-001 the
   // body only changes on note switch; EDIT-003 will guard against local echoes.
   useEffect(() => {
-    editor.commands.setContent(parseDocument(note.contentJson));
+    const current = JSON.stringify(editor.getJSON());
+    if (current !== note.contentJson) {
+      synchronizing.current = true;
+      editor.commands.setContent(parseDocument(note.contentJson));
+      synchronizing.current = false;
+    }
   }, [editor, note.contentJson]);
 
   useEffect(() => {

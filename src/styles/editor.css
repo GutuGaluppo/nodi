@@ -42,6 +42,15 @@
   margin-top: var(--space-5);
 }
 
+.save-status {
+  width: min(var(--editor-max-width), calc(100% - var(--space-16)));
+  min-height: 1.2em;
+  margin: var(--space-2) auto 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: right;
+}
+
 .editor-toolbar {
   position: sticky;
   top: 0;

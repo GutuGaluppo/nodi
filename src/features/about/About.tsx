@@ -4,6 +4,7 @@ import db003Screenshot from "../../../docs/about/screenshots/db-003-device-id.pn
 import doc001Screenshot from "../../../docs/about/screenshots/doc-001-about-rule.png";
 import edit001Screenshot from "../../../docs/about/screenshots/edit-001-tiptap-base-editor.png";
 import edit002Screenshot from "../../../docs/about/screenshots/edit-002-note-title.png";
+import edit003Screenshot from "../../../docs/about/screenshots/edit-003-autosave.png";
 import fnd001Screenshot from "../../../docs/about/screenshots/fnd-001-native-shell.png";
 import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.png";
 import fnd003Screenshot from "../../../docs/about/screenshots/fnd-003-project-structure.png";
@@ -138,6 +139,14 @@ const evolution = [
     description:
       "The title is now an editable field that persists on blur or Enter, refreshes the library immediately, preserves failed drafts, and still presents an empty value gracefully as Untitled.",
     screenshot: edit002Screenshot,
+  },
+  {
+    id: "EDIT-003",
+    title: "Writing saves itself",
+    date: "September 7, 2026",
+    description:
+      "Editor transactions stay immediate in memory, then persist canonical Tiptap JSON and regenerated plain text after 450 ms of inactivity, with forced flushes on blur, note switch, background, and close.",
+    screenshot: edit003Screenshot,
   },
 ];
 
