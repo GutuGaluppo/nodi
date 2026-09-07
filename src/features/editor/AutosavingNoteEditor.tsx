@@ -32,6 +32,19 @@ function AutosavingNoteEditor({
       <div className="save-status" role="status" aria-live="polite">
         {STATUS_LABELS[autosave.status]}
       </div>
+      {autosave.status === "error" ? (
+        <div className="save-error" role="alert">
+          <span>Your changes are still here and could not be saved.</span>
+          <button
+            type="button"
+            onClick={() => {
+              void autosave.flush();
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      ) : null}
       <NoteEditor
         note={note}
         autoFocus={autoFocus}

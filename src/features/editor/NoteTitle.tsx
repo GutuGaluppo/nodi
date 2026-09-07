@@ -44,9 +44,12 @@ function NoteTitle({ note }: NoteTitleProps) {
         onKeyDown={handleKeyDown}
       />
       {update.isError ? (
-        <p id="note-title-error" className="inline-error" role="alert">
-          The title could not be saved. Your text is still here.
-        </p>
+        <div id="note-title-error" className="inline-error" role="alert">
+          <span>The title could not be saved. Your text is still here.</span>
+          <button type="button" onClick={persistTitle}>
+            Try again
+          </button>
+        </div>
       ) : null}
     </div>
   );

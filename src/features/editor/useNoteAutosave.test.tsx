@@ -64,13 +64,22 @@ describe("useNoteAutosave", () => {
     expect(save).toHaveBeenCalledWith("n1", draft);
   });
 
-  it("retains the draft and exposes an error after a failed save", async () => {
-    const save = vi.fn().mockRejectedValue(new Error("disk full"));
+  it("retains the draft and retries after a failed save", async () => {
+    const save = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("disk full"))
+      .mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => useNoteAutosave("n1", save));
 
     act(() => result.current.queue(draft));
     await act(() => result.current.flush());
 
     expect(result.current.status).toBe("error");
+
+    await act(() => result.current.flush());
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(save).toHaveBeenLastCalledWith("n1", draft);
+    expect(result.current.status).toBe("saved");
   });
 });

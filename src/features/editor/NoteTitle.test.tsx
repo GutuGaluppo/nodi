@@ -66,7 +66,9 @@ describe("NoteTitle", () => {
   });
 
   it("keeps the draft and surfaces a failed save", async () => {
-    vi.mocked(updateNote).mockRejectedValueOnce(new Error("disk full"));
+    vi.mocked(updateNote)
+      .mockRejectedValueOnce(new Error("disk full"))
+      .mockResolvedValueOnce({ ...note, title: "Unsaved title", revision: 2 });
     const user = userEvent.setup();
     renderTitle();
 
@@ -79,5 +81,8 @@ describe("NoteTitle", () => {
       "Your text is still here",
     );
     expect(input).toHaveValue("Unsaved title");
+
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(updateNote).toHaveBeenCalledTimes(2));
   });
 });

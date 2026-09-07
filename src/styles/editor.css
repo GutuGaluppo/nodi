@@ -33,6 +33,10 @@
 }
 
 .inline-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
   margin: var(--space-2) 0 0;
   color: var(--color-danger);
   font-size: var(--font-size-sm);
@@ -49,6 +53,27 @@
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   text-align: right;
+}
+
+.save-error {
+  display: flex;
+  width: min(var(--editor-max-width), calc(100% - var(--space-16)));
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-2) auto 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.save-error button,
+.inline-error button {
+  color: inherit;
+  font-weight: 650;
+  text-decoration: underline;
 }
 
 .editor-toolbar {

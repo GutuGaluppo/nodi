@@ -134,3 +134,11 @@ The editor title is now a real input. Changes persist when focus leaves the fiel
 Writing now saves itself. Every editor transaction updates local state immediately, then a 450 ms debounce persists canonical Tiptap JSON and regenerates the plain-text projection used by previews. Pending changes also flush on blur, note switch, application background, and close; a quiet status announces dirty, saving, and saved states.
 
 ![NODI after EDIT-003](about/screenshots/edit-003-autosave.png)
+
+## 016 — EDIT-004 Save error recovery
+
+**Completed:** September 7, 2026
+
+A failed database write never clears the editor. NODI keeps the complete draft in memory, announces a visible non-destructive error, and offers an explicit “Try again” action for both body and title; a successful retry returns the subtle status to “Saved”.
+
+![NODI after EDIT-004](about/screenshots/edit-004-save-error-recovery.png)

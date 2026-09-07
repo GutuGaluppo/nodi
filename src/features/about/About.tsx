@@ -5,6 +5,7 @@ import doc001Screenshot from "../../../docs/about/screenshots/doc-001-about-rule
 import edit001Screenshot from "../../../docs/about/screenshots/edit-001-tiptap-base-editor.png";
 import edit002Screenshot from "../../../docs/about/screenshots/edit-002-note-title.png";
 import edit003Screenshot from "../../../docs/about/screenshots/edit-003-autosave.png";
+import edit004Screenshot from "../../../docs/about/screenshots/edit-004-save-error-recovery.png";
 import fnd001Screenshot from "../../../docs/about/screenshots/fnd-001-native-shell.png";
 import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.png";
 import fnd003Screenshot from "../../../docs/about/screenshots/fnd-003-project-structure.png";
@@ -147,6 +148,14 @@ const evolution = [
     description:
       "Editor transactions stay immediate in memory, then persist canonical Tiptap JSON and regenerated plain text after 450 ms of inactivity, with forced flushes on blur, note switch, background, and close.",
     screenshot: edit003Screenshot,
+  },
+  {
+    id: "EDIT-004",
+    title: "A failed write never erases a thought",
+    date: "September 7, 2026",
+    description:
+      "Save failures now keep the full draft in memory, announce a non-destructive error beside the editor, and provide an explicit retry path for both body and title.",
+    screenshot: edit004Screenshot,
   },
 ];
 
