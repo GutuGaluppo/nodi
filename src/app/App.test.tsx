@@ -6,6 +6,7 @@ import {
   createNote,
   getNoteById,
   listNotes,
+  restoreNote,
   softDeleteNote,
   updateNote,
 } from "../db/repositories/noteRepository";
@@ -17,6 +18,7 @@ vi.mock("../db/repositories/noteRepository", () => ({
   getNoteById: vi.fn(),
   updateNote: vi.fn(),
   softDeleteNote: vi.fn(),
+  restoreNote: vi.fn(),
   EMPTY_NOTE_CONTENT_JSON: '{"type":"doc","content":[{"type":"paragraph"}]}',
 }));
 
@@ -54,6 +56,7 @@ describe("NODI app", () => {
       .mockReset()
       .mockResolvedValue({ ...newNote, title: "Updated" });
     vi.mocked(softDeleteNote).mockReset().mockResolvedValue(undefined);
+    vi.mocked(restoreNote).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -83,7 +86,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(18);
+    expect(screen.getAllByRole("img")).toHaveLength(19);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -147,5 +150,28 @@ describe("NODI app", () => {
       await screen.findByRole("region", { name: "Nothing selected" }),
     ).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
+  });
+
+  it("restores a selected note from Trash", async () => {
+    const user = userEvent.setup();
+    const trashed = {
+      ...newNoteSummary,
+      deletedAt: "2026-09-07T13:00:00.000Z",
+    };
+    vi.mocked(listNotes)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([trashed])
+      .mockResolvedValue([]);
+    render(<App />);
+
+    await screen.findByText("No notes yet");
+    await user.click(screen.getByRole("button", { name: "Trash" }));
+    await user.click(await screen.findByRole("option", { name: /Untitled/ }));
+    await user.click(
+      await screen.findByRole("button", { name: "Restore note" }),
+    );
+
+    expect(restoreNote).toHaveBeenCalledWith("new-1");
+    expect(await screen.findByText("Trash is empty")).toBeInTheDocument();
   });
 });

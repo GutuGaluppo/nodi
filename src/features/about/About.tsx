@@ -16,6 +16,7 @@ import note001Screenshot from "../../../docs/about/screenshots/note-001-note-rep
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import trash001Screenshot from "../../../docs/about/screenshots/trash-001-soft-deletion.png";
+import trash002Screenshot from "../../../docs/about/screenshots/trash-002-restore.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -165,6 +166,14 @@ const evolution = [
     description:
       "Move to Trash now removes a note from the active library, preserves its complete record and content, and exposes it in a dedicated, keyboard-accessible Trash view.",
     screenshot: trash001Screenshot,
+  },
+  {
+    id: "TRASH-002",
+    title: "A note can come back whole",
+    date: "September 7, 2026",
+    description:
+      "Selecting a trashed note now exposes Restore note, which clears its deletion marker, increments its revision, and returns the complete note to the active library.",
+    screenshot: trash002Screenshot,
   },
 ];
 

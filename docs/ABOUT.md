@@ -150,3 +150,11 @@ A failed database write never clears the editor. NODI keeps the complete draft i
 “Move to Trash” now performs a reversible soft deletion. The note disappears from the normal library, retains its complete title and Tiptap body in SQLite, and appears in a dedicated Trash view with the same accessible list navigation.
 
 ![NODI after TRASH-001](about/screenshots/trash-001-soft-deletion.png)
+
+## 018 — TRASH-002 Restore
+
+**Completed:** September 7, 2026
+
+A trashed note can now return intact. Selecting it exposes “Restore note”; the repository clears `deleted_at`, refreshes `updated_at`, increments the revision, and moves the same record — including its complete Tiptap content — back to the normal library.
+
+![NODI after TRASH-002](about/screenshots/trash-002-restore.png)

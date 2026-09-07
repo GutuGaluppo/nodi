@@ -1,5 +1,6 @@
 import type { Ref } from "react";
 import { useNote } from "../notes/useNote";
+import { useRestoreNote } from "../notes/useRestoreNote";
 import { useTrashNote } from "../notes/useTrashNote";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
@@ -28,6 +29,7 @@ function EditorPane({
 }: EditorPaneProps) {
   const note = useNote(noteId);
   const trashNote = useTrashNote();
+  const restoreNote = useRestoreNote();
   const selectedNote = note.data;
 
   return (
@@ -74,11 +76,25 @@ function EditorPane({
               >
                 {trashNote.isPending ? "Moving…" : "Move to Trash"}
               </button>
-            ) : null}
+            ) : (
+              <button
+                className="subtle-action"
+                type="button"
+                disabled={restoreNote.isPending}
+                onClick={() => {
+                  restoreNote.mutate(selectedNote.id, {
+                    onSuccess: onNoteRemoved,
+                  });
+                }}
+              >
+                {restoreNote.isPending ? "Restoring…" : "Restore note"}
+              </button>
+            )}
           </div>
-          {trashNote.isError ? (
+          {trashNote.isError || restoreNote.isError ? (
             <p className="inline-error" role="alert">
-              This note could not be moved. Your content was not changed.
+              This note could not be {view === "notes" ? "moved" : "restored"}.
+              Your content was not changed.
             </p>
           ) : null}
           <AutosavingNoteEditor
