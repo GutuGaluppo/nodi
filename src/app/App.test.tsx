@@ -23,6 +23,7 @@ import {
   listNotes,
   permanentlyDeleteNote,
   restoreNote,
+  searchNotes,
   softDeleteNote,
   updateNote,
 } from "../db/repositories/noteRepository";
@@ -53,6 +54,7 @@ vi.mock("../db/repositories/noteRepository", () => ({
   softDeleteNote: vi.fn(),
   restoreNote: vi.fn(),
   permanentlyDeleteNote: vi.fn(),
+  searchNotes: vi.fn(),
   EMPTY_NOTE_CONTENT_JSON: '{"type":"doc","content":[{"type":"paragraph"}]}',
 }));
 
@@ -149,6 +151,7 @@ describe("NODI app", () => {
     vi.mocked(softDeleteNote).mockReset().mockResolvedValue(undefined);
     vi.mocked(restoreNote).mockReset().mockResolvedValue(undefined);
     vi.mocked(permanentlyDeleteNote).mockReset().mockResolvedValue(undefined);
+    vi.mocked(searchNotes).mockReset().mockResolvedValue([]);
     vi.mocked(listNotebooks).mockReset().mockResolvedValue([]);
     vi.mocked(createNotebook).mockReset().mockResolvedValue(notebook);
     vi.mocked(renameNotebook).mockReset().mockResolvedValue(undefined);
@@ -197,7 +200,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(27);
+    expect(screen.getAllByRole("img")).toHaveLength(28);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -212,6 +215,36 @@ describe("NODI app", () => {
 
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(window.localStorage.getItem("nodi.theme")).toBe("dark");
+  });
+
+  it("opens search with Cmd/Ctrl+K and supports keyboard result selection", async () => {
+    const user = userEvent.setup();
+    vi.mocked(searchNotes).mockResolvedValue([
+      { ...newNoteSummary, title: "Testando primeiro documento" },
+    ]);
+    render(<App />);
+
+    await user.keyboard("{Control>}k{/Control}");
+    const input = screen.getByRole("searchbox", { name: "Search notes" });
+    expect(input).toHaveFocus();
+    await user.type(input, "autosave");
+
+    expect(
+      await screen.findByRole("option", {
+        name: /Testando primeiro documento/,
+      }),
+    ).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{Enter}");
+
+    expect(screen.queryByRole("dialog", { name: "Search notes" })).toBeNull();
+    await waitFor(() => expect(getNoteById).toHaveBeenCalledWith("new-1"));
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(
+      screen.getByRole("dialog", { name: "Search notes" }),
+    ).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "Search notes" })).toBeNull();
   });
 
   it("creates, renames, and deletes a notebook", async () => {

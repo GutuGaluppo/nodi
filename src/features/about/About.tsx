@@ -19,6 +19,7 @@ import note001Screenshot from "../../../docs/about/screenshots/note-001-note-rep
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import search001Screenshot from "../../../docs/about/screenshots/search-001-fts-index.png";
+import search002Screenshot from "../../../docs/about/screenshots/search-002-basic-search.png";
 import short001Screenshot from "../../../docs/about/screenshots/short-001-favorites.png";
 import tag001Screenshot from "../../../docs/about/screenshots/tag-001-tags.png";
 import tag002Screenshot from "../../../docs/about/screenshots/tag-002-note-tags.png";
@@ -246,6 +247,14 @@ const evolution = [
     description:
       "A synchronized FTS5 projection now indexes every note title, plain-text body, tag, and notebook, backfills existing data, tracks mutations through database triggers, and ranks matching notes by relevance.",
     screenshot: search001Screenshot,
+  },
+  {
+    id: "SEARCH-002",
+    title: "The library is one shortcut away",
+    date: "September 7, 2026",
+    description:
+      "Command-K now opens a focused search surface with relevance-ranked results, accessible arrow navigation, Enter to open, Escape to close, and safe prefix matching across the synchronized index.",
+    screenshot: search002Screenshot,
   },
 ];
 

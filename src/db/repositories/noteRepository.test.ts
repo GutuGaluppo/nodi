@@ -300,7 +300,7 @@ describe("noteRepository", () => {
       expect(sql).toContain("notes_fts MATCH $1");
       expect(sql).toContain("ORDER BY bm25(notes_fts");
       expect(sql).toContain("notes.deleted_at IS NULL");
-      expect(values).toEqual(["project", 20]);
+      expect(values).toEqual(['"project"*', 20]);
     });
 
     it("does not query the database for blank input", async () => {

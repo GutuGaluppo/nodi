@@ -249,12 +249,21 @@ export async function listNotes(
 }
 
 /** Search the synchronized FTS5 projection and order active notes by relevance. */
+export function toFtsQuery(input: string): string {
+  return input
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((term) => `"${term.replace(/"/g, '""')}"*`)
+    .join(" AND ");
+}
+
 export async function searchNotes(
   query: string,
   limit = 50,
 ): Promise<NoteSummary[]> {
   try {
-    const normalized = query.trim();
+    const normalized = toFtsQuery(query);
     if (!normalized) return [];
     const database = await initializeDatabase();
     const rows = await database.select<NoteSummaryRow[]>(

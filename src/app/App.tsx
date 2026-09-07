@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import DesktopShell from "../components/layout/DesktopShell";
 import About from "../features/about/About";
 import { useCreateNote } from "../features/notes/useCreateNote";
+import SearchDialog from "../features/search/SearchDialog";
 import { AppProviders } from "./providers";
 import { useGlobalShortcuts } from "./shortcuts";
 import {
@@ -25,6 +26,7 @@ function Workspace({
     null,
   );
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editorFocusRequest, setEditorFocusRequest] = useState<string | null>(
     null,
@@ -65,41 +67,61 @@ function Workspace({
         void handleCreateNote();
       },
     },
+    {
+      id: "search",
+      keys: ["mod", "k"],
+      label: "Search notes",
+      action: () => setSearchOpen(true),
+    },
   ]);
 
   return (
-    <DesktopShell
-      theme={theme}
-      onThemeChange={onThemeChange}
-      onOpenAbout={onOpenAbout}
-      onCreateNote={() => {
-        void handleCreateNote();
-      }}
-      selectedNoteId={selectedNoteId}
-      onSelectNote={handleSelectNote}
-      editorPaneRef={editorPaneRef}
-      focusEditor={editorFocusRequest === selectedNoteId}
-      onEditorFocused={handleEditorFocused}
-      activeView={activeView}
-      onNavigate={handleNavigate}
-      selectedNotebookId={selectedNotebookId}
-      onSelectNotebook={(id) => {
-        setActiveView("notes");
-        setSelectedNotebookId(id);
-        setSelectedTagId(null);
-        setSelectedNoteId(null);
-        setEditorFocusRequest(null);
-      }}
-      selectedTagId={selectedTagId}
-      onSelectTag={(id) => {
-        setActiveView("notes");
-        setSelectedNotebookId(null);
-        setSelectedTagId(id);
-        setSelectedNoteId(null);
-        setEditorFocusRequest(null);
-      }}
-      onNoteRemoved={() => setSelectedNoteId(null)}
-    />
+    <>
+      <DesktopShell
+        theme={theme}
+        onThemeChange={onThemeChange}
+        onOpenAbout={onOpenAbout}
+        onCreateNote={() => {
+          void handleCreateNote();
+        }}
+        selectedNoteId={selectedNoteId}
+        onSelectNote={handleSelectNote}
+        editorPaneRef={editorPaneRef}
+        focusEditor={editorFocusRequest === selectedNoteId}
+        onEditorFocused={handleEditorFocused}
+        activeView={activeView}
+        onNavigate={handleNavigate}
+        selectedNotebookId={selectedNotebookId}
+        onSelectNotebook={(id) => {
+          setActiveView("notes");
+          setSelectedNotebookId(id);
+          setSelectedTagId(null);
+          setSelectedNoteId(null);
+          setEditorFocusRequest(null);
+        }}
+        selectedTagId={selectedTagId}
+        onSelectTag={(id) => {
+          setActiveView("notes");
+          setSelectedNotebookId(null);
+          setSelectedTagId(id);
+          setSelectedNoteId(null);
+          setEditorFocusRequest(null);
+        }}
+        onNoteRemoved={() => setSelectedNoteId(null)}
+      />
+      {searchOpen ? (
+        <SearchDialog
+          onClose={() => setSearchOpen(false)}
+          onOpenNote={(id) => {
+            setActiveView("notes");
+            setSelectedNotebookId(null);
+            setSelectedTagId(null);
+            setSelectedNoteId(id);
+            setSearchOpen(false);
+          }}
+        />
+      ) : null}
+    </>
   );
 }
 

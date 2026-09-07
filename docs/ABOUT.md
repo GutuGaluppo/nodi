@@ -222,3 +222,11 @@ Notes and notebooks can now be starred into a persistent Shortcuts section and o
 Every note now has a synchronized FTS5 projection covering its title, plain-text body, tag names, and notebook name. Migration 5 backfills the existing library, database triggers keep all four fields current, permanent deletion still cleans the index atomically, and the repository exposes relevance-ranked parameterized search.
 
 ![NODI after SEARCH-001](about/screenshots/search-001-fts-index.png)
+
+## 027 — SEARCH-002 Basic search UI
+
+**Completed:** September 7, 2026
+
+`Cmd+K` now opens a focused search surface over the native workspace. Results arrive from the relevance-ranked FTS index and support mouse or keyboard navigation: Arrow Up/Down changes the active result, Enter opens it, and Escape closes search without changing the current note.
+
+![NODI after SEARCH-002](about/screenshots/search-002-basic-search.png)
