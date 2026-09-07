@@ -1,0 +1,51 @@
+:root,
+[data-theme="light"] {
+  --color-bg: #f7f7f3;
+  --color-surface: #ffffff;
+  --color-surface-muted: #efefea;
+  --color-text: #1b1c1a;
+  --color-text-muted: #62655e;
+  --color-border: #ddded8;
+  --color-accent: #2f6d4f;
+  --color-accent-hover: #25563f;
+  --color-accent-soft: #ddece4;
+  --color-danger: #b94343;
+  --color-hover: rgb(27 28 26 / 6%);
+
+  --font-ui:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --font-size-xs: 0.72rem;
+  --font-size-sm: 0.8rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.1rem;
+  --font-size-xl: 1.8rem;
+  --font-size-title: 2rem;
+
+  --sidebar-width: 232px;
+  --note-list-width: 320px;
+  --editor-max-width: 760px;
+  --about-max-width: 920px;
+
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 12px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-18: 72px;
+  --space-24: 96px;
+
+  --transition-fast: 120ms;
+  --transition-normal: 180ms;
+}

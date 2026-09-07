@@ -36,3 +36,11 @@ The interface remains intentionally stable while the project gains a reliable de
 The visible baseline stays stable while application startup, global styles, and ABOUT move into clear, one-directional project layers. Future feature directories will be created only when they contain real implementation, avoiding empty speculative abstractions.
 
 ![NODI after FND-003](about/screenshots/fnd-003-project-structure.png)
+
+## 005 — FND-004 Design tokens
+
+**Completed:** September 7, 2026
+
+NODI gains a shared visual foundation for color, typography, spacing, borders, radii, and motion. An accessible theme selector supports System, Light, and Dark preferences, persists the choice locally, and applies the same tokens to ABOUT.
+
+![NODI after FND-004](about/screenshots/fnd-004-design-tokens.png)

@@ -1,15 +1,8 @@
 :root {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-  --border-color: #deded9;
-  --muted-color: #686a65;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -21,6 +14,14 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+body {
+  transition:
+    color var(--transition-normal),
+    background-color var(--transition-normal);
 }
 
 .app-shell {
@@ -32,10 +33,14 @@ body {
   text-align: center;
 }
 
-.about-link {
+.app-actions {
   position: fixed;
-  top: 28px;
-  right: 32px;
+  z-index: 1;
+  top: calc(var(--space-6) + var(--space-1));
+  right: var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 button {
@@ -46,16 +51,14 @@ button {
   cursor: pointer;
 }
 
-.about-link,
 .text-button {
-  padding: 8px 10px;
-  border-radius: 7px;
-  color: var(--muted-color);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
 }
 
-.about-link:hover,
 .text-button:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--color-hover);
   color: inherit;
 }
 
@@ -66,22 +69,64 @@ button:focus-visible {
 
 h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: var(--font-size-title);
+}
+
+.theme-selector {
+  display: flex;
+  gap: var(--space-1);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.theme-option {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.theme-option:hover {
+  color: var(--color-text);
+}
+
+.theme-option[aria-pressed="true"] {
+  color: var(--color-accent-hover);
+  background: var(--color-surface);
 }
 
 .about-page {
-  width: min(920px, calc(100% - 64px));
+  width: min(var(--about-max-width), calc(100% - var(--space-16)));
   margin: 0 auto;
-  padding: 72px 0 96px;
+  padding: var(--space-18) 0 var(--space-24);
 }
 
 .about-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 32px;
-  padding-bottom: 48px;
-  border-bottom: 1px solid var(--border-color);
+  gap: var(--space-8);
+  padding-bottom: var(--space-12);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .about-header h1 {
@@ -92,18 +137,18 @@ h1 {
 }
 
 .eyebrow {
-  margin: 0 0 20px;
-  color: var(--muted-color);
-  font-size: 0.72rem;
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   letter-spacing: 0.18em;
 }
 
 .about-intro {
   max-width: 620px;
-  margin: 24px 0 0;
-  color: var(--muted-color);
-  font-size: 1.1rem;
+  margin: var(--space-6) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
   line-height: 1.6;
 }
 
@@ -115,18 +160,18 @@ h1 {
 
 .timeline-entry {
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr);
-  gap: 32px;
-  padding: 56px 0;
-  border-bottom: 1px solid var(--border-color);
+  grid-template-columns: calc(var(--space-10) * 4) minmax(0, 1fr);
+  gap: var(--space-8);
+  padding: var(--space-14) 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .entry-meta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  color: var(--muted-color);
-  font-size: 0.8rem;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .entry-meta span {
@@ -137,13 +182,13 @@ h1 {
 
 .entry-content h2 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: var(--font-size-xl);
 }
 
 .entry-content p {
   max-width: 640px;
-  margin: 12px 0 28px;
-  color: var(--muted-color);
+  margin: var(--space-3) 0 calc(var(--space-6) + var(--space-1));
+  color: var(--color-text-muted);
   line-height: 1.6;
 }
 
@@ -151,14 +196,14 @@ h1 {
   display: block;
   width: 100%;
   height: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 @media (max-width: 680px) {
   .about-page {
-    width: min(100% - 40px, 920px);
-    padding-top: 40px;
+    width: min(100% - var(--space-10), var(--about-max-width));
+    padding-top: var(--space-10);
   }
 
   .about-header,
@@ -168,20 +213,13 @@ h1 {
   }
 
   .timeline-entry {
-    gap: 20px;
+    gap: var(--space-5);
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-    --border-color: #494b47;
-    --muted-color: #b4b6b0;
-  }
-
-  .about-link:hover,
-  .text-button:hover {
-    background: rgba(255, 255, 255, 0.08);
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .theme-option {
+    transition: none;
   }
 }

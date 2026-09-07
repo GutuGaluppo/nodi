@@ -2,6 +2,7 @@ import doc001Screenshot from "../../../docs/about/screenshots/doc-001-about-rule
 import fnd001Screenshot from "../../../docs/about/screenshots/fnd-001-native-shell.png";
 import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.png";
 import fnd003Screenshot from "../../../docs/about/screenshots/fnd-003-project-structure.png";
+import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -39,6 +40,14 @@ const evolution = [
     description:
       "The visible baseline stays stable while application startup, global styles, and ABOUT move into clear, one-directional project layers.",
     screenshot: fnd003Screenshot,
+  },
+  {
+    id: "FND-004",
+    title: "A visual foundation",
+    date: "September 7, 2026",
+    description:
+      "NODI gains shared design tokens and accessible System, Light, and Dark themes that persist across launches and also style ABOUT.",
+    screenshot: fnd004Screenshot,
   },
 ];
 
