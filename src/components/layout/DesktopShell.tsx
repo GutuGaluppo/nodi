@@ -1,6 +1,7 @@
 import type { Ref } from "react";
 import type { ThemePreference } from "../../app/theme";
 import EditorPane from "../../features/editor/EditorPane";
+import NotebookSection from "../../features/notebooks/NotebookSection";
 import NoteList from "../../features/notes/NoteList";
 import ThemeSelector from "../ui/ThemeSelector";
 
@@ -68,6 +69,8 @@ function DesktopShell({
             Trash
           </button>
         </nav>
+
+        <NotebookSection />
 
         <footer className="sidebar-footer">
           <ThemeSelector value={theme} onChange={onThemeChange} />

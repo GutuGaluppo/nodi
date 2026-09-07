@@ -166,3 +166,11 @@ A trashed note can now return intact. Selecting it exposes “Restore note”; t
 Permanent deletion is now a deliberate, confirmed action. The accessible dialog keeps cancellation as the safe default; confirmation removes the note record while SQLite cascades its attachment metadata and tag relationships, and a database trigger removes its full-text search entry in the same transaction.
 
 ![NODI after TRASH-003](about/screenshots/trash-003-permanent-delete.png)
+
+## 020 — NB-001 Notebooks
+
+**Completed:** September 7, 2026
+
+Notebooks now have a complete local lifecycle in the sidebar. NODI lists them alphabetically and supports keyboard-accessible creation, inline renaming, confirmed deletion, resilient loading, and non-destructive error feedback through one parameterized repository.
+
+![NODI after NB-001](about/screenshots/nb-001-notebooks.png)

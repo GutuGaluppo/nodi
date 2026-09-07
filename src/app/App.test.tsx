@@ -1,6 +1,13 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Notebook } from "../db/repositories/notebookRepository";
+import {
+  createNotebook,
+  deleteNotebook,
+  listNotebooks,
+  renameNotebook,
+} from "../db/repositories/notebookRepository";
 import type { Note, NoteSummary } from "../db/repositories/noteRepository";
 import {
   createNote,
@@ -22,6 +29,13 @@ vi.mock("../db/repositories/noteRepository", () => ({
   restoreNote: vi.fn(),
   permanentlyDeleteNote: vi.fn(),
   EMPTY_NOTE_CONTENT_JSON: '{"type":"doc","content":[{"type":"paragraph"}]}',
+}));
+
+vi.mock("../db/repositories/notebookRepository", () => ({
+  listNotebooks: vi.fn(),
+  createNotebook: vi.fn(),
+  renameNotebook: vi.fn(),
+  deleteNotebook: vi.fn(),
 }));
 
 const newNote: Note = {
@@ -49,6 +63,15 @@ const newNoteSummary: NoteSummary = {
   deletedAt: null,
 };
 
+const notebook: Notebook = {
+  id: "nb-1",
+  name: "Projects",
+  stackId: null,
+  createdAt: "2026-09-07T12:00:00.000Z",
+  updatedAt: "2026-09-07T12:00:00.000Z",
+  deletedAt: null,
+};
+
 describe("NODI app", () => {
   beforeEach(() => {
     vi.mocked(listNotes).mockReset().mockResolvedValue([]);
@@ -60,6 +83,10 @@ describe("NODI app", () => {
     vi.mocked(softDeleteNote).mockReset().mockResolvedValue(undefined);
     vi.mocked(restoreNote).mockReset().mockResolvedValue(undefined);
     vi.mocked(permanentlyDeleteNote).mockReset().mockResolvedValue(undefined);
+    vi.mocked(listNotebooks).mockReset().mockResolvedValue([]);
+    vi.mocked(createNotebook).mockReset().mockResolvedValue(notebook);
+    vi.mocked(renameNotebook).mockReset().mockResolvedValue(undefined);
+    vi.mocked(deleteNotebook).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -89,7 +116,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(20);
+    expect(screen.getAllByRole("img")).toHaveLength(21);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -104,6 +131,41 @@ describe("NODI app", () => {
 
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(window.localStorage.getItem("nodi.theme")).toBe("dark");
+  });
+
+  it("creates, renames, and deletes a notebook", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listNotebooks)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([notebook])
+      .mockResolvedValueOnce([{ ...notebook, name: "Archive" }])
+      .mockResolvedValue([]);
+    render(<App />);
+
+    await screen.findByText("No notebooks yet");
+    await user.click(screen.getByRole("button", { name: "Create notebook" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "New notebook name" }),
+      "Projects",
+    );
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(createNotebook).toHaveBeenCalledWith("Projects");
+
+    await user.click(
+      await screen.findByRole("button", { name: "Rename Projects" }),
+    );
+    const name = screen.getByRole("textbox", { name: "Notebook name" });
+    await user.clear(name);
+    await user.type(name, "Archive");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(renameNotebook).toHaveBeenCalledWith("nb-1", "Archive");
+
+    await user.click(
+      await screen.findByRole("button", { name: "Delete Archive" }),
+    );
+    expect(deleteNotebook).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Delete notebook" }));
+    expect(deleteNotebook).toHaveBeenCalledWith("nb-1");
   });
 
   it("creates, selects, and focuses a new note from the sidebar", async () => {

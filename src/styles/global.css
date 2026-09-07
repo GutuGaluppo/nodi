@@ -133,7 +133,125 @@ h1 {
 }
 
 .primary-navigation {
+  flex: 0 0 auto;
+  margin-bottom: var(--space-6);
+}
+
+.notebook-section {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-section-label {
+  margin: 0;
+}
+
+.sidebar-icon-button {
+  width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.sidebar-icon-button:hover,
+.notebook-row-actions button:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
+}
+
+.notebook-list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notebook-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 34px;
+  padding-left: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.notebook-list li > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  font-weight: 550;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.notebook-row-actions {
+  display: flex;
+  margin-left: auto;
+  opacity: 0;
+}
+
+.notebook-list li:hover .notebook-row-actions,
+.notebook-row-actions:focus-within {
+  opacity: 1;
+}
+
+.notebook-row-actions button {
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+}
+
+.notebook-form {
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.notebook-form input {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-bg);
+  font: inherit;
+  font-size: var(--font-size-sm);
+}
+
+.notebook-form-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.small-action {
+  color: var(--color-accent-hover);
+  font-size: var(--font-size-xs);
+  font-weight: 650;
+}
+
+.sidebar-status,
+.sidebar-error {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+  text-align: left;
+}
+
+.sidebar-error {
+  color: var(--color-danger);
 }
 
 .section-label {
