@@ -214,3 +214,11 @@ Notes can now carry any number of tags through an accessible metadata control. A
 Notes and notebooks can now be starred into a persistent Shortcuts section and opened in one action. Duplicate targets are prevented by migration 4, removal never touches source data, and database triggers automatically clean shortcuts when their target is permanently deleted.
 
 ![NODI after SHORT-001](about/screenshots/short-001-favorites.png)
+
+## 026 — SEARCH-001 FTS5 index
+
+**Completed:** September 7, 2026
+
+Every note now has a synchronized FTS5 projection covering its title, plain-text body, tag names, and notebook name. Migration 5 backfills the existing library, database triggers keep all four fields current, permanent deletion still cleans the index atomically, and the repository exposes relevance-ranked parameterized search.
+
+![NODI after SEARCH-001](about/screenshots/search-001-fts-index.png)

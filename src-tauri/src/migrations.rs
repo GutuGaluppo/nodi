@@ -6,6 +6,7 @@ const INITIAL_SCHEMA: &str = include_str!("../migrations/0001_initial_schema.sql
 const SEARCH_CLEANUP: &str = include_str!("../migrations/0002_search_cleanup.sql");
 const NOTEBOOK_STACK_CLEANUP: &str = include_str!("../migrations/0003_notebook_stack_cleanup.sql");
 const SHORTCUT_INTEGRITY: &str = include_str!("../migrations/0004_shortcut_integrity.sql");
+const FTS_SYNC: &str = include_str!("../migrations/0005_fts_sync.sql");
 
 pub fn all() -> Vec<Migration> {
     vec![
@@ -31,6 +32,12 @@ pub fn all() -> Vec<Migration> {
             version: 4,
             description: "shortcut integrity",
             sql: SHORTCUT_INTEGRITY,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 5,
+            description: "fts sync",
+            sql: FTS_SYNC,
             kind: MigrationKind::Up,
         },
     ]
@@ -98,7 +105,7 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 4);
+        assert_eq!(applied_count, 5);
     }
 
     #[tokio::test]
@@ -218,6 +225,75 @@ mod tests {
         .await
         .expect("notebook should remain readable");
         assert_eq!(stack_id, None);
+    }
+
+    #[tokio::test]
+    async fn full_text_projection_tracks_note_tag_and_notebook_text() {
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .expect("in-memory database should open");
+        migration_runner()
+            .await
+            .run(&pool)
+            .await
+            .expect("migrations should succeed");
+
+        sqlx::query(
+            "INSERT INTO notebooks (id, name, created_at, updated_at) VALUES ('nb1', 'Projects', 'now', 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("notebook fixture should be inserted");
+        sqlx::query(
+            "INSERT INTO notes (id, title, content_json, content_text, notebook_id, created_at, updated_at, device_id) VALUES ('n1', 'Roadmap', '{}', 'shipping plan', 'nb1', 'now', 'now', 'd1')",
+        )
+        .execute(&pool)
+        .await
+        .expect("note fixture should be inserted");
+        sqlx::query(
+            "INSERT INTO tags (id, name, created_at, updated_at) VALUES ('t1', 'ideas', 'now', 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("tag fixture should be inserted");
+        sqlx::query("INSERT INTO note_tags (note_id, tag_id) VALUES ('n1', 't1')")
+            .execute(&pool)
+            .await
+            .expect("note tag fixture should be inserted");
+
+        let projection = sqlx::query_as::<_, (String, String, String, String)>(
+            "SELECT title, content_text, tags_text, notebook_text FROM notes_fts WHERE note_id = 'n1'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("search projection should exist");
+        assert_eq!(
+            projection,
+            (
+                "Roadmap".into(),
+                "shipping plan".into(),
+                "ideas".into(),
+                "Projects".into()
+            )
+        );
+
+        sqlx::query("UPDATE tags SET name = 'research' WHERE id = 't1'")
+            .execute(&pool)
+            .await
+            .expect("tag should rename");
+        sqlx::query("UPDATE notebooks SET name = 'Studio' WHERE id = 'nb1'")
+            .execute(&pool)
+            .await
+            .expect("notebook should rename");
+        let updated = sqlx::query_as::<_, (String, String)>(
+            "SELECT tags_text, notebook_text FROM notes_fts WHERE note_id = 'n1'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("search projection should update");
+        assert_eq!(updated, ("research".into(), "Studio".into()));
     }
 
     #[tokio::test]

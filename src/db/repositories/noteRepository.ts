@@ -248,6 +248,31 @@ export async function listNotes(
   }
 }
 
+/** Search the synchronized FTS5 projection and order active notes by relevance. */
+export async function searchNotes(
+  query: string,
+  limit = 50,
+): Promise<NoteSummary[]> {
+  try {
+    const normalized = query.trim();
+    if (!normalized) return [];
+    const database = await initializeDatabase();
+    const rows = await database.select<NoteSummaryRow[]>(
+      `SELECT notes.id, notes.title, notes.content_text, notes.notebook_id, notes.is_pinned,
+              notes.created_at, notes.updated_at, notes.deleted_at
+       FROM notes_fts
+       INNER JOIN notes ON notes.id = notes_fts.note_id
+       WHERE notes_fts MATCH $1 AND notes.deleted_at IS NULL
+       ORDER BY bm25(notes_fts, 0.0, 5.0, 2.0, 1.5, 1.5), notes.updated_at DESC
+       LIMIT $2`,
+      [normalized, limit],
+    );
+    return rows.map(mapNoteSummary);
+  } catch (cause) {
+    rethrowAsDatabaseError(cause, "Could not search notes.");
+  }
+}
+
 export async function updateNote(
   id: string,
   patch: UpdateNoteInput = {},

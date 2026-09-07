@@ -289,6 +289,27 @@ describe("noteRepository", () => {
     });
   });
 
+  describe("searchNotes", () => {
+    it("uses the FTS index with bound query and limit, ordered by bm25", async () => {
+      db.select.mockResolvedValueOnce([]);
+      const { searchNotes } = await importRepository();
+
+      await searchNotes("project", 20);
+
+      const [sql, values] = db.select.mock.calls[0];
+      expect(sql).toContain("notes_fts MATCH $1");
+      expect(sql).toContain("ORDER BY bm25(notes_fts");
+      expect(sql).toContain("notes.deleted_at IS NULL");
+      expect(values).toEqual(["project", 20]);
+    });
+
+    it("does not query the database for blank input", async () => {
+      const { searchNotes } = await importRepository();
+      await expect(searchNotes("   ")).resolves.toEqual([]);
+      expect(db.select).not.toHaveBeenCalled();
+    });
+  });
+
   describe("trash lifecycle", () => {
     it("soft deletes without removing the row", async () => {
       const { softDeleteNote } = await importRepository();
