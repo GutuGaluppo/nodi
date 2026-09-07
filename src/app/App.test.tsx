@@ -6,6 +6,7 @@ import {
   createNote,
   getNoteById,
   listNotes,
+  permanentlyDeleteNote,
   restoreNote,
   softDeleteNote,
   updateNote,
@@ -19,6 +20,7 @@ vi.mock("../db/repositories/noteRepository", () => ({
   updateNote: vi.fn(),
   softDeleteNote: vi.fn(),
   restoreNote: vi.fn(),
+  permanentlyDeleteNote: vi.fn(),
   EMPTY_NOTE_CONTENT_JSON: '{"type":"doc","content":[{"type":"paragraph"}]}',
 }));
 
@@ -57,6 +59,7 @@ describe("NODI app", () => {
       .mockResolvedValue({ ...newNote, title: "Updated" });
     vi.mocked(softDeleteNote).mockReset().mockResolvedValue(undefined);
     vi.mocked(restoreNote).mockReset().mockResolvedValue(undefined);
+    vi.mocked(permanentlyDeleteNote).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -86,7 +89,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(19);
+    expect(screen.getAllByRole("img")).toHaveLength(20);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -172,6 +175,34 @@ describe("NODI app", () => {
     );
 
     expect(restoreNote).toHaveBeenCalledWith("new-1");
+    expect(await screen.findByText("Trash is empty")).toBeInTheDocument();
+  });
+
+  it("requires confirmation before permanently deleting a note", async () => {
+    const user = userEvent.setup();
+    const trashed = {
+      ...newNoteSummary,
+      deletedAt: "2026-09-07T13:00:00.000Z",
+    };
+    vi.mocked(listNotes)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([trashed])
+      .mockResolvedValue([]);
+    render(<App />);
+
+    await screen.findByText("No notes yet");
+    await user.click(screen.getByRole("button", { name: "Trash" }));
+    await user.click(await screen.findByRole("option", { name: /Untitled/ }));
+    await user.click(
+      await screen.findByRole("button", { name: "Delete permanently" }),
+    );
+
+    expect(permanentlyDeleteNote).not.toHaveBeenCalled();
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Delete forever" }));
+
+    expect(permanentlyDeleteNote).toHaveBeenCalledWith("new-1");
     expect(await screen.findByText("Trash is empty")).toBeInTheDocument();
   });
 });

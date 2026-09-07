@@ -158,3 +158,11 @@ A failed database write never clears the editor. NODI keeps the complete draft i
 A trashed note can now return intact. Selecting it exposes “Restore note”; the repository clears `deleted_at`, refreshes `updated_at`, increments the revision, and moves the same record — including its complete Tiptap content — back to the normal library.
 
 ![NODI after TRASH-002](about/screenshots/trash-002-restore.png)
+
+## 019 — TRASH-003 Permanent delete
+
+**Completed:** September 7, 2026
+
+Permanent deletion is now a deliberate, confirmed action. The accessible dialog keeps cancellation as the safe default; confirmation removes the note record while SQLite cascades its attachment metadata and tag relationships, and a database trigger removes its full-text search entry in the same transaction.
+
+![NODI after TRASH-003](about/screenshots/trash-003-permanent-delete.png)

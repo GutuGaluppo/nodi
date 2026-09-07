@@ -17,6 +17,7 @@ import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-li
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import trash001Screenshot from "../../../docs/about/screenshots/trash-001-soft-deletion.png";
 import trash002Screenshot from "../../../docs/about/screenshots/trash-002-restore.png";
+import trash003Screenshot from "../../../docs/about/screenshots/trash-003-permanent-delete.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -174,6 +175,14 @@ const evolution = [
     description:
       "Selecting a trashed note now exposes Restore note, which clears its deletion marker, increments its revision, and returns the complete note to the active library.",
     screenshot: trash002Screenshot,
+  },
+  {
+    id: "TRASH-003",
+    title: "Permanent means deliberate",
+    date: "September 7, 2026",
+    description:
+      "Permanent deletion now requires an explicit confirmation, then removes the note and atomically cleans its attachment metadata, tag relationships, and full-text search entry.",
+    screenshot: trash003Screenshot,
   },
 ];
 

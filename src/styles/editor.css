@@ -32,6 +32,12 @@
   font-size: var(--font-size-sm);
 }
 
+.editor-note-actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-3);
+}
+
 .subtle-action:hover {
   color: var(--color-text);
 }

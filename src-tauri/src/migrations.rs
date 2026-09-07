@@ -3,14 +3,23 @@ use tauri_plugin_sql::{Migration, MigrationKind};
 pub const DATABASE_URL: &str = "sqlite:nodi.db";
 
 const INITIAL_SCHEMA: &str = include_str!("../migrations/0001_initial_schema.sql");
+const SEARCH_CLEANUP: &str = include_str!("../migrations/0002_search_cleanup.sql");
 
 pub fn all() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "initial schema",
-        sql: INITIAL_SCHEMA,
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "initial schema",
+            sql: INITIAL_SCHEMA,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "search cleanup",
+            sql: SEARCH_CLEANUP,
+            kind: MigrationKind::Up,
+        },
+    ]
 }
 
 #[cfg(test)]
@@ -61,6 +70,7 @@ mod tests {
             "notebook_stacks",
             "notebooks",
             "notes",
+            "notes_fts",
             "settings",
             "shortcuts",
             "tags",
@@ -74,7 +84,72 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 1);
+        assert_eq!(applied_count, 2);
+    }
+
+    #[tokio::test]
+    async fn permanently_deleting_a_note_cascades_related_rows_and_search() {
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .expect("in-memory database should open");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("foreign keys should be enabled");
+        migration_runner()
+            .await
+            .run(&pool)
+            .await
+            .expect("migrations should succeed");
+
+        sqlx::query(
+            "INSERT INTO notes (id, content_json, created_at, updated_at, device_id) VALUES ('n1', '{}', 'now', 'now', 'd1')",
+        )
+        .execute(&pool)
+        .await
+        .expect("note fixture should be inserted");
+        sqlx::query(
+            "INSERT INTO attachments (id, note_id, filename, relative_path, sha256, size, created_at) VALUES ('a1', 'n1', 'file.txt', 'attachments/file.txt', 'hash', 1, 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("attachment fixture should be inserted");
+        sqlx::query(
+            "INSERT INTO tags (id, name, created_at, updated_at) VALUES ('t1', 'tag', 'now', 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("tag fixture should be inserted");
+        sqlx::query("INSERT INTO note_tags (note_id, tag_id) VALUES ('n1', 't1')")
+            .execute(&pool)
+            .await
+            .expect("note tag fixture should be inserted");
+        sqlx::query("INSERT INTO notes_fts (note_id, title) VALUES ('n1', 'Note')")
+            .execute(&pool)
+            .await
+            .expect("search fixture should be inserted");
+
+        sqlx::query("DELETE FROM notes WHERE id = 'n1'")
+            .execute(&pool)
+            .await
+            .expect("note should be deleted");
+
+        for table in ["notes", "attachments", "note_tags", "notes_fts"] {
+            let count = sqlx::query_scalar::<_, i64>(&format!(
+                "SELECT COUNT(*) FROM {table} WHERE {} = 'n1'",
+                if table == "attachments" || table == "note_tags" || table == "notes_fts" {
+                    "note_id"
+                } else {
+                    "id"
+                }
+            ))
+            .fetch_one(&pool)
+            .await
+            .expect("related table should be readable");
+            assert_eq!(count, 0, "{table} should not retain note data");
+        }
     }
 
     #[tokio::test]

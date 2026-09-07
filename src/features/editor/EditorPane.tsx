@@ -1,5 +1,7 @@
-import type { Ref } from "react";
+import { type Ref, useState } from "react";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { useNote } from "../notes/useNote";
+import { usePermanentlyDeleteNote } from "../notes/usePermanentlyDeleteNote";
 import { useRestoreNote } from "../notes/useRestoreNote";
 import { useTrashNote } from "../notes/useTrashNote";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
@@ -30,6 +32,8 @@ function EditorPane({
   const note = useNote(noteId);
   const trashNote = useTrashNote();
   const restoreNote = useRestoreNote();
+  const deleteNote = usePermanentlyDeleteNote();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const selectedNote = note.data;
 
   return (
@@ -77,18 +81,27 @@ function EditorPane({
                 {trashNote.isPending ? "Moving…" : "Move to Trash"}
               </button>
             ) : (
-              <button
-                className="subtle-action"
-                type="button"
-                disabled={restoreNote.isPending}
-                onClick={() => {
-                  restoreNote.mutate(selectedNote.id, {
-                    onSuccess: onNoteRemoved,
-                  });
-                }}
-              >
-                {restoreNote.isPending ? "Restoring…" : "Restore note"}
-              </button>
+              <div className="editor-note-actions">
+                <button
+                  className="subtle-action"
+                  type="button"
+                  disabled={restoreNote.isPending}
+                  onClick={() => {
+                    restoreNote.mutate(selectedNote.id, {
+                      onSuccess: onNoteRemoved,
+                    });
+                  }}
+                >
+                  {restoreNote.isPending ? "Restoring…" : "Restore note"}
+                </button>
+                <button
+                  className="subtle-action danger-action"
+                  type="button"
+                  onClick={() => setConfirmingDelete(true)}
+                >
+                  Delete permanently
+                </button>
+              </div>
             )}
           </div>
           {trashNote.isError || restoreNote.isError ? (
@@ -103,6 +116,20 @@ function EditorPane({
             autoFocus={focusEditor}
             onAutoFocus={onEditorFocused}
           />
+          {confirmingDelete ? (
+            <ConfirmDialog
+              title="Delete this note forever?"
+              description="This permanently removes the note and its related data. This action cannot be undone."
+              confirmLabel="Delete forever"
+              isPending={deleteNote.isPending}
+              onCancel={() => setConfirmingDelete(false)}
+              onConfirm={() => {
+                deleteNote.mutate(selectedNote.id, {
+                  onSuccess: onNoteRemoved,
+                });
+              }}
+            />
+          ) : null}
         </div>
       )}
     </section>
