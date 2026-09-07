@@ -1,6 +1,7 @@
 import type { Ref } from "react";
 import NoteEditor from "../../editor/NoteEditor";
 import { useNote } from "../notes/useNote";
+import NoteTitle from "./NoteTitle";
 
 interface EditorPaneProps {
   noteId: string | null;
@@ -48,9 +49,10 @@ function EditorPane({
         </div>
       ) : (
         <div className="editor-scroll">
-          <h2 id="editor-heading" className="note-title-display">
+          <h2 id="editor-heading" className="visually-hidden">
             {note.data.title.trim() === "" ? "Untitled" : note.data.title}
           </h2>
+          <NoteTitle key={note.data.id} note={note.data} />
           <NoteEditor
             note={note.data}
             autoFocus={focusEditor}

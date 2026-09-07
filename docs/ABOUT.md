@@ -118,3 +118,11 @@ A "New note" action appears at the top of the sidebar, and ⌘N / Ctrl+N trigger
 The editor column becomes a real writing surface. The selected note's Tiptap JSON loads into a Tiptap editor with the fixed NODI extension set — paragraphs, headings, bold, italic, underline, highlight, links, bullet / numbered / task lists, and tables — plus a placeholder for empty notes. A sticky formatting toolbar exposes each capability with pressed-state feedback, and switching notes reloads the surface. Editing is in memory for now; autosave and save-error recovery arrive in EDIT-003 and EDIT-004.
 
 ![NODI after EDIT-001](about/screenshots/edit-001-tiptap-base-editor.png)
+
+## 014 — EDIT-002 Note title
+
+**Completed:** September 7, 2026
+
+The editor title is now a real input. Changes persist when focus leaves the field or Enter is pressed, the notes list refreshes immediately through the shared query cache, and an empty title continues to appear as “Untitled”. A failed write leaves the draft intact and visible instead of discarding it.
+
+![NODI after EDIT-002](about/screenshots/edit-002-note-title.png)

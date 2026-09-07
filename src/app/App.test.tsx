@@ -6,6 +6,7 @@ import {
   createNote,
   getNoteById,
   listNotes,
+  updateNote,
 } from "../db/repositories/noteRepository";
 import App from "./App";
 
@@ -13,6 +14,7 @@ vi.mock("../db/repositories/noteRepository", () => ({
   listNotes: vi.fn(),
   createNote: vi.fn(),
   getNoteById: vi.fn(),
+  updateNote: vi.fn(),
   EMPTY_NOTE_CONTENT_JSON: '{"type":"doc","content":[{"type":"paragraph"}]}',
 }));
 
@@ -46,6 +48,9 @@ describe("NODI app", () => {
     vi.mocked(listNotes).mockReset().mockResolvedValue([]);
     vi.mocked(createNote).mockReset().mockResolvedValue(newNote);
     vi.mocked(getNoteById).mockReset().mockResolvedValue(newNote);
+    vi.mocked(updateNote)
+      .mockReset()
+      .mockResolvedValue({ ...newNote, title: "Updated" });
   });
 
   it("renders the NODI baseline", async () => {
@@ -75,7 +80,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(14);
+    expect(screen.getAllByRole("img")).toHaveLength(15);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 

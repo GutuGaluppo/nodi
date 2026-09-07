@@ -3,6 +3,7 @@ import db002Screenshot from "../../../docs/about/screenshots/db-002-migration-ru
 import db003Screenshot from "../../../docs/about/screenshots/db-003-device-id.png";
 import doc001Screenshot from "../../../docs/about/screenshots/doc-001-about-rule.png";
 import edit001Screenshot from "../../../docs/about/screenshots/edit-001-tiptap-base-editor.png";
+import edit002Screenshot from "../../../docs/about/screenshots/edit-002-note-title.png";
 import fnd001Screenshot from "../../../docs/about/screenshots/fnd-001-native-shell.png";
 import fnd002Screenshot from "../../../docs/about/screenshots/fnd-002-tooling.png";
 import fnd003Screenshot from "../../../docs/about/screenshots/fnd-003-project-structure.png";
@@ -129,6 +130,14 @@ const evolution = [
     description:
       "Tiptap now renders canonical JSON with NODI's complete base extension set and an accessible toolbar for text, lists, links, highlights, tasks, and tables.",
     screenshot: edit001Screenshot,
+  },
+  {
+    id: "EDIT-002",
+    title: "Every note can name itself",
+    date: "September 7, 2026",
+    description:
+      "The title is now an editable field that persists on blur or Enter, refreshes the library immediately, preserves failed drafts, and still presents an empty value gracefully as Untitled.",
+    screenshot: edit002Screenshot,
   },
 ];
 
