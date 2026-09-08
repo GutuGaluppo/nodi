@@ -10,7 +10,6 @@ import ShortcutSection from "../../features/shortcuts/ShortcutSection";
 import TagSection from "../../features/tags/TagSection";
 import { useTags } from "../../features/tags/tagQueries";
 import Icon from "../ui/Icon";
-import ThemeSelector from "../ui/ThemeSelector";
 
 interface DesktopShellProps {
   theme: ThemePreference;
@@ -71,20 +70,6 @@ function DesktopShell({
             <img src={nodiMark} alt="" />
             <h1>NODI</h1>
           </div>
-          <details className="settings-menu">
-            <summary
-              aria-label="Settings"
-              title="Settings"
-              data-tooltip="Settings"
-            >
-              <Icon name="settings" />
-            </summary>
-            <div className="settings-popover">
-              <button type="button" onClick={onOpenAbout}>
-                About NODI
-              </button>
-            </div>
-          </details>
         </header>
 
         <button
@@ -92,54 +77,89 @@ function DesktopShell({
           type="button"
           onClick={onCreateNote}
         >
-          <span aria-hidden="true">+</span> New note
+          <span className="new-note-icon" aria-hidden="true">
+            <Icon name="plus" />
+          </span>
+          New note
         </button>
 
-        <ShortcutSection
-          onOpenNote={(id) => {
-            onNavigate("notes");
-            onSelectNote(id);
-          }}
-          onOpenNotebook={onSelectNotebook}
-        />
+        <div className="sidebar-scroll-area">
+          <ShortcutSection
+            onOpenNote={(id) => {
+              onNavigate("notes");
+              onSelectNote(id);
+            }}
+            onOpenNotebook={onSelectNotebook}
+          />
 
-        <SavedSearchSection onOpen={onOpenSavedSearch} />
+          <SavedSearchSection onOpen={onOpenSavedSearch} />
 
-        <nav className="primary-navigation" aria-label="Primary navigation">
-          <p className="section-label">Workspace</p>
-          <button
-            className="nav-item"
-            type="button"
-            aria-current={
-              activeView === "notes" &&
-              selectedNotebookId === null &&
-              selectedTagId === null
-                ? "page"
-                : undefined
-            }
-            onClick={() => onNavigate("notes")}
-          >
-            Notes
-          </button>
-          <button
-            className="nav-item"
-            type="button"
-            aria-current={activeView === "trash" ? "page" : undefined}
-            onClick={() => onNavigate("trash")}
-          >
-            Trash
-          </button>
-        </nav>
+          <nav className="primary-navigation" aria-label="Primary navigation">
+            <p className="section-label">Main menu</p>
+            <button
+              className="nav-item"
+              type="button"
+              aria-current={
+                activeView === "notes" &&
+                selectedNotebookId === null &&
+                selectedTagId === null
+                  ? "page"
+                  : undefined
+              }
+              onClick={() => onNavigate("notes")}
+            >
+              <Icon name="note" />
+              <span>Notes</span>
+            </button>
+            <button
+              className="nav-item"
+              type="button"
+              aria-current={activeView === "trash" ? "page" : undefined}
+              onClick={() => onNavigate("trash")}
+            >
+              <Icon name="trash" />
+              <span>Trash</span>
+            </button>
+          </nav>
 
-        <NotebookSection
-          selectedNotebookId={selectedNotebookId}
-          onSelectNotebook={onSelectNotebook}
-        />
+          <NotebookSection
+            selectedNotebookId={selectedNotebookId}
+            onSelectNotebook={onSelectNotebook}
+          />
 
-        <TagSection selectedTagId={selectedTagId} onSelectTag={onSelectTag} />
+          <TagSection selectedTagId={selectedTagId} onSelectTag={onSelectTag} />
+        </div>
 
         <footer className="sidebar-footer">
-          <ThemeSelector value={theme} onChange={onThemeChange} />
+          <p className="section-label">System</p>
+          <button
+            className="system-row"
+            type="button"
+            role="switch"
+            aria-checked={theme === "dark"}
+            onClick={() => onThemeChange(theme === "dark" ? "light" : "dark")}
+          >
+            <Icon name="moon" />
+            <span>Dark mode</span>
+            <span className="system-switch" aria-hidden="true">
+              <span className="system-switch-knob" />
+            </span>
+          </button>
+          <details className="settings-menu system-settings-menu">
+            <summary className="system-row" aria-label="Settings">
+              <Icon name="settings" />
+              <span>Settings</span>
+            </summary>
+            <div className="settings-popover">
+              <button type="button" onClick={onOpenAbout}>
+                About NODI
+              </button>
+            </div>
+          </details>
+          <button className="system-row" type="button" onClick={onOpenAbout}>
+            <Icon name="help" />
+            <span>Help &amp; Support</span>
+          </button>
         </footer>
       </aside>
 

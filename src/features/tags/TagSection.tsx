@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import Icon from "../../components/ui/Icon";
 import type { Tag } from "../../db/repositories/tagRepository";
 import {
   useCreateTag,
@@ -61,7 +62,7 @@ function TagSection({ selectedTagId, onSelectTag }: TagSectionProps) {
             setEditing(true);
           }}
         >
-          +
+          <Icon name="plus" />
         </button>
       </header>
 
@@ -99,10 +100,12 @@ function TagSection({ selectedTagId, onSelectTag }: TagSectionProps) {
               <button
                 className="tag-name"
                 type="button"
+                aria-label={`# ${tag.name}`}
                 aria-current={selectedTagId === tag.id ? "page" : undefined}
                 onClick={() => onSelectTag(tag.id)}
               >
-                # {tag.name}
+                <Icon name="tag" />
+                <span>{tag.name}</span>
               </button>
               <span className="tag-row-actions">
                 <button
@@ -115,14 +118,14 @@ function TagSection({ selectedTagId, onSelectTag }: TagSectionProps) {
                     setRenaming(tag);
                   }}
                 >
-                  Edit
+                  <Icon name="edit" />
                 </button>
                 <button
                   type="button"
                   aria-label={`Delete tag ${tag.name}`}
                   onClick={() => setDeleting(tag)}
                 >
-                  Delete
+                  <Icon name="trash" />
                 </button>
               </span>
             </li>

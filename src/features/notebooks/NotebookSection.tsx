@@ -55,7 +55,8 @@ function NotebookRows({
             }
             onClick={() => onSelectNotebook(notebook.id)}
           >
-            {notebook.name}
+            <Icon name="notebook" />
+            <span>{notebook.name}</span>
           </button>
           <span className="notebook-row-actions">
             <ShortcutToggle
@@ -212,7 +213,7 @@ function NotebookSection({
             data-tooltip="New notebook"
             onClick={() => beginCreate("notebook")}
           >
-            +
+            <Icon name="plus" />
           </button>
           <button
             className="sidebar-icon-button stack-button"
@@ -222,7 +223,7 @@ function NotebookSection({
             data-tooltip="New stack"
             onClick={() => beginCreate("stack")}
           >
-            ≡
+            <Icon name="stack" />
           </button>
         </span>
       </header>

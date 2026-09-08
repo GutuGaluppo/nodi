@@ -278,3 +278,27 @@ NODI adopts the reference's quieter desktop rhythm without importing unrelated p
 Useful searches can now be named and kept in the sidebar. Each saved search preserves its complete query — including structured filters — and opens the search dialog with that query ready to use. Searches persist locally in SQLite and can be removed without affecting notes or their content.
 
 ![NODI after SEARCH-004](about/screenshots/search-004-saved-searches.png)
+
+## 034 — UI-005 Reference-led sidebar
+
+**Completed:** September 8, 2026
+
+The sidebar now follows a clearer desktop navigation hierarchy inspired by the supplied reference. NODI's identity and creation action remain fixed at the top, navigation and local resources use consistent icons and selection blocks inside an independently scrollable region, and theme controls live in a stable System footer. Existing notebooks, stacks, tags, shortcuts, saved searches, and Settings behavior remain intact.
+
+![NODI after UI-005](about/screenshots/ui-005-reference-sidebar.png)
+
+## 035 — UI-006 System controls
+
+**Completed:** September 8, 2026
+
+The sidebar's System area now mirrors the reference's compact utility layout. Dark mode is a persistent accessible switch, Settings opens the existing menu beside the NODI name, and Help & Support leads to the local ABOUT experience without adding a network dependency.
+
+![NODI after UI-006](about/screenshots/ui-006-system-section.png)
+
+## 036 — UI-007 Settings relocation
+
+**Completed:** September 8, 2026
+
+Settings now has one unambiguous home inside the System section. The duplicate control beside the NODI name was removed, leaving the brand header quiet while the same local Settings menu remains available from its labeled utility row.
+
+![NODI after UI-007](about/screenshots/ui-007-settings-relocated.png)

@@ -1,3 +1,4 @@
+import Icon from "../../components/ui/Icon";
 import { useShortcuts, useToggleShortcut } from "./shortcutQueries";
 
 interface ShortcutSectionProps {
@@ -45,7 +46,7 @@ function ShortcutSection({ onOpenNote, onOpenNotebook }: ShortcutSectionProps) {
                 })
               }
             >
-              ×
+              <Icon name="trash" />
             </button>
           </li>
         ))}

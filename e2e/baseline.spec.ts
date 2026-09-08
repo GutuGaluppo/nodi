@@ -29,7 +29,7 @@ test("collapses and restores the Library", async ({ page }) => {
 
 test("applies and restores the selected theme", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Dark" }).click();
+  await page.getByRole("switch", { name: "Dark mode" }).click();
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator("body")).toHaveCSS(
@@ -40,8 +40,8 @@ test("applies and restores the selected theme", async ({ page }) => {
   await page.reload();
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("button", { name: "Dark" })).toHaveAttribute(
-    "aria-pressed",
+  await expect(page.getByRole("switch", { name: "Dark mode" })).toHaveAttribute(
+    "aria-checked",
     "true",
   );
 });

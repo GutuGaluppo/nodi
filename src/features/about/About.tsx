@@ -32,6 +32,9 @@ import ui001Screenshot from "../../../docs/about/screenshots/ui-001-interface-po
 import ui002Screenshot from "../../../docs/about/screenshots/ui-002-sidebar-library.png";
 import ui003Screenshot from "../../../docs/about/screenshots/ui-003-brand-assets.png";
 import ui004Screenshot from "../../../docs/about/screenshots/ui-004-reference-editor.png";
+import ui005Screenshot from "../../../docs/about/screenshots/ui-005-reference-sidebar.png";
+import ui006Screenshot from "../../../docs/about/screenshots/ui-006-system-section.png";
+import ui007Screenshot from "../../../docs/about/screenshots/ui-007-settings-relocated.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -309,6 +312,30 @@ const evolution = [
     description:
       "Named searches now persist locally in SQLite and live in the sidebar. Opening one restores its full text and structured filters, while removing it never touches the notes it finds.",
     screenshot: search004Screenshot,
+  },
+  {
+    id: "UI-005",
+    title: "Navigation gains a steady rhythm",
+    date: "September 8, 2026",
+    description:
+      "The sidebar now separates its fixed identity, scrollable navigation, local resources, and System footer into a calmer hierarchy, with consistent icons and compact selection blocks throughout.",
+    screenshot: ui005Screenshot,
+  },
+  {
+    id: "UI-006",
+    title: "System controls become immediate",
+    date: "September 8, 2026",
+    description:
+      "Dark mode, Settings, and local help now form a compact utility group at the foot of the sidebar, with a persistent accessible switch and direct paths to existing NODI controls.",
+    screenshot: ui006Screenshot,
+  },
+  {
+    id: "UI-007",
+    title: "Settings finds one clear home",
+    date: "September 8, 2026",
+    description:
+      "The duplicate Settings icon leaves the NODI header, while its existing menu moves intact to the clearly labeled Settings row in the System section.",
+    screenshot: ui007Screenshot,
   },
 ];
 

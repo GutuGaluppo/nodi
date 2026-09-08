@@ -240,7 +240,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(34);
+    expect(screen.getAllByRole("img")).toHaveLength(37);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -253,10 +253,14 @@ describe("NODI app", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Dark" }));
+    await user.click(screen.getByRole("switch", { name: "Dark mode" }));
 
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(window.localStorage.getItem("nodi.theme")).toBe("dark");
+    expect(screen.getByRole("switch", { name: "Dark mode" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
   });
 
   it("opens search with Cmd/Ctrl+K and supports keyboard result selection", async () => {
