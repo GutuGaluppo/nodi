@@ -9,6 +9,10 @@ pnpm install
 pnpm tauri dev
 ```
 
+## Installation and updates
+
+See the Portuguese guide for [installing and updating NODI](docs/INSTALACAO_E_ATUALIZACAO.md) on macOS.
+
 ## Recommended IDE Setup
 
 - [VS Code](https://code.visualstudio.com/)
