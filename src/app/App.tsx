@@ -27,6 +27,7 @@ function Workspace({
   );
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchInitialQuery, setSearchInitialQuery] = useState("");
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editorFocusRequest, setEditorFocusRequest] = useState<string | null>(
     null,
@@ -71,7 +72,10 @@ function Workspace({
       id: "search",
       keys: ["mod", "k"],
       label: "Search notes",
-      action: () => setSearchOpen(true),
+      action: () => {
+        setSearchInitialQuery("");
+        setSearchOpen(true);
+      },
     },
   ]);
 
@@ -108,10 +112,15 @@ function Workspace({
           setEditorFocusRequest(null);
         }}
         onNoteRemoved={() => setSelectedNoteId(null)}
+        onOpenSavedSearch={(query) => {
+          setSearchInitialQuery(query);
+          setSearchOpen(true);
+        }}
       />
       {searchOpen ? (
         <SearchDialog
           onClose={() => setSearchOpen(false)}
+          initialQuery={searchInitialQuery}
           onOpenNote={(id) => {
             setActiveView("notes");
             setSelectedNotebookId(null);

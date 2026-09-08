@@ -32,6 +32,12 @@ import {
   listTagsForNote,
   removeTagFromNote,
 } from "../db/repositories/noteTagRepository";
+import type { SavedSearch } from "../db/repositories/savedSearchRepository";
+import {
+  createSavedSearch,
+  deleteSavedSearch,
+  listSavedSearches,
+} from "../db/repositories/savedSearchRepository";
 import {
   addShortcut,
   listShortcuts,
@@ -92,6 +98,12 @@ vi.mock("../db/repositories/shortcutRepository", () => ({
   removeShortcut: vi.fn(),
 }));
 
+vi.mock("../db/repositories/savedSearchRepository", () => ({
+  listSavedSearches: vi.fn(),
+  createSavedSearch: vi.fn(),
+  deleteSavedSearch: vi.fn(),
+}));
+
 const newNote: Note = {
   id: "new-1",
   title: "",
@@ -140,6 +152,14 @@ const tag: Tag = {
   updatedAt: "2026-09-07T12:00:00.000Z",
 };
 
+const savedSearch: SavedSearch = {
+  id: "saved-1",
+  name: "Project ideas",
+  query: "tag:ideas roadmap",
+  createdAt: "2026-09-08T12:00:00.000Z",
+  updatedAt: "2026-09-08T12:00:00.000Z",
+};
+
 describe("NODI app", () => {
   beforeEach(() => {
     vi.mocked(listNotes).mockReset().mockResolvedValue([]);
@@ -171,6 +191,9 @@ describe("NODI app", () => {
     vi.mocked(listShortcuts).mockReset().mockResolvedValue([]);
     vi.mocked(addShortcut).mockReset().mockResolvedValue(undefined);
     vi.mocked(removeShortcut).mockReset().mockResolvedValue(undefined);
+    vi.mocked(listSavedSearches).mockReset().mockResolvedValue([]);
+    vi.mocked(createSavedSearch).mockReset().mockResolvedValue(savedSearch);
+    vi.mocked(deleteSavedSearch).mockReset().mockResolvedValue(undefined);
   });
 
   it("renders the NODI baseline", async () => {
@@ -217,7 +240,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(33);
+    expect(screen.getAllByRole("img")).toHaveLength(34);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
@@ -264,6 +287,38 @@ describe("NODI app", () => {
     ).toBeInTheDocument();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog", { name: "Search notes" })).toBeNull();
+  });
+
+  it("saves a search and reopens its query from the sidebar", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listSavedSearches)
+      .mockResolvedValueOnce([])
+      .mockResolvedValue([savedSearch]);
+    render(<App />);
+
+    await user.keyboard("{Control>}k{/Control}");
+    const query = screen.getByRole("searchbox", { name: "Search notes" });
+    await user.type(query, savedSearch.query);
+    await user.click(screen.getByRole("button", { name: "Save search" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Saved search name" }),
+      savedSearch.name,
+    );
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(createSavedSearch).toHaveBeenCalledWith(
+        savedSearch.name,
+        savedSearch.query,
+      ),
+    );
+    await user.keyboard("{Escape}");
+    await user.click(
+      await screen.findByRole("button", { name: savedSearch.name }),
+    );
+    expect(screen.getByRole("searchbox", { name: "Search notes" })).toHaveValue(
+      savedSearch.query,
+    );
   });
 
   it("creates, renames, and deletes a notebook", async () => {

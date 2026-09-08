@@ -5,24 +5,38 @@ import {
   useRef,
   useState,
 } from "react";
+import { useCreateSavedSearch } from "./savedSearchQueries";
 import { parseSearchInput } from "./searchParser";
 import { useSearchNotes } from "./searchQueries";
 
 interface SearchDialogProps {
   onClose: () => void;
   onOpenNote: (id: string) => void;
+  initialQuery?: string;
 }
 
-function SearchDialog({ onClose, onOpenNote }: SearchDialogProps) {
-  const [query, setQuery] = useState("");
+function SearchDialog({
+  onClose,
+  onOpenNote,
+  initialQuery = "",
+}: SearchDialogProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [namingSearch, setNamingSearch] = useState(false);
+  const [searchName, setSearchName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const results = useSearchNotes(query);
+  const saveSearch = useCreateSavedSearch();
   const notes = results.data ?? [];
   const parsed = parseSearchInput(query);
   const activeFilters = Object.entries(parsed.filters);
 
   useEffect(() => inputRef.current?.focus(), []);
+
+  useEffect(() => {
+    if (namingSearch) nameInputRef.current?.focus();
+  }, [namingSearch]);
 
   function openActive() {
     const note = notes[activeIndex];
@@ -50,6 +64,19 @@ function SearchDialog({ onClose, onOpenNote }: SearchDialogProps) {
     openActive();
   }
 
+  async function submitSavedSearch(event: FormEvent) {
+    event.preventDefault();
+    if (!searchName.trim() || !query.trim()) return;
+    try {
+      await saveSearch.mutateAsync({ name: searchName, query });
+      setNamingSearch(false);
+      setSearchName("");
+      inputRef.current?.focus();
+    } catch {
+      // Mutation state renders the recoverable error without closing the form.
+    }
+  }
+
   return (
     <div className="dialog-backdrop search-backdrop">
       <section
@@ -61,7 +88,7 @@ function SearchDialog({ onClose, onOpenNote }: SearchDialogProps) {
         <h2 className="visually-hidden" id="search-dialog-title">
           Search notes
         </h2>
-        <form onSubmit={submit}>
+        <form className="search-query-form" onSubmit={submit}>
           <label className="visually-hidden" htmlFor="global-search">
             Search notes
           </label>
@@ -79,8 +106,42 @@ function SearchDialog({ onClose, onOpenNote }: SearchDialogProps) {
             }}
             onKeyDown={handleKeyDown}
           />
+          <button
+            className="search-save-button"
+            type="button"
+            disabled={!query.trim() || saveSearch.isPending}
+            onClick={() => setNamingSearch(true)}
+          >
+            Save search
+          </button>
           <kbd>⌘ K</kbd>
         </form>
+
+        {namingSearch ? (
+          <form className="save-search-form" onSubmit={submitSavedSearch}>
+            <label htmlFor="saved-search-name">Saved search name</label>
+            <input
+              ref={nameInputRef}
+              id="saved-search-name"
+              value={searchName}
+              onChange={(event) => setSearchName(event.target.value)}
+              placeholder="e.g. Recent project notes"
+              autoComplete="off"
+            />
+            <button
+              type="submit"
+              disabled={!searchName.trim() || saveSearch.isPending}
+            >
+              {saveSearch.isPending ? "Saving…" : "Save"}
+            </button>
+            <button type="button" onClick={() => setNamingSearch(false)}>
+              Cancel
+            </button>
+            {saveSearch.isError ? (
+              <p role="alert">Search could not be saved.</p>
+            ) : null}
+          </form>
+        ) : null}
 
         {activeFilters.length > 0 ? (
           <ul className="search-filter-list" aria-label="Active search filters">

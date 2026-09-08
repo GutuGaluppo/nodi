@@ -5,6 +5,7 @@ import EditorPane from "../../features/editor/EditorPane";
 import NotebookSection from "../../features/notebooks/NotebookSection";
 import { useNotebooks } from "../../features/notebooks/notebookQueries";
 import NoteList from "../../features/notes/NoteList";
+import SavedSearchSection from "../../features/search/SavedSearchSection";
 import ShortcutSection from "../../features/shortcuts/ShortcutSection";
 import TagSection from "../../features/tags/TagSection";
 import { useTags } from "../../features/tags/tagQueries";
@@ -28,6 +29,7 @@ interface DesktopShellProps {
   selectedTagId: string | null;
   onSelectTag: (id: string) => void;
   onNoteRemoved: () => void;
+  onOpenSavedSearch: (query: string) => void;
 }
 
 function DesktopShell({
@@ -47,6 +49,7 @@ function DesktopShell({
   selectedTagId,
   onSelectTag,
   onNoteRemoved,
+  onOpenSavedSearch,
 }: DesktopShellProps) {
   const [libraryCollapsed, setLibraryCollapsed] = useState(false);
   const notebooks = useNotebooks();
@@ -99,6 +102,8 @@ function DesktopShell({
           }}
           onOpenNotebook={onSelectNotebook}
         />
+
+        <SavedSearchSection onOpen={onOpenSavedSearch} />
 
         <nav className="primary-navigation" aria-label="Primary navigation">
           <p className="section-label">Workspace</p>

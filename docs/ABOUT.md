@@ -270,3 +270,11 @@ NODI now uses its supplied visual identity throughout the application. The trans
 NODI adopts the reference's quieter desktop rhythm without importing unrelated product concepts: brighter neutral surfaces, fine borders, compact radii, structured sidebar navigation, understated selection states, a wider Library, and a more generous editor canvas. Formatting no longer consumes permanent editor space. Selecting text opens a compact Tiptap bubble toolbar above the selection with active-state feedback and accessible labels; collapsing the selection dismisses it.
 
 ![NODI after UI-004](about/screenshots/ui-004-reference-editor.png)
+
+## 033 — SEARCH-004 Saved searches
+
+**Completed:** September 8, 2026
+
+Useful searches can now be named and kept in the sidebar. Each saved search preserves its complete query — including structured filters — and opens the search dialog with that query ready to use. Searches persist locally in SQLite and can be removed without affecting notes or their content.
+
+![NODI after SEARCH-004](about/screenshots/search-004-saved-searches.png)

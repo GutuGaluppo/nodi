@@ -21,6 +21,7 @@ import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note
 import search001Screenshot from "../../../docs/about/screenshots/search-001-fts-index.png";
 import search002Screenshot from "../../../docs/about/screenshots/search-002-basic-search.png";
 import search003Screenshot from "../../../docs/about/screenshots/search-003-filters.png";
+import search004Screenshot from "../../../docs/about/screenshots/search-004-saved-searches.png";
 import short001Screenshot from "../../../docs/about/screenshots/short-001-favorites.png";
 import tag001Screenshot from "../../../docs/about/screenshots/tag-001-tags.png";
 import tag002Screenshot from "../../../docs/about/screenshots/tag-002-note-tags.png";
@@ -300,6 +301,14 @@ const evolution = [
     description:
       "A calmer, structured workspace brings NODI closer to a focused desktop tool, while formatting now appears in a compact contextual toolbar only when text is selected.",
     screenshot: ui004Screenshot,
+  },
+  {
+    id: "SEARCH-004",
+    title: "Useful searches stay close",
+    date: "September 8, 2026",
+    description:
+      "Named searches now persist locally in SQLite and live in the sidebar. Opening one restores its full text and structured filters, while removing it never touches the notes it finds.",
+    screenshot: search004Screenshot,
   },
 ];
 
