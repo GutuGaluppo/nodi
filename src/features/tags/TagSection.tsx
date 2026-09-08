@@ -54,6 +54,8 @@ function TagSection({ selectedTagId, onSelectTag }: TagSectionProps) {
           className="sidebar-icon-button"
           type="button"
           aria-label="Create tag"
+          title="Create tag"
+          data-tooltip="New tag"
           onClick={() => {
             reset();
             setEditing(true);

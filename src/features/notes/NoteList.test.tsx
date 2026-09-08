@@ -40,6 +40,7 @@ function renderNoteList(
         view="notes"
         selectedNoteId={props.selectedNoteId ?? null}
         onSelectNote={onSelectNote}
+        onCollapse={vi.fn()}
       />
     </QueryClientProvider>,
   );

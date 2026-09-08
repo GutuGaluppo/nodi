@@ -1,4 +1,5 @@
 import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import { useEffect, useRef } from "react";
 import type { Note } from "../db/repositories/noteRepository";
 import { EMPTY_NOTE_CONTENT_JSON } from "../db/repositories/noteRepository";
@@ -81,7 +82,13 @@ function NoteEditor({
 
   return (
     <div className="note-editor">
-      <EditorToolbar editor={editor} />
+      <BubbleMenu
+        editor={editor}
+        options={{ placement: "top", offset: 10 }}
+        shouldShow={({ state }) => !state.selection.empty}
+      >
+        <EditorToolbar editor={editor} />
+      </BubbleMenu>
       <EditorContent editor={editor} className="note-editor-content" />
     </div>
   );

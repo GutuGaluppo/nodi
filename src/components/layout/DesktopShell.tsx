@@ -1,5 +1,6 @@
-import type { Ref } from "react";
+import { type Ref, useState } from "react";
 import type { ThemePreference } from "../../app/theme";
+import nodiMark from "../../assets/branding/nodi-mark.png";
 import EditorPane from "../../features/editor/EditorPane";
 import NotebookSection from "../../features/notebooks/NotebookSection";
 import { useNotebooks } from "../../features/notebooks/notebookQueries";
@@ -7,6 +8,7 @@ import NoteList from "../../features/notes/NoteList";
 import ShortcutSection from "../../features/shortcuts/ShortcutSection";
 import TagSection from "../../features/tags/TagSection";
 import { useTags } from "../../features/tags/tagQueries";
+import Icon from "../ui/Icon";
 import ThemeSelector from "../ui/ThemeSelector";
 
 interface DesktopShellProps {
@@ -46,6 +48,7 @@ function DesktopShell({
   onSelectTag,
   onNoteRemoved,
 }: DesktopShellProps) {
+  const [libraryCollapsed, setLibraryCollapsed] = useState(false);
   const notebooks = useNotebooks();
   const selectedNotebookName = notebooks.data?.find(
     (notebook) => notebook.id === selectedNotebookId,
@@ -56,11 +59,29 @@ function DesktopShell({
   )?.name;
 
   return (
-    <main className="desktop-shell">
+    <main
+      className={`desktop-shell${libraryCollapsed ? " library-collapsed" : ""}`}
+    >
       <aside className="sidebar" aria-label="Sidebar">
-        <header className="sidebar-header">
-          <h1>NODI</h1>
-          <p>Local notes</p>
+        <header className="sidebar-app-header">
+          <div className="sidebar-brand">
+            <img src={nodiMark} alt="" />
+            <h1>NODI</h1>
+          </div>
+          <details className="settings-menu">
+            <summary
+              aria-label="Settings"
+              title="Settings"
+              data-tooltip="Settings"
+            >
+              <Icon name="settings" />
+            </summary>
+            <div className="settings-popover">
+              <button type="button" onClick={onOpenAbout}>
+                About NODI
+              </button>
+            </div>
+          </details>
         </header>
 
         <button
@@ -114,25 +135,21 @@ function DesktopShell({
 
         <footer className="sidebar-footer">
           <ThemeSelector value={theme} onChange={onThemeChange} />
-          <button
-            className="text-button sidebar-button"
-            type="button"
-            onClick={onOpenAbout}
-          >
-            About
-          </button>
         </footer>
       </aside>
 
-      <NoteList
-        view={activeView}
-        selectedNoteId={selectedNoteId}
-        onSelectNote={onSelectNote}
-        notebookId={activeView === "notes" ? selectedNotebookId : null}
-        notebookName={selectedNotebookName}
-        tagId={activeView === "notes" ? selectedTagId : null}
-        tagName={selectedTagName}
-      />
+      {libraryCollapsed ? null : (
+        <NoteList
+          view={activeView}
+          selectedNoteId={selectedNoteId}
+          onSelectNote={onSelectNote}
+          onCollapse={() => setLibraryCollapsed(true)}
+          notebookId={activeView === "notes" ? selectedNotebookId : null}
+          notebookName={selectedNotebookName}
+          tagId={activeView === "notes" ? selectedTagId : null}
+          tagName={selectedTagName}
+        />
+      )}
 
       <EditorPane
         ref={editorPaneRef}
@@ -143,6 +160,8 @@ function DesktopShell({
         onNoteRemoved={onNoteRemoved}
         activeNotebookId={activeView === "notes" ? selectedNotebookId : null}
         activeTagId={activeView === "notes" ? selectedTagId : null}
+        libraryCollapsed={libraryCollapsed}
+        onExpandLibrary={() => setLibraryCollapsed(false)}
       />
     </main>
   );

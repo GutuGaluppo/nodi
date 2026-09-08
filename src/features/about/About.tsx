@@ -27,6 +27,10 @@ import tag002Screenshot from "../../../docs/about/screenshots/tag-002-note-tags.
 import trash001Screenshot from "../../../docs/about/screenshots/trash-001-soft-deletion.png";
 import trash002Screenshot from "../../../docs/about/screenshots/trash-002-restore.png";
 import trash003Screenshot from "../../../docs/about/screenshots/trash-003-permanent-delete.png";
+import ui001Screenshot from "../../../docs/about/screenshots/ui-001-interface-polish.png";
+import ui002Screenshot from "../../../docs/about/screenshots/ui-002-sidebar-library.png";
+import ui003Screenshot from "../../../docs/about/screenshots/ui-003-brand-assets.png";
+import ui004Screenshot from "../../../docs/about/screenshots/ui-004-reference-editor.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -264,6 +268,38 @@ const evolution = [
     description:
       "Search now parses visible, composable tag, notebook, created-date, and updated-date filters while preserving free-text relevance ranking and binding every value safely in SQLite.",
     screenshot: search003Screenshot,
+  },
+  {
+    id: "UI-001",
+    title: "More room for the work",
+    date: "September 8, 2026",
+    description:
+      "NODI's workspace now removes redundant chrome, centers theme controls, gathers About under Settings, replaces row actions with accessible icons, refines metadata selectors, and moves formatting into a compact floating menu.",
+    screenshot: ui001Screenshot,
+  },
+  {
+    id: "UI-002",
+    title: "A workspace that gets out of the way",
+    date: "September 8, 2026",
+    description:
+      "NODI's name returns to the sidebar beside Settings, icon controls explain themselves with tooltips, and the Library can collapse into a small restore control whenever the writing surface needs more room.",
+    screenshot: ui002Screenshot,
+  },
+  {
+    id: "UI-003",
+    title: "NODI finds its mark",
+    date: "September 8, 2026",
+    description:
+      "The new feather mark now anchors NODI's sidebar and startup screen, while a complete native icon set carries the same identity across desktop and mobile application targets.",
+    screenshot: ui003Screenshot,
+  },
+  {
+    id: "UI-004",
+    title: "Formatting appears in context",
+    date: "September 8, 2026",
+    description:
+      "A calmer, structured workspace brings NODI closer to a focused desktop tool, while formatting now appears in a compact contextual toolbar only when text is selected.",
+    screenshot: ui004Screenshot,
   },
 ];
 

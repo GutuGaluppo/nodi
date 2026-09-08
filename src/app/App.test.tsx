@@ -176,6 +176,9 @@ describe("NODI app", () => {
   it("renders the NODI baseline", async () => {
     render(<App />);
 
+    expect(
+      screen.getByRole("button", { name: "New note" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "NODI" })).toBeInTheDocument();
     expect(
       screen.getByRole("complementary", { name: "Sidebar" }),
@@ -188,11 +191,25 @@ describe("NODI app", () => {
     expect(await screen.findByText("No notes yet")).toBeInTheDocument();
   });
 
+  it("collapses and restores the Library", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Collapse Library" }));
+    expect(
+      screen.queryByRole("region", { name: "Notes" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Expand Library" }));
+    expect(screen.getByRole("region", { name: "Notes" })).toBeInTheDocument();
+  });
+
   it("opens and closes the visual history", async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "About" }));
+    await user.click(screen.getByLabelText("Settings"));
+    await user.click(screen.getByRole("button", { name: "About NODI" }));
 
     expect(
       screen.getByRole("heading", { name: "The making of NODI" }),
@@ -200,11 +217,13 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(29);
+    expect(screen.getAllByRole("img")).toHaveLength(33);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
-    expect(screen.getByRole("heading", { name: "NODI" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "New note" }),
+    ).toBeInTheDocument();
   });
 
   it("applies and stores an explicit theme preference", async () => {

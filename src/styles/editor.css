@@ -2,7 +2,25 @@
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  padding: var(--space-10) 0 var(--space-24);
+  padding: var(--space-18) 0 var(--space-24);
+}
+
+.editor-pane {
+  position: relative;
+}
+
+.expand-library-button {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 3;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
+}
+
+.expand-library-button .icon {
+  transform: rotate(-90deg);
 }
 
 .note-title-field,
@@ -30,10 +48,11 @@
 
 .note-metadata-controls {
   display: flex;
+  width: min(var(--editor-max-width), calc(100% - var(--space-16)));
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  margin: var(--space-2) 0 var(--space-4);
+  margin: var(--space-2) auto var(--space-4);
 }
 
 .note-metadata-controls .note-notebook-control {
@@ -77,20 +96,27 @@
   max-width: 150px;
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--color-text);
   background: var(--color-surface);
   font: inherit;
+  cursor: pointer;
 }
 
 .note-notebook-control select {
   max-width: 220px;
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--color-text);
   background: var(--color-surface);
   font: inherit;
+  cursor: pointer;
+}
+
+.note-notebook-control select:hover,
+.note-tags-control select:hover {
+  border-color: var(--color-accent);
 }
 
 .editor-title-row .note-title-field {
@@ -112,6 +138,21 @@
   gap: var(--space-3);
 }
 
+.icon-action {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  margin-top: var(--space-1);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  place-items: center;
+}
+
+.icon-action:hover {
+  color: var(--color-danger);
+  background: var(--color-hover);
+}
+
 .subtle-action:hover {
   color: var(--color-text);
 }
@@ -127,9 +168,9 @@
   color: var(--color-text);
   background: transparent;
   font: inherit;
-  font-size: var(--font-size-title);
-  font-weight: 650;
-  letter-spacing: -0.025em;
+  font-size: 2.25rem;
+  font-weight: 620;
+  letter-spacing: -0.04em;
 }
 
 .note-title-field input::placeholder {
@@ -186,23 +227,33 @@
 }
 
 .editor-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) 0;
-  background: var(--color-bg);
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 14%);
+  white-space: nowrap;
 }
 
 .toolbar-button {
-  padding: var(--space-1) var(--space-2);
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: 550;
+  font-size: 0.78rem;
+  font-weight: 620;
+}
+
+.toolbar-button[aria-label="Italic"] span {
+  font-style: italic;
+}
+
+.toolbar-button[aria-label="Underline"] span {
+  text-decoration: underline;
 }
 
 .toolbar-button:hover {
@@ -326,6 +377,10 @@
 @media (max-width: 980px) {
   .note-title-field,
   .note-editor {
+    width: calc(100% - var(--space-10));
+  }
+
+  .note-metadata-controls {
     width: calc(100% - var(--space-10));
   }
 }

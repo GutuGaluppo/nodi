@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("shows the NODI baseline and visual history", async ({ page }) => {
   await page.goto("/");
 
+  await expect(page.getByRole("button", { name: "New note" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "NODI" })).toBeVisible();
   await expect(
     page.getByRole("complementary", { name: "Sidebar" }),
@@ -11,10 +12,19 @@ test("shows the NODI baseline and visual history", async ({ page }) => {
   await expect(
     page.getByRole("region", { name: "Nothing selected" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "About" }).click();
+  await page.getByLabel("Settings").click();
+  await page.getByRole("button", { name: "About NODI" }).click();
   await expect(
     page.getByRole("heading", { name: "The making of NODI" }),
   ).toBeVisible();
+});
+
+test("collapses and restores the Library", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Collapse Library" }).click();
+  await expect(page.getByRole("region", { name: "Notes" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Expand Library" }).click();
+  await expect(page.getByRole("region", { name: "Notes" })).toBeVisible();
 });
 
 test("applies and restores the selected theme", async ({ page }) => {
@@ -46,8 +56,8 @@ test("keeps all three desktop columns visible at the minimum width", async ({
   const noteList = page.getByRole("region", { name: "Notes" });
   const editor = page.getByRole("region", { name: "Nothing selected" });
 
-  await expect(sidebar).toHaveCSS("width", "232px");
-  await expect(noteList).toHaveCSS("width", "320px");
+  await expect(sidebar).toHaveCSS("width", "244px");
+  await expect(noteList).toHaveCSS("width", "340px");
   await expect(editor).toBeVisible();
   expect(
     await page.evaluate(

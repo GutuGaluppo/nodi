@@ -1,5 +1,6 @@
 import { type Ref, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import Icon from "../../components/ui/Icon";
 import NoteNotebookSelect from "../notebooks/NoteNotebookSelect";
 import { useNote } from "../notes/useNote";
 import { usePermanentlyDeleteNote } from "../notes/usePermanentlyDeleteNote";
@@ -19,6 +20,8 @@ interface EditorPaneProps {
   onNoteRemoved: () => void;
   activeNotebookId: string | null;
   activeTagId: string | null;
+  libraryCollapsed: boolean;
+  onExpandLibrary: () => void;
 }
 
 /**
@@ -35,6 +38,8 @@ function EditorPane({
   onNoteRemoved,
   activeNotebookId,
   activeTagId,
+  libraryCollapsed,
+  onExpandLibrary,
 }: EditorPaneProps) {
   const note = useNote(noteId);
   const trashNote = useTrashNote();
@@ -50,6 +55,18 @@ function EditorPane({
       aria-labelledby="editor-heading"
       tabIndex={-1}
     >
+      {libraryCollapsed ? (
+        <button
+          className="icon-button expand-library-button"
+          type="button"
+          aria-label="Expand Library"
+          title="Expand Library"
+          data-tooltip="Expand Library"
+          onClick={onExpandLibrary}
+        >
+          <Icon name="chevron" />
+        </button>
+      ) : null}
       {noteId === null ? (
         <div className="editor-empty-state">
           <p className="section-label">Editor</p>
@@ -86,8 +103,11 @@ function EditorPane({
                   }
                 />
                 <button
-                  className="subtle-action danger-action"
+                  className="icon-action danger-action"
                   type="button"
+                  aria-label="Move to Trash"
+                  title="Move to Trash"
+                  data-tooltip="Move to Trash"
                   disabled={trashNote.isPending}
                   onClick={() => {
                     trashNote.mutate(selectedNote.id, {
@@ -95,7 +115,7 @@ function EditorPane({
                     });
                   }}
                 >
-                  {trashNote.isPending ? "Moving…" : "Move to Trash"}
+                  <Icon name="trash" />
                 </button>
               </div>
             ) : (

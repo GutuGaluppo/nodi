@@ -238,3 +238,35 @@ Every note now has a synchronized FTS5 projection covering its title, plain-text
 Search now understands composable `tag:`, `notebook:`, `created:`, and `updated:` filters alongside ordinary text. Quoted notebook names are supported, active filters remain visible in the dialog, and every generated SQL condition uses bound values while free text retains FTS relevance ranking.
 
 ![NODI after SEARCH-003](about/screenshots/search-003-filters.png)
+
+## 029 — UI-001 Interface polish
+
+**Completed:** September 8, 2026
+
+NODI's workspace now gives notes more visual room. Redundant naming is removed from the native title bar and sidebar, theme controls are centered, and About lives inside a dedicated Settings menu. Compact, accessible icons replace verbose row actions; note metadata selectors have a clearer shared style; and the full formatting toolbar is available from a floating control without permanently occupying writing space.
+
+![NODI after UI-001](about/screenshots/ui-001-interface-polish.png)
+
+## 030 — UI-002 Sidebar identity and collapsible Library
+
+**Completed:** September 8, 2026
+
+The NODI name returns exactly where it provides useful orientation: at the top of the sidebar, opposite the Settings menu. Icon-only controls now explain their actions through accessible labels, native titles, and visible hover/focus tooltips. The Library column can also collapse completely to give the editor more room, leaving a compact, keyboard-accessible control that restores it instantly.
+
+![NODI after UI-002](about/screenshots/ui-002-sidebar-library.png)
+
+## 031 — UI-003 Brand assets
+
+**Completed:** September 8, 2026
+
+NODI now uses its supplied visual identity throughout the application. The transparent feather mark appears beside the sidebar name and on the startup screen, with automatic contrast treatment in dark mode. The primary dark icon has also generated the complete Tauri icon family for macOS, Windows, Linux, iOS, and Android, while all three original icon variants remain preserved as source assets.
+
+![NODI after UI-003](about/screenshots/ui-003-brand-assets.png)
+
+## 032 — UI-004 Reference-led editor refinement
+
+**Completed:** September 8, 2026
+
+NODI adopts the reference's quieter desktop rhythm without importing unrelated product concepts: brighter neutral surfaces, fine borders, compact radii, structured sidebar navigation, understated selection states, a wider Library, and a more generous editor canvas. Formatting no longer consumes permanent editor space. Selecting text opens a compact Tiptap bubble toolbar above the selection with active-state feedback and accessible labels; collapsing the selection dismisses it.
+
+![NODI after UI-004](about/screenshots/ui-004-reference-editor.png)

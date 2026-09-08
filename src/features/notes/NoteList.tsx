@@ -1,4 +1,5 @@
 import { type KeyboardEvent, useRef } from "react";
+import Icon from "../../components/ui/Icon";
 import NoteListItem from "./NoteListItem";
 import { useNotes } from "./useNotes";
 
@@ -6,6 +7,7 @@ interface NoteListProps {
   view: "notes" | "trash";
   selectedNoteId: string | null;
   onSelectNote: (id: string) => void;
+  onCollapse: () => void;
   notebookId?: string | null;
   notebookName?: string;
   tagId?: string | null;
@@ -18,6 +20,7 @@ function NoteList({
   view,
   selectedNoteId,
   onSelectNote,
+  onCollapse,
   notebookId = null,
   notebookName,
   tagId = null,
@@ -77,12 +80,24 @@ function NoteList({
           <p className="section-label">Library</p>
           <h2 id="notes-heading">{displayTitle}</h2>
         </div>
-        <span className="item-count">
-          <span aria-hidden="true">{count}</span>
-          <span className="visually-hidden">
-            {count} {view === "trash" ? "trashed notes" : "notes"}
+        <div className="pane-header-actions">
+          <span className="item-count">
+            <span aria-hidden="true">{count}</span>
+            <span className="visually-hidden">
+              {count} {view === "trash" ? "trashed notes" : "notes"}
+            </span>
           </span>
-        </span>
+          <button
+            className="icon-button collapse-library-button"
+            type="button"
+            aria-label="Collapse Library"
+            title="Collapse Library"
+            data-tooltip="Collapse Library"
+            onClick={onCollapse}
+          >
+            <Icon name="chevron" />
+          </button>
+        </div>
       </header>
 
       {notes.isPending ? (

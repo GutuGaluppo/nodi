@@ -15,12 +15,15 @@ function ShortcutToggle({ targetType, targetId, label }: ShortcutToggleProps) {
       (shortcut) =>
         shortcut.targetType === targetType && shortcut.targetId === targetId,
     ) ?? false;
+  const actionLabel = `${active ? "Remove" : "Add"} ${label} ${active ? "from" : "to"} shortcuts`;
 
   return (
     <button
       className="shortcut-toggle"
       type="button"
-      aria-label={`${active ? "Remove" : "Add"} ${label} ${active ? "from" : "to"} shortcuts`}
+      aria-label={actionLabel}
+      title={actionLabel}
+      data-tooltip={active ? "Remove shortcut" : "Add shortcut"}
       aria-pressed={active}
       disabled={toggle.isPending}
       onClick={() => toggle.mutate({ targetType, targetId, active })}

@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import Icon from "../../components/ui/Icon";
 import type { Notebook } from "../../db/repositories/notebookRepository";
 import type { NotebookStack } from "../../db/repositories/notebookStackRepository";
 import ShortcutToggle from "../shortcuts/ShortcutToggle";
@@ -63,6 +64,7 @@ function NotebookRows({
               label={notebook.name}
             />
             <select
+              className="compact-select"
               aria-label={`Stack for ${notebook.name}`}
               title={`Stack for ${notebook.name}`}
               value={notebook.stackId ?? ""}
@@ -80,16 +82,20 @@ function NotebookRows({
             <button
               type="button"
               aria-label={`Rename ${notebook.name}`}
+              title={`Rename ${notebook.name}`}
+              data-tooltip="Rename"
               onClick={() => onRename(notebook)}
             >
-              Edit
+              <Icon name="edit" />
             </button>
             <button
               type="button"
               aria-label={`Delete ${notebook.name}`}
+              title={`Delete ${notebook.name}`}
+              data-tooltip="Delete"
               onClick={() => onDelete(notebook)}
             >
-              Delete
+              <Icon name="trash" />
             </button>
           </span>
         </li>
@@ -203,6 +209,7 @@ function NotebookSection({
             type="button"
             aria-label="Create notebook"
             title="Create notebook"
+            data-tooltip="New notebook"
             onClick={() => beginCreate("notebook")}
           >
             +
@@ -212,6 +219,7 @@ function NotebookSection({
             type="button"
             aria-label="Create stack"
             title="Create stack"
+            data-tooltip="New stack"
             onClick={() => beginCreate("stack")}
           >
             ≡
@@ -284,6 +292,8 @@ function NotebookSection({
                   <button
                     type="button"
                     aria-label={`Rename stack ${stack.name}`}
+                    title={`Rename stack ${stack.name}`}
+                    data-tooltip="Rename"
                     onClick={() => {
                       resetEditor();
                       setEditor("stack");
@@ -291,14 +301,16 @@ function NotebookSection({
                       setRenamingStack(stack);
                     }}
                   >
-                    Edit
+                    <Icon name="edit" />
                   </button>
                   <button
                     type="button"
                     aria-label={`Delete stack ${stack.name}`}
+                    title={`Delete stack ${stack.name}`}
+                    data-tooltip="Delete"
                     onClick={() => setDeletingStack(stack)}
                   >
-                    Delete
+                    <Icon name="trash" />
                   </button>
                 </span>
               </header>

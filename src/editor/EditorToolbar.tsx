@@ -6,12 +6,14 @@ interface EditorToolbarProps {
 
 interface ToolbarButtonProps {
   label: string;
+  display?: string;
   isActive?: boolean;
   onClick: () => void;
 }
 
 function ToolbarButton({
   label,
+  display = label,
   isActive = false,
   onClick,
 }: ToolbarButtonProps) {
@@ -19,10 +21,11 @@ function ToolbarButton({
     <button
       type="button"
       className="toolbar-button"
+      aria-label={label}
       aria-pressed={isActive}
       onClick={onClick}
     >
-      {label}
+      <span aria-hidden="true">{display}</span>
     </button>
   );
 }
@@ -63,55 +66,70 @@ function EditorToolbar({ editor }: EditorToolbarProps) {
     <div className="editor-toolbar" role="toolbar" aria-label="Formatting">
       <ToolbarButton
         label="Bold"
+        display="B"
         isActive={active.bold}
         onClick={() => editor.chain().focus().toggleBold().run()}
       />
       <ToolbarButton
         label="Italic"
+        display="I"
         isActive={active.italic}
         onClick={() => editor.chain().focus().toggleItalic().run()}
       />
       <ToolbarButton
         label="Underline"
+        display="U"
         isActive={active.underline}
         onClick={() => editor.chain().focus().toggleUnderline().run()}
       />
       <ToolbarButton
         label="Highlight"
+        display="H"
         isActive={active.highlight}
         onClick={() => editor.chain().focus().toggleHighlight().run()}
       />
       <span className="toolbar-divider" aria-hidden="true" />
       <ToolbarButton
         label="Heading 1"
+        display="H1"
         isActive={active.h1}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
       />
       <ToolbarButton
         label="Heading 2"
+        display="H2"
         isActive={active.h2}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
       />
       <span className="toolbar-divider" aria-hidden="true" />
       <ToolbarButton
         label="Bullet list"
+        display="• List"
         isActive={active.bulletList}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
       />
       <ToolbarButton
         label="Numbered list"
+        display="1. List"
         isActive={active.orderedList}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
       />
       <ToolbarButton
         label="Task list"
+        display="☑"
         isActive={active.taskList}
         onClick={() => editor.chain().focus().toggleTaskList().run()}
       />
       <span className="toolbar-divider" aria-hidden="true" />
-      <ToolbarButton label="Link" isActive={active.link} onClick={editLink} />
+      <ToolbarButton
+        label="Link"
+        display="↗"
+        isActive={active.link}
+        onClick={editLink}
+      />
       <ToolbarButton
         label="Insert table"
+        display="▦"
         onClick={() =>
           editor
             .chain()

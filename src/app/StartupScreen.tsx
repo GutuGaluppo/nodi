@@ -1,3 +1,5 @@
+import nodiMark from "../assets/branding/nodi-mark.png";
+
 interface StartupScreenProps {
   status: "loading" | "error";
   onRetry?: () => void;
@@ -6,7 +8,10 @@ interface StartupScreenProps {
 function StartupScreen({ status, onRetry }: StartupScreenProps) {
   return (
     <main className="startup-screen" aria-live="polite">
-      <p className="section-label">NODI</p>
+      <div className="startup-brand">
+        <img src={nodiMark} alt="" />
+        <p className="section-label startup-brand-label">NODI</p>
+      </div>
       {status === "loading" ? (
         <>
           <h1>Opening your library</h1>
