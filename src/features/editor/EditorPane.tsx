@@ -1,3 +1,4 @@
+import type { Editor } from "@tiptap/react";
 import { type Ref, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Icon from "../../components/ui/Icon";
@@ -10,8 +11,19 @@ import { useUpdateNote } from "../notes/useUpdateNote";
 import PrivateNoteGate from "../privacy/PrivateNoteGate";
 import ShortcutToggle from "../shortcuts/ShortcutToggle";
 import NoteTagPicker from "../tags/NoteTagPicker";
+import { useVoiceCapture } from "../voice/useVoiceCapture";
+import { useVoiceInsertionTarget } from "../voice/useVoiceInsertionTarget";
+import VoiceCaptureButton from "../voice/VoiceCaptureButton";
+import VoiceCapturePanel from "../voice/VoiceCapturePanel";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
+
+const VOICE_LANGUAGES = [
+  { code: "pt-BR", label: "Português (Brasil)" },
+  { code: "pt-PT", label: "Português (Portugal)" },
+  { code: "en", label: "English" },
+  { code: "auto", label: "Detectar automaticamente" },
+] as const;
 
 interface EditorPaneProps {
   noteId: string | null;
@@ -50,7 +62,33 @@ function EditorPane({
   const updateNote = useUpdateNote();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [unlockedNoteId, setUnlockedNoteId] = useState<string | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [voiceLanguage, setVoiceLanguage] = useState<string>("pt-BR");
   const selectedNote = note.data;
+
+  const voice = useVoiceCapture();
+  const insertionTarget = useVoiceInsertionTarget(editor);
+  const canInsertVoiceResultHere =
+    voice.state.result !== null &&
+    selectedNote != null &&
+    voice.state.result.noteId === selectedNote.id;
+
+  function handleStartVoiceCapture(): void {
+    if (selectedNote == null) {
+      return;
+    }
+    insertionTarget.mark();
+    void voice.start(selectedNote.id, voiceLanguage);
+  }
+
+  function handleInsertVoiceResult(): void {
+    if (editor === null || voice.state.result === null) {
+      return;
+    }
+    const pos = insertionTarget.resolve();
+    editor.chain().focus().insertContentAt(pos, voice.state.result.text).run();
+    voice.dismiss();
+  }
 
   return (
     <section
@@ -109,6 +147,26 @@ function EditorPane({
                       ? "Untitled"
                       : selectedNote.title
                   }
+                />
+                {voice.state.phase === "idle" ? (
+                  <select
+                    className="voice-language-select"
+                    aria-label="Idioma da transcrição"
+                    value={voiceLanguage}
+                    onChange={(event) => setVoiceLanguage(event.target.value)}
+                  >
+                    {VOICE_LANGUAGES.map((language) => (
+                      <option key={language.code} value={language.code}>
+                        {language.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+                <VoiceCaptureButton
+                  phase={voice.state.phase}
+                  disabled={false}
+                  onStart={handleStartVoiceCapture}
+                  onStop={voice.stop}
                 />
                 <button
                   className="icon-action"
@@ -198,11 +256,22 @@ function EditorPane({
               Your content was not changed.
             </p>
           ) : null}
+          {view === "notes" ? (
+            <VoiceCapturePanel
+              voiceState={voice.state}
+              canInsertHere={canInsertVoiceResultHere}
+              onStop={voice.stop}
+              onCancel={voice.cancel}
+              onInsert={handleInsertVoiceResult}
+              onDismiss={voice.dismiss}
+            />
+          ) : null}
           <AutosavingNoteEditor
             key={selectedNote.id}
             note={selectedNote}
             autoFocus={focusEditor}
             onAutoFocus={onEditorFocused}
+            onEditorReady={setEditor}
           />
           {confirmingDelete ? (
             <ConfirmDialog

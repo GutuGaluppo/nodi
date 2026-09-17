@@ -1,3 +1,4 @@
+import type { Editor } from "@tiptap/react";
 import type { Note } from "../../db/repositories/noteRepository";
 import NoteEditor from "../../editor/NoteEditor";
 import { useUpdateNote } from "../notes/useUpdateNote";
@@ -7,6 +8,7 @@ interface AutosavingNoteEditorProps {
   note: Note;
   autoFocus?: boolean;
   onAutoFocus?: () => void;
+  onEditorReady?: (editor: Editor | null) => void;
 }
 
 const STATUS_LABELS = {
@@ -21,6 +23,7 @@ function AutosavingNoteEditor({
   note,
   autoFocus,
   onAutoFocus,
+  onEditorReady,
 }: AutosavingNoteEditorProps) {
   const update = useUpdateNote();
   const autosave = useNoteAutosave(note.id, async (id, draft) => {
@@ -53,6 +56,7 @@ function AutosavingNoteEditor({
         onBlur={() => {
           void autosave.flush();
         }}
+        onEditorReady={onEditorReady}
       />
     </>
   );

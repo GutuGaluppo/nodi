@@ -1,4 +1,9 @@
-import { EditorContent, type JSONContent, useEditor } from "@tiptap/react";
+import {
+  type Editor,
+  EditorContent,
+  type JSONContent,
+  useEditor,
+} from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { useEffect, useRef } from "react";
 import type { Note } from "../db/repositories/noteRepository";
@@ -20,6 +25,7 @@ interface NoteEditorProps {
   onAutoFocus?: () => void;
   onChange?: (draft: { contentJson: string; contentText: string }) => void;
   onBlur?: () => void;
+  onEditorReady?: (editor: Editor | null) => void;
 }
 
 /**
@@ -33,6 +39,7 @@ function NoteEditor({
   onAutoFocus,
   onChange,
   onBlur,
+  onEditorReady,
 }: NoteEditorProps) {
   const synchronizing = useRef(false);
   const editor = useEditor(
@@ -59,6 +66,11 @@ function NoteEditor({
     },
     [],
   );
+
+  useEffect(() => {
+    onEditorReady?.(editor);
+    return () => onEditorReady?.(null);
+  }, [editor, onEditorReady]);
 
   // Reload the surface when a different note's body arrives. In EDIT-001 the
   // body only changes on note switch; EDIT-003 will guard against local echoes.

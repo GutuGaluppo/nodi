@@ -1,22 +1,34 @@
 interface IconProps {
   name:
+    | "check"
     | "chevron"
+    | "copy"
     | "edit"
     | "help"
     | "lock"
+    | "mic"
     | "moon"
     | "note"
     | "notebook"
     | "plus"
     | "search"
     | "settings"
+    | "square"
     | "stack"
     | "tag"
-    | "trash";
+    | "trash"
+    | "x";
 }
 
 const paths = {
+  check: <path d="m5 13 4 4 10-10" />,
   chevron: <path d="m8 9 4 4 4-4" />,
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" />
+    </>
+  ),
   edit: (
     <>
       <path d="M12 20h9" />
@@ -34,6 +46,12 @@ const paths = {
     <>
       <rect x="5" y="10" width="14" height="10" rx="2" />
       <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2" />
+    </>
+  ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
     </>
   ),
   moon: <path d="M20 15.2A8 8 0 0 1 8.8 4 8 8 0 1 0 20 15.2Z" />,
@@ -62,6 +80,7 @@ const paths = {
       <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
     </>
   ),
+  square: <rect x="6" y="6" width="12" height="12" rx="2" />,
   stack: (
     <>
       <path d="m12 3 8 4-8 4-8-4Z" />
@@ -80,6 +99,7 @@ const paths = {
       <path d="M8 6V4h8v2M19 6l-1 14H6L5 6m5 4v6m4-6v6" />
     </>
   ),
+  x: <path d="M6 6l12 12M18 6 6 18" />,
 };
 
 function Icon({ name }: IconProps) {
