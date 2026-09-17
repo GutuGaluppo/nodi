@@ -36,6 +36,7 @@ import ui004Screenshot from "../../../docs/about/screenshots/ui-004-reference-ed
 import ui005Screenshot from "../../../docs/about/screenshots/ui-005-reference-sidebar.png";
 import ui006Screenshot from "../../../docs/about/screenshots/ui-006-system-section.png";
 import ui007Screenshot from "../../../docs/about/screenshots/ui-007-settings-relocated.png";
+import ui008Screenshot from "../../../docs/about/screenshots/ui-008-compact-lists.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -345,6 +346,14 @@ const evolution = [
     description:
       "Notes can now be marked private, hide their title and preview in the library, stay out of search, and require a locally verified password before their contents can be opened.",
     screenshot: privacy001Screenshot,
+  },
+  {
+    id: "UI-008",
+    title: "Lists find a tighter rhythm",
+    date: "September 15, 2026",
+    description:
+      "Bullet, numbered, and task lists now use a compact line height, while checklist text sits cleanly beside its aligned checkbox without extra paragraph spacing.",
+    screenshot: ui008Screenshot,
   },
 ];
 

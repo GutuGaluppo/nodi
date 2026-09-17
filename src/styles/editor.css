@@ -357,6 +357,11 @@
 .note-editor-surface ul,
 .note-editor-surface ol {
   padding-left: var(--space-6);
+  line-height: 1.35;
+}
+
+.note-editor-surface li p {
+  margin: 0;
 }
 
 .note-editor-surface ul[data-type="taskList"] {
@@ -366,6 +371,7 @@
 
 .note-editor-surface ul[data-type="taskList"] li {
   display: flex;
+  align-items: flex-start;
   gap: var(--space-2);
 }
 

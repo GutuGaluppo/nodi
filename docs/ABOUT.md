@@ -310,3 +310,11 @@ Settings now has one unambiguous home inside the System section. The duplicate c
 Private notes now hide their title and preview in the library and are excluded from search. Opening one requires the local private-notes password; NODI stores only a salted PBKDF2 verifier, never the password itself.
 
 ![NODI after PRIVACY-001](about/screenshots/privacy-001-private-notes.png)
+
+## 038 — UI-008 Compact list rhythm
+
+**Completed:** September 15, 2026
+
+Bullet, numbered, and task lists now use a compact line height. Checklist text sits cleanly beside its aligned checkbox without the browser's extra paragraph spacing between items.
+
+![NODI after UI-008, showing a compact checklist](about/screenshots/ui-008-compact-lists.png)

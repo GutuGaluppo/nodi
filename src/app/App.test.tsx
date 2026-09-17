@@ -240,7 +240,7 @@ describe("NODI app", () => {
     expect(
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole("img")).toHaveLength(38);
+    expect(screen.getAllByRole("img")).toHaveLength(39);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 
