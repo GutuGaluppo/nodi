@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
 import Icon from "../../components/ui/Icon";
 import type { VoiceCapturePhase, VoiceCaptureState } from "./useVoiceCapture";
+import { parseVoiceCommand } from "./voiceCommandParser";
 
 interface VoiceCapturePanelProps {
   voiceState: VoiceCaptureState;
@@ -154,9 +155,25 @@ function VoiceCapturePanel({
   }
 
   if (voiceState.phase === "completed" && voiceState.result !== null) {
+    const plan = parseVoiceCommand(voiceState.result.text);
     return (
       <div className="voice-capture-panel voice-capture-result">
-        <p className="voice-capture-result-text">{voiceState.result.text}</p>
+        {plan.kind === "list" ? (
+          <>
+            <p className="voice-capture-result-hint">
+              {plan.listType === "task"
+                ? "Lista de tarefas detectada"
+                : "Lista detectada"}
+            </p>
+            <ul className="voice-capture-result-list">
+              {plan.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="voice-capture-result-text">{plan.text}</p>
+        )}
         {!canInsertHere ? (
           <p role="alert">
             Esta transcrição pertence a outra nota. Volte para ela para inserir,

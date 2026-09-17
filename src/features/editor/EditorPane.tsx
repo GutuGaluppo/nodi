@@ -1,4 +1,4 @@
-import type { Editor } from "@tiptap/react";
+import type { Editor, JSONContent } from "@tiptap/react";
 import { type Ref, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Icon from "../../components/ui/Icon";
@@ -15,8 +15,30 @@ import { useVoiceCapture } from "../voice/useVoiceCapture";
 import { useVoiceInsertionTarget } from "../voice/useVoiceInsertionTarget";
 import VoiceCaptureButton from "../voice/VoiceCaptureButton";
 import VoiceCapturePanel from "../voice/VoiceCapturePanel";
+import {
+  parseVoiceCommand,
+  type VoiceInsertionPlan,
+} from "../voice/voiceCommandParser";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
+
+/** Turns a parsed voice command into the Tiptap content to insert. */
+function buildVoiceInsertionContent(
+  plan: VoiceInsertionPlan,
+): JSONContent | string {
+  if (plan.kind === "text") {
+    return plan.text;
+  }
+  const isTask = plan.listType === "task";
+  return {
+    type: isTask ? "taskList" : "bulletList",
+    content: plan.items.map((item) => ({
+      type: isTask ? "taskItem" : "listItem",
+      ...(isTask ? { attrs: { checked: false } } : {}),
+      content: [{ type: "paragraph", content: [{ type: "text", text: item }] }],
+    })),
+  };
+}
 
 const VOICE_LANGUAGES = [
   { code: "pt-BR", label: "Português (Brasil)" },
@@ -86,7 +108,9 @@ function EditorPane({
       return;
     }
     const pos = insertionTarget.resolve();
-    editor.chain().focus().insertContentAt(pos, voice.state.result.text).run();
+    const plan = parseVoiceCommand(voice.state.result.text);
+    const content = buildVoiceInsertionContent(plan);
+    editor.chain().focus().insertContentAt(pos, content).run();
     voice.dismiss();
   }
 

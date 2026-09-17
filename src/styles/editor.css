@@ -426,6 +426,18 @@
   white-space: pre-wrap;
 }
 
+.voice-capture-result-hint {
+  color: var(--color-accent);
+  font-weight: 620;
+}
+
+.voice-capture-result-list {
+  margin: 0;
+  padding-left: var(--space-6);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
 .voice-capture-actions {
   display: flex;
   gap: var(--space-3);
