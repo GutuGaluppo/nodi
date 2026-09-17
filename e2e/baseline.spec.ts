@@ -17,6 +17,9 @@ test("shows the NODI baseline and visual history", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "The making of NODI" }),
   ).toBeVisible();
+  await page.screenshot({
+    path: "docs/about/screenshots/privacy-001-private-notes.png",
+  });
 });
 
 test("collapses and restores the Library", async ({ page }) => {

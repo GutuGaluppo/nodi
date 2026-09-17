@@ -18,6 +18,7 @@ import nb003Screenshot from "../../../docs/about/screenshots/nb-003-notebook-sta
 import note001Screenshot from "../../../docs/about/screenshots/note-001-note-repository.png";
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
+import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
 import search001Screenshot from "../../../docs/about/screenshots/search-001-fts-index.png";
 import search002Screenshot from "../../../docs/about/screenshots/search-002-basic-search.png";
 import search003Screenshot from "../../../docs/about/screenshots/search-003-filters.png";
@@ -336,6 +337,14 @@ const evolution = [
     description:
       "The duplicate Settings icon leaves the NODI header, while its existing menu moves intact to the clearly labeled Settings row in the System section.",
     screenshot: ui007Screenshot,
+  },
+  {
+    id: "PRIVACY-001",
+    title: "Private notes stay private",
+    date: "September 11, 2026",
+    description:
+      "Notes can now be marked private, hide their title and preview in the library, stay out of search, and require a locally verified password before their contents can be opened.",
+    screenshot: privacy001Screenshot,
   },
 ];
 

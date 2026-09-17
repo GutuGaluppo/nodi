@@ -6,6 +6,8 @@ import { useNote } from "../notes/useNote";
 import { usePermanentlyDeleteNote } from "../notes/usePermanentlyDeleteNote";
 import { useRestoreNote } from "../notes/useRestoreNote";
 import { useTrashNote } from "../notes/useTrashNote";
+import { useUpdateNote } from "../notes/useUpdateNote";
+import PrivateNoteGate from "../privacy/PrivateNoteGate";
 import ShortcutToggle from "../shortcuts/ShortcutToggle";
 import NoteTagPicker from "../tags/NoteTagPicker";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
@@ -45,7 +47,9 @@ function EditorPane({
   const trashNote = useTrashNote();
   const restoreNote = useRestoreNote();
   const deleteNote = usePermanentlyDeleteNote();
+  const updateNote = useUpdateNote();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [unlockedNoteId, setUnlockedNoteId] = useState<string | null>(null);
   const selectedNote = note.data;
 
   return (
@@ -84,6 +88,10 @@ function EditorPane({
           <h2 id="editor-heading">This note could not be opened</h2>
           <p>Your data was not changed.</p>
         </div>
+      ) : selectedNote.isPrivate && unlockedNoteId !== selectedNote.id ? (
+        <PrivateNoteGate
+          onUnlocked={() => setUnlockedNoteId(selectedNote.id)}
+        />
       ) : (
         <div className="editor-scroll">
           <h2 id="editor-heading" className="visually-hidden">
@@ -102,6 +110,34 @@ function EditorPane({
                       : selectedNote.title
                   }
                 />
+                <button
+                  className="icon-action"
+                  type="button"
+                  aria-label={
+                    selectedNote.isPrivate
+                      ? "Make note public"
+                      : "Make note private"
+                  }
+                  title={
+                    selectedNote.isPrivate
+                      ? "Make note public"
+                      : "Make note private"
+                  }
+                  data-tooltip={
+                    selectedNote.isPrivate
+                      ? "Make note public"
+                      : "Make note private"
+                  }
+                  disabled={updateNote.isPending}
+                  onClick={() => {
+                    updateNote.mutate({
+                      id: selectedNote.id,
+                      patch: { isPrivate: !selectedNote.isPrivate },
+                    });
+                  }}
+                >
+                  <Icon name="lock" />
+                </button>
                 <button
                   className="icon-action danger-action"
                   type="button"

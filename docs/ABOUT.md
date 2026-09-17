@@ -302,3 +302,11 @@ The sidebar's System area now mirrors the reference's compact utility layout. Da
 Settings now has one unambiguous home inside the System section. The duplicate control beside the NODI name was removed, leaving the brand header quiet while the same local Settings menu remains available from its labeled utility row.
 
 ![NODI after UI-007](about/screenshots/ui-007-settings-relocated.png)
+
+## 037 — PRIVACY-001 Private notes
+
+**Completed:** September 11, 2026
+
+Private notes now hide their title and preview in the library and are excluded from search. Opening one requires the local private-notes password; NODI stores only a salted PBKDF2 verifier, never the password itself.
+
+![NODI after PRIVACY-001](about/screenshots/privacy-001-private-notes.png)

@@ -25,6 +25,7 @@ export interface Note {
   contentText: string;
   notebookId: string | null;
   isPinned: boolean;
+  isPrivate?: boolean;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -39,6 +40,7 @@ export interface NoteSummary {
   contentText: string;
   notebookId: string | null;
   isPinned: boolean;
+  isPrivate?: boolean;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -50,6 +52,7 @@ export interface CreateNoteInput {
   contentText?: string;
   notebookId?: string | null;
   isPinned?: boolean;
+  isPrivate?: boolean;
 }
 
 export interface UpdateNoteInput {
@@ -58,6 +61,7 @@ export interface UpdateNoteInput {
   contentText?: string;
   notebookId?: string | null;
   isPinned?: boolean;
+  isPrivate?: boolean;
 }
 
 export interface ListNotesInput {
@@ -78,6 +82,7 @@ interface NoteRow {
   content_text: string;
   notebook_id: string | null;
   is_pinned: number;
+  is_private: number;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -88,10 +93,10 @@ interface NoteRow {
 type NoteSummaryRow = Omit<NoteRow, "content_json" | "revision" | "device_id">;
 
 const NOTE_COLUMNS =
-  "id, title, content_json, content_text, notebook_id, is_pinned, created_at, updated_at, deleted_at, revision, device_id";
+  "id, title, content_json, content_text, notebook_id, is_pinned, is_private, created_at, updated_at, deleted_at, revision, device_id";
 
 const NOTE_SUMMARY_COLUMNS =
-  "id, title, content_text, notebook_id, is_pinned, created_at, updated_at, deleted_at";
+  "id, title, content_text, notebook_id, is_pinned, is_private, created_at, updated_at, deleted_at";
 
 /** Columns a caller may change through `updateNote`, keyed by input field. */
 const UPDATABLE_COLUMNS: Record<keyof UpdateNoteInput, string> = {
@@ -100,6 +105,7 @@ const UPDATABLE_COLUMNS: Record<keyof UpdateNoteInput, string> = {
   contentText: "content_text",
   notebookId: "notebook_id",
   isPinned: "is_pinned",
+  isPrivate: "is_private",
 };
 
 function mapNote(row: NoteRow): Note {
@@ -110,6 +116,7 @@ function mapNote(row: NoteRow): Note {
     contentText: row.content_text,
     notebookId: row.notebook_id,
     isPinned: row.is_pinned === 1,
+    isPrivate: row.is_private === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
@@ -125,6 +132,7 @@ function mapNoteSummary(row: NoteSummaryRow): NoteSummary {
     contentText: row.content_text,
     notebookId: row.notebook_id,
     isPinned: row.is_pinned === 1,
+    isPrivate: row.is_private === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
@@ -152,8 +160,8 @@ export async function createNote(input: CreateNoteInput = {}): Promise<Note> {
 
     await database.execute(
       `INSERT INTO notes
-         (id, title, content_json, content_text, notebook_id, is_pinned, created_at, updated_at, deleted_at, revision, device_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $7, NULL, 1, $8)`,
+         (id, title, content_json, content_text, notebook_id, is_pinned, is_private, created_at, updated_at, deleted_at, revision, device_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, NULL, 1, $9)`,
       [
         id,
         input.title ?? "",
@@ -161,6 +169,7 @@ export async function createNote(input: CreateNoteInput = {}): Promise<Note> {
         input.contentText ?? "",
         input.notebookId ?? null,
         input.isPinned ? 1 : 0,
+        input.isPrivate ? 1 : 0,
         timestamp,
         deviceId,
       ],
@@ -276,7 +285,7 @@ export async function searchNotes(
       return [];
     }
     const database = await initializeDatabase();
-    const clauses = ["notes.deleted_at IS NULL"];
+    const clauses = ["notes.deleted_at IS NULL", "notes.is_private = 0"];
     const values: unknown[] = [];
     let position = 1;
 
@@ -314,7 +323,7 @@ export async function searchNotes(
     values.push(limit);
 
     const rows = await database.select<NoteSummaryRow[]>(
-      `SELECT notes.id, notes.title, notes.content_text, notes.notebook_id, notes.is_pinned,
+      `SELECT notes.id, notes.title, notes.content_text, notes.notebook_id, notes.is_pinned, notes.is_private,
               notes.created_at, notes.updated_at, notes.deleted_at
        FROM notes_fts
        INNER JOIN notes ON notes.id = notes_fts.note_id
@@ -350,7 +359,9 @@ export async function updateNote(
 
       sets.push(`${UPDATABLE_COLUMNS[key]} = $${position}`);
       position += 1;
-      values.push(key === "isPinned" ? (value ? 1 : 0) : value);
+      values.push(
+        key === "isPinned" || key === "isPrivate" ? (value ? 1 : 0) : value,
+      );
     }
 
     sets.push(`updated_at = $${position}`);

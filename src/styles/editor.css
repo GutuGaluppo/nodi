@@ -9,6 +9,60 @@
   position: relative;
 }
 
+.private-note-gate {
+  display: grid;
+  width: min(420px, calc(100% - var(--space-16)));
+  min-height: 100%;
+  align-content: center;
+  justify-items: start;
+  margin: 0 auto;
+}
+
+.private-note-gate > .icon {
+  width: 34px;
+  height: 34px;
+  margin-bottom: var(--space-4);
+  color: var(--color-accent);
+}
+
+.private-note-gate h2 {
+  font-size: var(--font-size-xl);
+}
+
+.private-note-gate > p:not(.section-label) {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.private-note-gate form {
+  display: grid;
+  width: 100%;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.private-note-gate label {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.private-note-gate input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font: inherit;
+}
+
+.private-note-gate .primary-button {
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
 .expand-library-button {
   position: absolute;
   top: var(--space-4);

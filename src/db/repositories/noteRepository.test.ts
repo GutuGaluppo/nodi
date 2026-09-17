@@ -26,6 +26,7 @@ function noteRow(overrides: Record<string, unknown> = {}) {
     content_text: "First note body",
     notebook_id: null,
     is_pinned: 0,
+    is_private: 0,
     created_at: "2026-01-01T00:00:00.000Z",
     updated_at: "2026-01-02T00:00:00.000Z",
     deleted_at: null,
@@ -62,7 +63,7 @@ describe("noteRepository", () => {
       const [sql, params] = db.execute.mock.calls[0];
       expect(sql).toContain("INSERT INTO notes");
       // created_at and updated_at bind the same parameter; revision is a literal 1.
-      expect(sql).toContain("$7, $7, NULL, 1, $8");
+      expect(sql).toContain("$8, $8, NULL, 1, $9");
 
       const [
         id,
@@ -71,6 +72,7 @@ describe("noteRepository", () => {
         contentText,
         notebookId,
         isPinned,
+        isPrivate,
         ts,
         deviceId,
       ] = params;
@@ -80,13 +82,19 @@ describe("noteRepository", () => {
       expect(contentText).toBe("");
       expect(notebookId).toBeNull();
       expect(isPinned).toBe(0);
+      expect(isPrivate).toBe(0);
       expect(deviceId).toBe("device-1");
       expect(ts >= before && ts <= after).toBe(true);
     });
 
     it("applies caller-provided fields and reads the note back", async () => {
       db.select.mockResolvedValueOnce([
-        noteRow({ title: "Groceries", is_pinned: 1, notebook_id: "nb-1" }),
+        noteRow({
+          title: "Groceries",
+          is_pinned: 1,
+          is_private: 1,
+          notebook_id: "nb-1",
+        }),
       ]);
       const { createNote } = await importRepository();
 
@@ -95,6 +103,7 @@ describe("noteRepository", () => {
         contentText: "milk",
         notebookId: "nb-1",
         isPinned: true,
+        isPrivate: true,
       });
 
       const params = db.execute.mock.calls[0][1];
@@ -102,6 +111,7 @@ describe("noteRepository", () => {
       expect(params[3]).toBe("milk");
       expect(params[4]).toBe("nb-1");
       expect(params[5]).toBe(1);
+      expect(params[6]).toBe(1);
       expect(note).toEqual({
         id: "note-1",
         title: "Groceries",
@@ -109,6 +119,7 @@ describe("noteRepository", () => {
         contentText: "First note body",
         notebookId: "nb-1",
         isPinned: true,
+        isPrivate: true,
         createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-02T00:00:00.000Z",
         deletedAt: null,
@@ -213,6 +224,7 @@ describe("noteRepository", () => {
           content_text: "preview",
           notebook_id: "nb-1",
           is_pinned: 1,
+          is_private: 0,
           created_at: "2026-01-01T00:00:00.000Z",
           updated_at: "2026-01-02T00:00:00.000Z",
           deleted_at: null,
@@ -227,6 +239,7 @@ describe("noteRepository", () => {
         contentText: "preview",
         notebookId: "nb-1",
         isPinned: true,
+        isPrivate: false,
         createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-02T00:00:00.000Z",
         deletedAt: null,

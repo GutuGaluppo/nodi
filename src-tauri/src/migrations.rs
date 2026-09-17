@@ -8,6 +8,7 @@ const NOTEBOOK_STACK_CLEANUP: &str = include_str!("../migrations/0003_notebook_s
 const SHORTCUT_INTEGRITY: &str = include_str!("../migrations/0004_shortcut_integrity.sql");
 const FTS_SYNC: &str = include_str!("../migrations/0005_fts_sync.sql");
 const SAVED_SEARCHES: &str = include_str!("../migrations/0006_saved_searches.sql");
+const PRIVATE_NOTES: &str = include_str!("../migrations/0007_private_notes.sql");
 
 pub fn all() -> Vec<Migration> {
     vec![
@@ -45,6 +46,12 @@ pub fn all() -> Vec<Migration> {
             version: 6,
             description: "saved searches",
             sql: SAVED_SEARCHES,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 7,
+            description: "private notes",
+            sql: PRIVATE_NOTES,
             kind: MigrationKind::Up,
         },
     ]
@@ -113,7 +120,7 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 6);
+        assert_eq!(applied_count, 7);
     }
 
     #[tokio::test]

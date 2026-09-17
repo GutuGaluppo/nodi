@@ -18,8 +18,12 @@ function NoteListItem({
   onSelect,
   ref,
 }: NoteListItemProps) {
-  const title = note.title.trim() === "" ? "Untitled" : note.title;
-  const preview = note.contentText.trim();
+  const title = note.isPrivate
+    ? "Private note"
+    : note.title.trim() === ""
+      ? "Untitled"
+      : note.title;
+  const preview = note.isPrivate ? "Locked" : note.contentText.trim();
 
   return (
     <div
