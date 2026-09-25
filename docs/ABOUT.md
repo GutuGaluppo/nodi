@@ -318,3 +318,11 @@ Private notes now hide their title and preview in the library and are excluded f
 Bullet, numbered, and task lists now use a compact line height. Checklist text sits cleanly beside its aligned checkbox without the browser's extra paragraph spacing between items.
 
 ![NODI after UI-008, showing a compact checklist](about/screenshots/ui-008-compact-lists.png)
+
+## 039 — LAND-001 Landing page
+
+**Completed:** September 25, 2026
+
+NODI gains a static, four-language landing page (Portuguese, English, Spanish, and German) in `landing/`. It uses real captures of the current interface with demo notes, an animated tour, and before-and-after comparisons for voice-to-checklist, search filtering, and light and dark themes. The page adds no dependency to the app.
+
+![NODI during LAND-001, showing a dictated checklist inserted into a note](about/screenshots/land-001-landing-page.png)

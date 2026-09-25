@@ -12,6 +12,7 @@ import fnd003Screenshot from "../../../docs/about/screenshots/fnd-003-project-st
 import fnd004DarkScreenshot from "../../../docs/about/screenshots/fnd-004-dark-mode.png";
 import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
 import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
+import land001Screenshot from "../../../docs/about/screenshots/land-001-landing-page.png";
 import nb001Screenshot from "../../../docs/about/screenshots/nb-001-notebooks.png";
 import nb002Screenshot from "../../../docs/about/screenshots/nb-002-move-note.png";
 import nb003Screenshot from "../../../docs/about/screenshots/nb-003-notebook-stacks.png";
@@ -354,6 +355,14 @@ const evolution = [
     description:
       "Bullet, numbered, and task lists now use a compact line height, while checklist text sits cleanly beside its aligned checkbox without extra paragraph spacing.",
     screenshot: ui008Screenshot,
+  },
+  {
+    id: "LAND-001",
+    title: "NODI introduces itself",
+    date: "September 25, 2026",
+    description:
+      "A four-language landing page presents NODI with real interface captures, an animated tour, and before-and-after comparisons of voice dictation, search, and themes.",
+    screenshot: land001Screenshot,
   },
 ];
 
