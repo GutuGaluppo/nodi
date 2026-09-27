@@ -105,6 +105,18 @@ describe("VoiceCapturePanel preview", () => {
     expect(onChange).toHaveBeenCalledWith(true);
   });
 
+  it("explains what keeping the audio gives the note", () => {
+    renderPanel({ keepAudio: { checked: true, onChange: vi.fn() } });
+
+    const checkbox = screen.getByRole("checkbox", {
+      name: "Guardar o áudio na nota",
+    });
+    expect(checkbox).toBeChecked();
+    expect(checkbox).toHaveAccessibleDescription(
+      /clique numa frase para ouvir daquele ponto/,
+    );
+  });
+
   it("explains why the audio cannot be kept", () => {
     renderPanel({
       audioUnavailableReason: "O áudio não é guardado em notas privadas.",

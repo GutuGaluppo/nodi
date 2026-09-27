@@ -22,6 +22,7 @@ import RelatedNotes from "../related/RelatedNotes";
 import ReminderControl from "../reminders/ReminderControl";
 import ShortcutToggle from "../shortcuts/ShortcutToggle";
 import NoteTagPicker from "../tags/NoteTagPicker";
+import { readKeepAudio, storeKeepAudio } from "../voice/keepAudioPreference";
 import { useVoiceActions } from "../voice/useVoiceActions";
 import { useVoiceCapture } from "../voice/useVoiceCapture";
 import { useVoiceInsertionTarget } from "../voice/useVoiceInsertionTarget";
@@ -51,24 +52,6 @@ function buildVoiceInsertionContent(
       content: [{ type: "paragraph", content: [{ type: "text", text: item }] }],
     })),
   };
-}
-
-const KEEP_AUDIO_SETTING = "nodi.voice.keepAudio";
-
-function readKeepAudio(): boolean {
-  try {
-    return window.localStorage.getItem(KEEP_AUDIO_SETTING) === "true";
-  } catch {
-    return false;
-  }
-}
-
-function storeKeepAudio(value: boolean): void {
-  try {
-    window.localStorage.setItem(KEEP_AUDIO_SETTING, String(value));
-  } catch {
-    // The preference is a convenience; losing it changes nothing else.
-  }
 }
 
 /** Throws away a staged recording the user did not keep. Best effort. */

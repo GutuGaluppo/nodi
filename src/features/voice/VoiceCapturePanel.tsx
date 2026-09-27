@@ -250,14 +250,28 @@ function VoiceCapturePanel({
           <p className="voice-capture-result-text">{plan.text}</p>
         )}
         {keepAudio && canInsertHere ? (
-          <label className="voice-keep-audio">
+          <div className="voice-keep-audio">
             <input
+              id="voice-keep-audio"
               type="checkbox"
               checked={keepAudio.checked}
+              aria-describedby="voice-keep-audio-hint"
               onChange={(event) => keepAudio.onChange(event.target.checked)}
             />
-            Guardar o áudio na nota
-          </label>
+            <span className="voice-keep-audio-icon" aria-hidden="true">
+              <Icon name="mic" />
+            </span>
+            <span className="voice-keep-audio-text">
+              <label htmlFor="voice-keep-audio">Guardar o áudio na nota</label>
+              <span
+                id="voice-keep-audio-hint"
+                className="voice-keep-audio-hint"
+              >
+                A gravação fica na nota, com um player e a transcrição por
+                frase: clique numa frase para ouvir daquele ponto.
+              </span>
+            </span>
+          </div>
         ) : audioUnavailableReason ? (
           <p className="voice-keep-audio-note">{audioUnavailableReason}</p>
         ) : null}
