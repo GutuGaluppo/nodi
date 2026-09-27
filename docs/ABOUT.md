@@ -478,3 +478,11 @@ Public notes can appear in Spotlight, and choosing one opens it in NODI. It stay
 The landing page now presents what NODI has become, in all four languages: encrypted private notes, voice notes with playable transcripts, searchable images, reminders, related notes, the Markdown mirror, and capture from anywhere on the Mac. The privacy section explains that everything that understands your notes runs on the Mac, and the page no longer scrolls sideways on phones.
 
 ![NODI during LAND-002, in dark mode with an image in a note](about/screenshots/land-002-landing-update.png)
+
+## 059 — LAND-003 New tour animation
+
+**Completed:** September 27, 2026
+
+The landing page's animated tour was recorded again with the new features: a receipt image in a note, related notes, a dictated note with a spoken title whose recording plays from any sentence, a search that finds a word inside the image, and dark mode.
+
+![NODI during LAND-003, in dark mode with a kept voice recording](about/screenshots/land-003-tour.png)

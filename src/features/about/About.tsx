@@ -15,6 +15,7 @@ import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tok
 import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
 import land001Screenshot from "../../../docs/about/screenshots/land-001-landing-page.png";
 import land002Screenshot from "../../../docs/about/screenshots/land-002-landing-update.png";
+import land003Screenshot from "../../../docs/about/screenshots/land-003-tour.png";
 import mac001Screenshot from "../../../docs/about/screenshots/mac-001-quick-capture.png";
 import mac002Screenshot from "../../../docs/about/screenshots/mac-002-spotlight.png";
 import mac003Screenshot from "../../../docs/about/screenshots/mac-003-share-extension.png";
@@ -534,6 +535,14 @@ const evolution = [
     description:
       "The four-language landing page now presents encrypted private notes, voice notes, searchable images, reminders, related notes, the Markdown mirror, and capture from anywhere.",
     screenshot: land002Screenshot,
+  },
+  {
+    id: "LAND-003",
+    title: "A tour of the new NODI",
+    date: "September 27, 2026",
+    description:
+      "The landing page's animated tour now shows images in notes, related notes, kept voice recordings, search inside images, and dark mode.",
+    screenshot: land003Screenshot,
   },
 ];
 
