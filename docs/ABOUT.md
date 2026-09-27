@@ -414,3 +414,27 @@ Clicking a sentence plays the recording from the moment it was spoken, and the s
 NODI can keep a folder of Markdown files that mirrors the library: one file per note, filed by notebook, with front matter for tags and dates, updated two seconds after every change. Private notes are never mirrored, and files the user adds to the folder are left alone. "Your data" shows the folder, the last update, and any file that could not be written, with actions to rebuild, change folder, or stop. A shared Tiptap-to-Markdown converter (EXPORT-001) produces the files.
 
 ![NODI after MIRROR-002: the Markdown mirror on the Your data page](about/screenshots/mirror-001-markdown-mirror.png)
+
+## 051 — ATT-003 Image insertion
+
+**Completed:** September 27, 2026
+
+Notes can hold images, inserted with the image button, pasted, or dropped on the window. NODI checks each file's real type, stores it in its local attachment storage, and keeps only the stored path in the note. Private notes do not accept images, because image files are not encrypted.
+
+![NODI after ATT-003: a receipt image inside a note](about/screenshots/att-003-image-insertion.png)
+
+## 052 — OCR-001 Reading images on the Mac
+
+**Completed:** September 27, 2026
+
+NODI reads the text in images with Apple's Vision framework, inside the app, with nothing sent anywhere. New images are read in the background, one at a time, and "Your data" shows how many are readable in search.
+
+![NODI after OCR-001: the image text row on the Your data page](about/screenshots/ocr-001-image-text.png)
+
+## 053 — OCR-002 Searchable images
+
+**Completed:** September 27, 2026
+
+Search now finds words that only appear inside images. Those notes come after the text matches and are marked "Found in an image". Images in private notes are never read.
+
+![NODI after OCR-002: a search result found in an image](about/screenshots/ocr-002-searchable-images.png)

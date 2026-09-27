@@ -1,3 +1,4 @@
+import att003Screenshot from "../../../docs/about/screenshots/att-003-image-insertion.png";
 import db001Screenshot from "../../../docs/about/screenshots/db-001-sqlite-connection.png";
 import db002Screenshot from "../../../docs/about/screenshots/db-002-migration-runner.png";
 import db003Screenshot from "../../../docs/about/screenshots/db-003-device-id.png";
@@ -20,6 +21,8 @@ import nb003Screenshot from "../../../docs/about/screenshots/nb-003-notebook-sta
 import note001Screenshot from "../../../docs/about/screenshots/note-001-note-repository.png";
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
+import ocr001Screenshot from "../../../docs/about/screenshots/ocr-001-image-text.png";
+import ocr002Screenshot from "../../../docs/about/screenshots/ocr-002-searchable-images.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
 import privacy002Screenshot from "../../../docs/about/screenshots/privacy-002-encrypted-private-notes.png";
 import privacy003Screenshot from "../../../docs/about/screenshots/privacy-003-network-lockdown.png";
@@ -462,6 +465,30 @@ const evolution = [
     description:
       "A folder of Markdown files mirrors the library, one file per note, updated after every change. Private notes are never mirrored, and Your data shows the mirror's health.",
     screenshot: mirror001Screenshot,
+  },
+  {
+    id: "ATT-003",
+    title: "Pictures in notes",
+    date: "September 27, 2026",
+    description:
+      "Images can be inserted, pasted, or dropped into notes. NODI checks each file's real type and stores it locally; private notes do not accept images.",
+    screenshot: att003Screenshot,
+  },
+  {
+    id: "OCR-001",
+    title: "The Mac reads your images",
+    date: "September 27, 2026",
+    description:
+      "Text inside images is recognized with Apple's Vision framework, in the app, in the background, with nothing sent anywhere.",
+    screenshot: ocr001Screenshot,
+  },
+  {
+    id: "OCR-002",
+    title: "Search inside images",
+    date: "September 27, 2026",
+    description:
+      'Search finds words that only appear in images and marks those notes "Found in an image". Images in private notes are never read.',
+    screenshot: ocr002Screenshot,
   },
 ];
 
