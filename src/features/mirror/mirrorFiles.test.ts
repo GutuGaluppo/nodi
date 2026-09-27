@@ -7,6 +7,7 @@ function note(overrides: Partial<ExportableNote>): ExportableNote {
     id: "n",
     title: "Note",
     contentJson: '{"type":"doc","content":[{"type":"paragraph"}]}',
+    contentText: "",
     notebook: null,
     tags: [],
     createdAt: "2026-09-01T00:00:00.000Z",

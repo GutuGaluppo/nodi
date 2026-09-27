@@ -275,3 +275,43 @@ only notes of the same language.
 - A note in a language without sentence embeddings gets no vector and no panel.
 - Private notes never get a vector, and a trigger deletes it when a note turns
   private. Linking related notes waits for LINK-001.
+
+## D-009 — macOS integration without a separate helper app
+
+**Date:** September 27, 2026
+**Tasks:** MAC-001 to MAC-004
+**Status:** Accepted
+
+### Decision
+
+- **Capture:** a global ⌥⌘N (`tauri-plugin-global-shortcut`) and a menu bar
+  item (Tauri's tray icon) bring NODI forward with a new note.
+- **`nodi://new`:** `tauri-plugin-deep-link` registers the scheme. Rust parses
+  it (title and text capped, only http(s) links kept) and queues captures; the
+  frontend drains the queue, so a capture that arrives at launch is kept.
+- **Share extension:** a small Swift `NSViewController` compiled with `swiftc`
+  into a sandboxed `.appex` (no Xcode project), embedded through
+  `bundle.macOS.files`. It turns what was shared into a `nodi://new` URL.
+- **Spotlight:** Core Spotlight through `objc2-core-spotlight`, off by default.
+  Choosing a result continues a user activity; NODI wraps the Tao app
+  delegate's `application:continueUserActivity:restorationHandler:` at runtime,
+  handling its own activities and forwarding every other one.
+- **Quick Look (MAC-004):** no code. The Markdown mirror (MIRROR-001) already
+  produces files Quick Look previews.
+
+### Rationale
+
+- All three plugins are official Tauri plugins; versions are pinned so the
+  `tauri` crate stays on the version matching `@tauri-apps/api`.
+- A URL scheme is the one channel the sandboxed extension, Shortcuts, and
+  other apps can all use without shared containers or App Groups.
+
+### Consequences
+
+- The Share extension needs Xcode or the Command Line Tools to build, and is
+  enabled by the user once in System Settings.
+- The runtime delegate wrap depends on Tao's delegate class; if a future Tao
+  changes it, NODI logs that notes cannot be opened from Spotlight and keeps
+  working otherwise.
+- Opening a note by clicking a Spotlight result was verified up to the hook's
+  installation; the click itself needs the Spotlight UI and was not automated.

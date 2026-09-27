@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getStorageReport } from "../../db/repositories/storageRepository";
 import ImageTextStatus from "../images/ImageTextStatus";
 import MirrorStatus from "../mirror/MirrorStatus";
+import SpotlightStatus from "../spotlight/SpotlightStatus";
 import { describeNetworkPolicy } from "./networkPolicy";
 
 interface YourDataProps {
@@ -195,6 +196,8 @@ function YourData({ onClose }: YourDataProps) {
         <ImageTextStatus />
 
         <MirrorStatus />
+
+        <SpotlightStatus />
 
         <div className="data-row">
           <dt>Backups</dt>

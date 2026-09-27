@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import DesktopShell from "../components/layout/DesktopShell";
 import About from "../features/about/About";
 import AttachmentSweeper from "../features/attachments/AttachmentSweeper";
+import { captureToNote } from "../features/capture/captureNote";
+import { useCaptureEvents } from "../features/capture/useCaptureEvents";
 import ImageTextIndexer from "../features/images/ImageTextIndexer";
 import MirrorSync from "../features/mirror/MirrorSync";
 import { useCreateNote } from "../features/notes/useCreateNote";
@@ -9,6 +11,7 @@ import YourData from "../features/privacy/YourData";
 import RelatedNotesIndexer from "../features/related/RelatedNotesIndexer";
 import ReminderScheduler from "../features/reminders/ReminderScheduler";
 import SearchDialog from "../features/search/SearchDialog";
+import SpotlightSync from "../features/spotlight/SpotlightSync";
 import { AppProviders } from "./providers";
 import { useGlobalShortcuts } from "./shortcuts";
 import {
@@ -66,6 +69,25 @@ function Workspace({
     setSelectedNoteId(null);
     setEditorFocusRequest(null);
   }, []);
+
+  useCaptureEvents({
+    onQuickNote: () => {
+      if (activeView === "trash") handleNavigate("notes");
+      void handleCreateNote();
+    },
+    onOpenNote: (noteId) => {
+      handleNavigate("notes");
+      setSelectedNoteId(noteId);
+    },
+    onCapture: (capture) => {
+      void createNote({ ...captureToNote(capture), notebookId: null }).then(
+        (note) => {
+          handleNavigate("notes");
+          setSelectedNoteId(note.id);
+        },
+      );
+    },
+  });
 
   useGlobalShortcuts([
     {
@@ -159,6 +181,7 @@ function App() {
       <MirrorSync />
       <ImageTextIndexer />
       <RelatedNotesIndexer />
+      <SpotlightSync />
       {page === "about" ? (
         <About onClose={() => setPage("workspace")} />
       ) : page === "data" ? (

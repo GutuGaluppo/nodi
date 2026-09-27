@@ -33,3 +33,5 @@ coverage
 *.sln
 *.sw?
 ignore
+# Share extension build output (scripts/build-share-extension.sh)
+src-tauri/share-extension/build

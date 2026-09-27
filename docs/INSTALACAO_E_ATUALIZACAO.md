@@ -76,6 +76,27 @@ src-tauri/target/release/bundle/
 
 A primeira compilação pode demorar alguns minutos porque o Rust precisa compilar as dependências nativas.
 
+## Extensão de Compartilhar e integração com o macOS
+
+`pnpm tauri build` também compila a extensão de Compartilhar do NODI
+(`scripts/build-share-extension.sh`) e a coloca em
+`NODI.app/Contents/PlugIns/`. Para isso é preciso o Xcode (o `swiftc` das
+Command Line Tools também serve).
+
+- A extensão é assinada com a primeira identidade "Apple Development" do
+  Keychain; sem nenhuma, é assinada ad hoc. Para escolher outra, defina
+  `SIGNING_IDENTITY` antes do build.
+- Na primeira vez, ative-a em **Ajustes do Sistema → Geral → Itens de Início e
+  Extensões → Compartilhar** (ou no menu Compartilhar → **Editar Extensões…**).
+  Depois disso, "NODI" aparece no menu Compartilhar do Safari e de outros apps.
+- O atalho global **⌥⌘N** e o item "NODI" na barra de menus criam uma nota
+  nova. Se outro app já usar ⌥⌘N, o item da barra de menus continua
+  funcionando.
+- Links `nodi://new?title=…&text=…&url=…` criam notas; servem para o app
+  Atalhos.
+- Notas no Spotlight ficam desligadas até você ativá-las em **Configurações →
+  Your data**.
+
 ## Fazer a primeira instalação
 
 1. Abra o arquivo `.dmg` criado em `src-tauri/target/release/bundle/dmg/`.

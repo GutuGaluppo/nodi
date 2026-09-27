@@ -271,4 +271,9 @@ One screen shows where the user's data lives and proves its state.
 | OCR-002 Searchable image text | Done |
 | REL-001 On-device embeddings | Done |
 | REL-002 Related notes panel | Done |
-| All other tasks | Not started |
+| MAC-001 Global capture shortcut and menu bar | Done |
+| MAC-002 Spotlight | Done (opt-in) |
+| MAC-003 Share extension and `nodi://new` | Done |
+| MAC-004 Quick Look | Covered by MIRROR-001; no code needed |
+
+All seven milestones are complete. Linking related notes (REL-002) waits for LINK-001, and BACKUP-001 is still open in `IMPLEMENTATION.md`.

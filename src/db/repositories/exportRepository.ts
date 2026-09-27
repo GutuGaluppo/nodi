@@ -6,6 +6,7 @@ export interface ExportableNote {
   id: string;
   title: string;
   contentJson: string;
+  contentText: string;
   notebook: string | null;
   tags: string[];
   createdAt: string;
@@ -16,6 +17,7 @@ interface ExportableRow {
   id: string;
   title: string;
   content_json: string;
+  content_text: string;
   notebook: string | null;
   tags: string | null;
   created_at: string;
@@ -30,7 +32,7 @@ export async function listExportableNotes(): Promise<ExportableNote[]> {
   try {
     const database = await initializeDatabase();
     const rows = await database.select<ExportableRow[]>(
-      `SELECT notes.id, notes.title, notes.content_json, notebooks.name AS notebook,
+      `SELECT notes.id, notes.title, notes.content_json, notes.content_text, notebooks.name AS notebook,
               (SELECT group_concat(tags.name, char(31))
                FROM note_tags INNER JOIN tags ON tags.id = note_tags.tag_id
                WHERE note_tags.note_id = notes.id) AS tags,
@@ -44,6 +46,7 @@ export async function listExportableNotes(): Promise<ExportableNote[]> {
       id: row.id,
       title: row.title,
       contentJson: row.content_json,
+      contentText: row.content_text,
       notebook: row.notebook,
       tags: row.tags ? row.tags.split("\u001f").sort() : [],
       createdAt: row.created_at,

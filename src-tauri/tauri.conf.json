@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "pnpm build && sh scripts/build-share-extension.sh",
     "frontendDist": "../dist"
   },
   "app": {
@@ -57,7 +57,10 @@
     "active": true,
     "targets": "all",
     "macOS": {
-      "minimumSystemVersion": "15.0"
+      "minimumSystemVersion": "15.0",
+      "files": {
+        "PlugIns/NODIShare.appex": "share-extension/build/NODIShare.appex"
+      }
     },
     "icon": [
       "icons/32x32.png",
@@ -66,5 +69,12 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["nodi"]
+      }
+    }
   }
 }
