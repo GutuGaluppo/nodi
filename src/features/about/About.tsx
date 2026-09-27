@@ -29,6 +29,7 @@ import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-li
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import ocr001Screenshot from "../../../docs/about/screenshots/ocr-001-image-text.png";
 import ocr002Screenshot from "../../../docs/about/screenshots/ocr-002-searchable-images.png";
+import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
 import privacy002Screenshot from "../../../docs/about/screenshots/privacy-002-encrypted-private-notes.png";
 import privacy003Screenshot from "../../../docs/about/screenshots/privacy-003-network-lockdown.png";
@@ -561,6 +562,14 @@ const evolution = [
     description:
       "NODI's menu bar item is now the quill alone on a transparent background, so it reads like the other menu bar icons in light and dark mode instead of a solid square.",
     screenshot: mac005Screenshot,
+  },
+  {
+    id: "PRIV-REC-001",
+    title: "A way back into private notes",
+    date: "September 27, 2026",
+    description:
+      "Private notes now come with a recovery key, shown once and kept by you, that resets a forgotten password without an account. With neither, private notes can be started over after a typed confirmation.",
+    screenshot: privRec001Screenshot,
   },
 ];
 

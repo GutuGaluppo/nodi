@@ -502,3 +502,11 @@ Dictations now keep their recording by default, so the playable transcript is th
 NODI's menu bar item showed a solid square, because its template image was cut from the whole app icon. It is now the quill alone on a transparent background, so macOS tints it like the other menu bar icons in light and dark mode. A test now checks that the icon's background stays clear.
 
 ![NODI with the new menu bar icon, on a light and a dark menu bar](about/screenshots/mac-005-menu-bar-icon.png)
+
+## 062 — PRIV-REC-001 to 003 A way back into private notes
+
+**Completed:** September 27, 2026
+
+A forgotten private-notes password no longer means losing those notes, and no email or account is involved. Setting a password now gives a recovery key, shown once and saved only after you type its last characters. "Forgot password?" takes that key and a new password; the notes are not re-encrypted, and NODI offers a fresh key right away. Notes protected before this get the offer at the next unlock, and "Your data" shows whether a recovery key exists. With neither the password nor the key, private notes can be started over: the encrypted ones are deleted for good after typing DELETE.
+
+![NODI during PRIV-REC-001: a new recovery key shown once](about/screenshots/priv-rec-001-recovery-key.png)
