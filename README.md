@@ -2,6 +2,8 @@
 
 Local-first notes for macOS, built with Tauri 2, React, TypeScript, and Vite.
 
+**Website:** [gutugaluppo.github.io/nodi](https://gutugaluppo.github.io/nodi/). The landing page source lives in [`landing/`](landing/).
+
 ## Development
 
 ```bash
