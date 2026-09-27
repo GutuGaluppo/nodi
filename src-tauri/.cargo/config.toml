@@ -1,0 +1,19 @@
+[env]
+# The `cmake` crate defaults CMAKE_OSX_DEPLOYMENT_TARGET to 10.13 for release
+# builds (it leaves it unset for dev builds, which is why this only breaks
+# `cargo build --release` / `tauri build`). whisper.cpp's ggml uses
+# std::filesystem, which Apple's libc++ marks unavailable below macOS 10.15 —
+# so 10.13 fails to compile.
+#
+# 11.0 alone gets past that, but then fails at link time instead: ggml-metal
+# guards a newer Metal capability behind `@available(macOS 15.0, ...)`, and
+# below that deployment target clang emits a runtime check that calls
+# `__isPlatformVersionAtLeast`, a symbol Rust's own linker invocation doesn't
+# pull in the way a direct `clang` link would (linking libclang_rt.osx.a by
+# hand works, but its path is keyed to the installed Xcode/CLT version, so
+# it's not portable to commit here). Raising the target to 15.0 makes that
+# `@available` check compile-time-true instead, removing the runtime call
+# and the missing symbol with it. This sets the project's real minimum macOS
+# version at 15.0 (Sequoia) — a direct consequence of Metal-accelerated
+# local Whisper, not a preference.
+MACOSX_DEPLOYMENT_TARGET = "15.0"

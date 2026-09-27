@@ -9,7 +9,8 @@ Antes da primeira compilação, confirme que a máquina possui:
 - Node.js;
 - pnpm;
 - Rust e Cargo;
-- Xcode Command Line Tools.
+- Xcode Command Line Tools;
+- CMake (necessário para compilar o `whisper.cpp` usado na transcrição de voz).
 
 Verifique o ambiente com:
 
@@ -19,7 +20,22 @@ pnpm --version
 rustc --version
 cargo --version
 xcode-select -p
+cmake --version
 ```
+
+Se o CMake não estiver instalado:
+
+```bash
+brew install cmake
+```
+
+> **macOS 15 (Sequoia) é a versão mínima exigida pelo NODI a partir da
+> transcrição de voz local.** `src-tauri/.cargo/config.toml` fixa
+> `MACOSX_DEPLOYMENT_TARGET=15.0`: abaixo disso, o build de release falha ao
+> linkar o `ggml-metal` (símbolo `__isPlatformVersionAtLeast` ausente, porque
+> um trecho do código só compila sem verificação em tempo de execução a
+> partir dessa versão). Isso não é uma preferência — é uma consequência
+> direta de usar Metal para acelerar o Whisper localmente.
 
 ## Preparar o projeto
 
