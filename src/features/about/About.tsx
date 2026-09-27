@@ -20,6 +20,7 @@ import mac001Screenshot from "../../../docs/about/screenshots/mac-001-quick-capt
 import mac002Screenshot from "../../../docs/about/screenshots/mac-002-spotlight.png";
 import mac003Screenshot from "../../../docs/about/screenshots/mac-003-share-extension.png";
 import mac005Screenshot from "../../../docs/about/screenshots/mac-005-menu-bar-icon.png";
+import mac006Screenshot from "../../../docs/about/screenshots/mac-006-spotlight-status.png";
 import mirror001Screenshot from "../../../docs/about/screenshots/mirror-001-markdown-mirror.png";
 import nb001Screenshot from "../../../docs/about/screenshots/nb-001-notebooks.png";
 import nb002Screenshot from "../../../docs/about/screenshots/nb-002-move-note.png";
@@ -570,6 +571,14 @@ const evolution = [
     description:
       "Private notes now come with a recovery key, shown once and kept by you, that resets a forgotten password without an account. With neither, private notes can be started over after a typed confirmation.",
     screenshot: privRec001Screenshot,
+  },
+  {
+    id: "MAC-006",
+    title: "A quiet Spotlight row",
+    date: "September 27, 2026",
+    description:
+      "The Spotlight row in Your data now reads its setting by itself, so opening the page or toggling Spotlight no longer logs errors.",
+    screenshot: mac006Screenshot,
   },
 ];
 
