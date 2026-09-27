@@ -12,6 +12,9 @@ async function openDatabase(): Promise<Database> {
     await database.execute("PRAGMA foreign_keys = ON");
     await database.select("PRAGMA journal_mode = WAL");
     await database.execute("PRAGMA busy_timeout = 5000");
+    // Overwrite deleted content instead of leaving it in free pages, so text
+    // removed from a note (or sealed into a private note) does not linger.
+    await database.execute("PRAGMA secure_delete = ON");
 
     return database;
   } catch (cause) {

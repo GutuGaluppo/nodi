@@ -3,11 +3,12 @@ import Icon from "../../components/ui/Icon";
 import {
   hasPrivateNotesPassword,
   setPrivateNotesPassword,
-  verifyPrivateNotesPassword,
+  unlockPrivateNotes,
 } from "./privateNotePassword";
 
 interface PrivateNoteGateProps {
-  onUnlocked: () => void;
+  /** Runs after the session opens; the gate stays busy until it settles. */
+  onUnlocked: () => void | Promise<void>;
 }
 
 function PrivateNoteGate({ onUnlocked }: PrivateNoteGateProps) {
@@ -43,9 +44,9 @@ function PrivateNoteGate({ onUnlocked }: PrivateNoteGateProps) {
     try {
       if (mode === "setup") {
         await setPrivateNotesPassword(password);
-        onUnlocked();
-      } else if (await verifyPrivateNotesPassword(password)) {
-        onUnlocked();
+        await onUnlocked();
+      } else if (await unlockPrivateNotes(password)) {
+        await onUnlocked();
       } else {
         setError("Incorrect password. Try again.");
       }
@@ -65,7 +66,7 @@ function PrivateNoteGate({ onUnlocked }: PrivateNoteGateProps) {
       <h2>{mode === "setup" ? "Set a password" : "This note is locked"}</h2>
       <p>
         {mode === "setup"
-          ? "Create one password to access private notes on this device."
+          ? "Create one password to access private notes on this device. Private notes are encrypted with it, so they cannot be recovered if you forget it."
           : "Enter your password to view and edit this note."}
       </p>
       {mode === "loading" ? null : (

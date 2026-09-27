@@ -33,7 +33,10 @@ export async function listShortcuts(): Promise<Shortcut[]> {
     const rows = await database.select<ShortcutRow[]>(
       `SELECT shortcuts.id, shortcuts.target_type, shortcuts.target_id,
         CASE shortcuts.target_type
-          WHEN 'note' THEN COALESCE(NULLIF(notes.title, ''), 'Untitled')
+          WHEN 'note' THEN CASE
+            WHEN notes.is_private = 1 THEN 'Private note'
+            ELSE COALESCE(NULLIF(notes.title, ''), 'Untitled')
+          END
           ELSE notebooks.name
         END AS label,
         shortcuts.sort_order, shortcuts.created_at

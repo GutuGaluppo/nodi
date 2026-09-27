@@ -9,6 +9,8 @@ const SHORTCUT_INTEGRITY: &str = include_str!("../migrations/0004_shortcut_integ
 const FTS_SYNC: &str = include_str!("../migrations/0005_fts_sync.sql");
 const SAVED_SEARCHES: &str = include_str!("../migrations/0006_saved_searches.sql");
 const PRIVATE_NOTES: &str = include_str!("../migrations/0007_private_notes.sql");
+const PRIVATE_NOTE_ENCRYPTION: &str =
+    include_str!("../migrations/0008_private_note_encryption.sql");
 
 pub fn all() -> Vec<Migration> {
     vec![
@@ -52,6 +54,12 @@ pub fn all() -> Vec<Migration> {
             version: 7,
             description: "private notes",
             sql: PRIVATE_NOTES,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 8,
+            description: "private note encryption",
+            sql: PRIVATE_NOTE_ENCRYPTION,
             kind: MigrationKind::Up,
         },
     ]
@@ -120,7 +128,14 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 7);
+        assert_eq!(applied_count, 8);
+
+        let note_columns =
+            sqlx::query_scalar::<_, String>("SELECT name FROM pragma_table_info('notes')")
+                .fetch_all(&pool)
+                .await
+                .expect("note columns should be readable");
+        assert!(note_columns.iter().any(|column| column == "encrypted_payload"));
     }
 
     #[tokio::test]

@@ -1,7 +1,14 @@
+import type Database from "@tauri-apps/plugin-sql";
+import {
+  decryptNotePayload,
+  encryptNotePayload,
+  type PrivateNotePayload,
+} from "../../lib/crypto/noteCipher";
 import { DatabaseError } from "../../lib/errors/DatabaseError";
 import { createId } from "../../lib/ids/id";
 import { initializeDatabase } from "../database";
 import { ensureDeviceId } from "../deviceId";
+import { getPrivateNoteKey } from "../privateNoteKey";
 
 /**
  * The only place note rows are read or written.
@@ -10,6 +17,11 @@ import { ensureDeviceId } from "../deviceId";
  * issuing SQL. Every statement is parameterized. `content_json` (Tiptap JSON) is
  * the canonical note body; `content_text` is a caller-supplied plain-text
  * projection used for previews and, later, full-text search.
+ *
+ * Private notes are encrypted at rest once private notes have been unlocked:
+ * their title and body live in `encrypted_payload`, and the plaintext columns
+ * hold empty values. Reads decrypt with the session key; without it, the note
+ * comes back with `isLocked` set and no content.
  */
 
 /** A valid empty Tiptap document, used when a note is created with no body. */
@@ -26,6 +38,8 @@ export interface Note {
   notebookId: string | null;
   isPinned: boolean;
   isPrivate?: boolean;
+  /** True when the note is encrypted and private notes are not unlocked. */
+  isLocked?: boolean;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -88,12 +102,16 @@ interface NoteRow {
   deleted_at: string | null;
   revision: number;
   device_id: string;
+  encrypted_payload: string | null;
 }
 
-type NoteSummaryRow = Omit<NoteRow, "content_json" | "revision" | "device_id">;
+type NoteSummaryRow = Omit<
+  NoteRow,
+  "content_json" | "revision" | "device_id" | "encrypted_payload"
+>;
 
 const NOTE_COLUMNS =
-  "id, title, content_json, content_text, notebook_id, is_pinned, is_private, created_at, updated_at, deleted_at, revision, device_id";
+  "id, title, content_json, content_text, notebook_id, is_pinned, is_private, created_at, updated_at, deleted_at, revision, device_id, encrypted_payload";
 
 const NOTE_SUMMARY_COLUMNS =
   "id, title, content_text, notebook_id, is_pinned, is_private, created_at, updated_at, deleted_at";
@@ -107,6 +125,11 @@ const UPDATABLE_COLUMNS: Record<keyof UpdateNoteInput, string> = {
   isPinned: "is_pinned",
   isPrivate: "is_private",
 };
+
+/** Fields that are sealed inside `encrypted_payload` for private notes. */
+const SEALED_FIELDS = ["title", "contentJson", "contentText"] as const;
+
+const LOCKED_ERROR = "Unlock private notes to change this note.";
 
 function mapNote(row: NoteRow): Note {
   return {
@@ -123,6 +146,48 @@ function mapNote(row: NoteRow): Note {
     revision: row.revision,
     deviceId: row.device_id,
   };
+}
+
+/** Maps a row and, for an encrypted note, opens it with the session key. */
+async function readNote(row: NoteRow): Promise<Note> {
+  const note = mapNote(row);
+  if (!row.encrypted_payload) {
+    return note;
+  }
+  const key = getPrivateNoteKey();
+  if (key === null) {
+    return { ...note, isLocked: true };
+  }
+  const payload = await decryptNotePayload(key, row.id, row.encrypted_payload);
+  return { ...note, ...payload };
+}
+
+function plaintextPayload(row: NoteRow): PrivateNotePayload {
+  return {
+    title: row.title,
+    contentJson: row.content_json,
+    contentText: row.content_text,
+  };
+}
+
+/**
+ * Removes plaintext that SQLite may still hold after a note was encrypted:
+ * deleted FTS5 entries, free pages, and the write-ahead log. Best effort — the
+ * note itself is already encrypted when this runs.
+ */
+async function scrubDeletedPlaintext(database: Database): Promise<void> {
+  try {
+    await database.execute(
+      "INSERT INTO notes_fts (notes_fts) VALUES ('optimize')",
+    );
+    await database.execute("VACUUM");
+    await database.select("PRAGMA wal_checkpoint(TRUNCATE)");
+  } catch (cause) {
+    console.error(
+      "NODI could not compact the database after encryption",
+      cause,
+    );
+  }
 }
 
 function mapNoteSummary(row: NoteSummaryRow): NoteSummary {
@@ -157,21 +222,29 @@ export async function createNote(input: CreateNoteInput = {}): Promise<Note> {
     const deviceId = await ensureDeviceId();
     const id = createId();
     const timestamp = nowIso();
+    const key = input.isPrivate ? getPrivateNoteKey() : null;
+    const payload: PrivateNotePayload = {
+      title: input.title ?? "",
+      contentJson: input.contentJson ?? EMPTY_NOTE_CONTENT_JSON,
+      contentText: input.contentText ?? "",
+    };
+    const sealed = key ? await encryptNotePayload(key, id, payload) : null;
 
     await database.execute(
       `INSERT INTO notes
-         (id, title, content_json, content_text, notebook_id, is_pinned, is_private, created_at, updated_at, deleted_at, revision, device_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, NULL, 1, $9)`,
+         (id, title, content_json, content_text, notebook_id, is_pinned, is_private, created_at, updated_at, deleted_at, revision, device_id, encrypted_payload)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, NULL, 1, $9, $10)`,
       [
         id,
-        input.title ?? "",
-        input.contentJson ?? EMPTY_NOTE_CONTENT_JSON,
-        input.contentText ?? "",
+        sealed ? "" : payload.title,
+        sealed ? EMPTY_NOTE_CONTENT_JSON : payload.contentJson,
+        sealed ? "" : payload.contentText,
         input.notebookId ?? null,
         input.isPinned ? 1 : 0,
         input.isPrivate ? 1 : 0,
         timestamp,
         deviceId,
+        sealed,
       ],
     );
 
@@ -197,7 +270,7 @@ export async function getNoteById(id: string): Promise<Note | null> {
     );
 
     const row = rows[0];
-    return row ? mapNote(row) : null;
+    return row ? await readNote(row) : null;
   } catch (cause) {
     rethrowAsDatabaseError(cause, `Could not read note ${id}.`);
   }
@@ -345,23 +418,79 @@ export async function updateNote(
 ): Promise<Note> {
   try {
     const database = await initializeDatabase();
+    const changes = new Map<keyof UpdateNoteInput, unknown>();
+    for (const key of Object.keys(UPDATABLE_COLUMNS) as Array<
+      keyof UpdateNoteInput
+    >) {
+      if (patch[key] !== undefined) {
+        changes.set(key, patch[key]);
+      }
+    }
+
+    // Only a change to the sealed fields or to privacy needs the current row.
+    const touchesPrivacy =
+      patch.isPrivate !== undefined ||
+      SEALED_FIELDS.some((field) => patch[field] !== undefined);
+    let encryptedPayload: string | null | undefined;
+    let scrub = false;
+
+    if (touchesPrivacy) {
+      const rows = await database.select<NoteRow[]>(
+        `SELECT ${NOTE_COLUMNS} FROM notes WHERE id = $1`,
+        [id],
+      );
+      const current = rows[0];
+      if (!current) {
+        throw new DatabaseError(`Note ${id} was not found.`);
+      }
+      const wasEncrypted = Boolean(current.encrypted_payload);
+      const willBePrivate = patch.isPrivate ?? current.is_private === 1;
+      const key = getPrivateNoteKey();
+
+      if (wasEncrypted || (willBePrivate && key !== null)) {
+        if (key === null) {
+          throw new DatabaseError(LOCKED_ERROR);
+        }
+        const base = wasEncrypted
+          ? await decryptNotePayload(key, id, current.encrypted_payload ?? "")
+          : plaintextPayload(current);
+        const merged: PrivateNotePayload = {
+          title: patch.title ?? base.title,
+          contentJson: patch.contentJson ?? base.contentJson,
+          contentText: patch.contentText ?? base.contentText,
+        };
+
+        if (willBePrivate) {
+          encryptedPayload = await encryptNotePayload(key, id, merged);
+          changes.set("title", "");
+          changes.set("contentJson", EMPTY_NOTE_CONTENT_JSON);
+          changes.set("contentText", "");
+          scrub = !wasEncrypted;
+        } else {
+          encryptedPayload = null;
+          changes.set("title", merged.title);
+          changes.set("contentJson", merged.contentJson);
+          changes.set("contentText", merged.contentText);
+        }
+      }
+    }
+
     const sets: string[] = [];
     const values: unknown[] = [];
     let position = 1;
 
-    for (const key of Object.keys(UPDATABLE_COLUMNS) as Array<
-      keyof UpdateNoteInput
-    >) {
-      const value = patch[key];
-      if (value === undefined) {
-        continue;
-      }
-
+    for (const [key, value] of changes) {
       sets.push(`${UPDATABLE_COLUMNS[key]} = $${position}`);
       position += 1;
       values.push(
         key === "isPinned" || key === "isPrivate" ? (value ? 1 : 0) : value,
       );
+    }
+
+    if (encryptedPayload !== undefined) {
+      sets.push(`encrypted_payload = $${position}`);
+      position += 1;
+      values.push(encryptedPayload);
     }
 
     sets.push(`updated_at = $${position}`);
@@ -378,6 +507,10 @@ export async function updateNote(
       throw new DatabaseError(`Note ${id} was not found.`);
     }
 
+    if (scrub) {
+      await scrubDeletedPlaintext(database);
+    }
+
     const updated = await getNoteById(id);
     if (!updated) {
       throw new DatabaseError(`Note ${id} was not found.`);
@@ -386,6 +519,44 @@ export async function updateNote(
     return updated;
   } catch (cause) {
     rethrowAsDatabaseError(cause, "Could not update the note.");
+  }
+}
+
+/**
+ * Encrypts private notes that are still stored in plaintext: notes made
+ * private while locked, and private notes from before encryption existed.
+ * Requires the session key. Returns how many notes were encrypted.
+ */
+export async function encryptPendingPrivateNotes(): Promise<number> {
+  try {
+    const key = getPrivateNoteKey();
+    if (key === null) {
+      throw new DatabaseError(LOCKED_ERROR);
+    }
+    const database = await initializeDatabase();
+    const rows = await database.select<NoteRow[]>(
+      `SELECT ${NOTE_COLUMNS} FROM notes WHERE is_private = 1 AND encrypted_payload IS NULL`,
+    );
+
+    for (const row of rows) {
+      await database.execute(
+        `UPDATE notes
+         SET encrypted_payload = $1, title = '', content_json = $2, content_text = ''
+         WHERE id = $3 AND encrypted_payload IS NULL`,
+        [
+          await encryptNotePayload(key, row.id, plaintextPayload(row)),
+          EMPTY_NOTE_CONTENT_JSON,
+          row.id,
+        ],
+      );
+    }
+
+    if (rows.length > 0) {
+      await scrubDeletedPlaintext(database);
+    }
+    return rows.length;
+  } catch (cause) {
+    rethrowAsDatabaseError(cause, "Could not encrypt private notes.");
   }
 }
 

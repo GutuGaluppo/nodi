@@ -35,6 +35,7 @@ describe("initializeDatabase", () => {
       2,
       "PRAGMA busy_timeout = 5000",
     );
+    expect(sql.execute).toHaveBeenNthCalledWith(3, "PRAGMA secure_delete = ON");
     expect(firstConnection).toBe(secondConnection);
   });
 

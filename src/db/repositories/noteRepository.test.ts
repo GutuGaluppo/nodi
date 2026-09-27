@@ -32,6 +32,7 @@ function noteRow(overrides: Record<string, unknown> = {}) {
     deleted_at: null,
     revision: 3,
     device_id: "device-1",
+    encrypted_payload: null,
     ...overrides,
   };
 }
@@ -250,9 +251,9 @@ describe("noteRepository", () => {
 
   describe("updateNote", () => {
     it("updates only the provided columns, bumps revision, and refreshes updated_at", async () => {
-      db.select.mockResolvedValueOnce([
-        noteRow({ title: "Renamed", revision: 4 }),
-      ]);
+      db.select
+        .mockResolvedValueOnce([noteRow()])
+        .mockResolvedValueOnce([noteRow({ title: "Renamed", revision: 4 })]);
       const { updateNote } = await importRepository();
 
       const before = new Date().toISOString();
@@ -388,5 +389,241 @@ describe("noteRepository", () => {
     const { DatabaseError } = await import("../../lib/errors/DatabaseError");
 
     await expect(createNote()).rejects.toBeInstanceOf(DatabaseError);
+  });
+
+  describe("private note encryption", () => {
+    const secret = {
+      title: "Journal",
+      contentJson: '{"type":"doc","content":[{"type":"paragraph"}]}',
+      contentText: "Something only I should read",
+    };
+
+    async function unlock() {
+      const { createNoteKey } = await import("../../lib/crypto/noteCipher");
+      const { setPrivateNoteKey } = await import("../privateNoteKey");
+      const { key } = await createNoteKey("correct horse");
+      setPrivateNoteKey(key);
+      return key;
+    }
+
+    async function seal(key: CryptoKey, payload = secret, noteId = "note-1") {
+      const { encryptNotePayload } = await import(
+        "../../lib/crypto/noteCipher"
+      );
+      return encryptNotePayload(key, noteId, payload);
+    }
+
+    async function open(key: CryptoKey, sealed: string, noteId = "note-1") {
+      const { decryptNotePayload } = await import(
+        "../../lib/crypto/noteCipher"
+      );
+      return decryptNotePayload(key, noteId, sealed);
+    }
+
+    function updateCall() {
+      const call = db.execute.mock.calls.find(([sql]) =>
+        String(sql).startsWith("UPDATE notes SET"),
+      );
+      if (!call) throw new Error("No UPDATE was executed.");
+      return call as [string, unknown[]];
+    }
+
+    function updatedValue(column: string) {
+      const [sql, values] = updateCall();
+      const match = new RegExp(`${column} = \\$(\\d+)`).exec(sql);
+      if (!match) throw new Error(`${column} was not updated.`);
+      return values[Number(match[1]) - 1];
+    }
+
+    it("encrypts a note when it becomes private and scrubs the old plaintext", async () => {
+      const { updateNote } = await importRepository();
+      const key = await unlock();
+      db.select
+        .mockResolvedValueOnce([
+          noteRow({
+            title: secret.title,
+            content_json: secret.contentJson,
+            content_text: secret.contentText,
+          }),
+        ])
+        .mockResolvedValue([noteRow({ is_private: 1 })]);
+
+      await updateNote("note-1", { isPrivate: true });
+
+      expect(updatedValue("title")).toBe("");
+      expect(updatedValue("content_text")).toBe("");
+      expect(updatedValue("is_private")).toBe(1);
+      const sealed = updatedValue("encrypted_payload") as string;
+      expect(sealed).not.toContain("Journal");
+      await expect(open(key, sealed)).resolves.toEqual(secret);
+      const statements = db.execute.mock.calls.map(([sql]) => sql);
+      expect(statements).toContain(
+        "INSERT INTO notes_fts (notes_fts) VALUES ('optimize')",
+      );
+      expect(statements).toContain("VACUUM");
+    });
+
+    it("keeps a note made private while locked readable until the next unlock", async () => {
+      const { updateNote } = await importRepository();
+      db.select.mockResolvedValue([noteRow()]);
+
+      await updateNote("note-1", { isPrivate: true });
+
+      expect(updateCall()[0]).not.toContain("encrypted_payload");
+      expect(updateCall()[0]).not.toContain("title");
+    });
+
+    it("returns an encrypted note locked and empty when private notes are locked", async () => {
+      const { getNoteById } = await importRepository();
+      const { createNoteKey } = await import("../../lib/crypto/noteCipher");
+      const { key } = await createNoteKey("correct horse");
+      db.select.mockResolvedValueOnce([
+        noteRow({
+          title: "",
+          content_text: "",
+          is_private: 1,
+          encrypted_payload: await seal(key),
+        }),
+      ]);
+
+      const note = await getNoteById("note-1");
+
+      expect(note?.isLocked).toBe(true);
+      expect(note?.title).toBe("");
+      expect(note?.contentText).toBe("");
+    });
+
+    it("decrypts an encrypted note with the session key", async () => {
+      const { getNoteById } = await importRepository();
+      const key = await unlock();
+      db.select.mockResolvedValueOnce([
+        noteRow({
+          title: "",
+          content_text: "",
+          is_private: 1,
+          encrypted_payload: await seal(key),
+        }),
+      ]);
+
+      const note = await getNoteById("note-1");
+
+      expect(note?.isLocked).toBeUndefined();
+      expect(note?.title).toBe("Journal");
+      expect(note?.contentText).toBe("Something only I should read");
+    });
+
+    it("refuses to write to an encrypted note without the session key", async () => {
+      const { updateNote } = await importRepository();
+      const { DatabaseError } = await import("../../lib/errors/DatabaseError");
+      const { createNoteKey } = await import("../../lib/crypto/noteCipher");
+      const { key } = await createNoteKey("correct horse");
+      db.select.mockResolvedValueOnce([
+        noteRow({ is_private: 1, encrypted_payload: await seal(key) }),
+      ]);
+
+      await expect(
+        updateNote("note-1", { contentText: "overwritten" }),
+      ).rejects.toBeInstanceOf(DatabaseError);
+      expect(db.execute).not.toHaveBeenCalled();
+    });
+
+    it("re-encrypts an autosave and keeps the sealed title", async () => {
+      const { updateNote } = await importRepository();
+      const key = await unlock();
+      const sealed = await seal(key);
+      db.select.mockResolvedValue([
+        noteRow({
+          title: "",
+          content_text: "",
+          is_private: 1,
+          encrypted_payload: sealed,
+        }),
+      ]);
+
+      await updateNote("note-1", { contentText: "New thought" });
+
+      const resealed = updatedValue("encrypted_payload") as string;
+      expect(updatedValue("content_text")).toBe("");
+      await expect(open(key, resealed)).resolves.toEqual({
+        ...secret,
+        contentText: "New thought",
+      });
+      expect(db.execute.mock.calls.map(([sql]) => sql)).not.toContain("VACUUM");
+    });
+
+    it("decrypts a note back into plaintext when it is made public", async () => {
+      const { updateNote } = await importRepository();
+      const key = await unlock();
+      db.select.mockResolvedValue([
+        noteRow({
+          title: "",
+          content_text: "",
+          is_private: 1,
+          encrypted_payload: await seal(key),
+        }),
+      ]);
+
+      await updateNote("note-1", { isPrivate: false });
+
+      expect(updatedValue("title")).toBe("Journal");
+      expect(updatedValue("content_text")).toBe("Something only I should read");
+      expect(updatedValue("encrypted_payload")).toBeNull();
+      expect(updatedValue("is_private")).toBe(0);
+    });
+
+    it("encrypts pending private notes in one pass", async () => {
+      const { encryptPendingPrivateNotes } = await importRepository();
+      const key = await unlock();
+      db.select.mockResolvedValueOnce([
+        noteRow({
+          id: "note-1",
+          title: secret.title,
+          content_json: secret.contentJson,
+          content_text: secret.contentText,
+          is_private: 1,
+        }),
+        noteRow({ id: "note-2", title: "Diary", is_private: 1 }),
+      ]);
+
+      await expect(encryptPendingPrivateNotes()).resolves.toBe(2);
+
+      const updates = db.execute.mock.calls.filter(([sql]) =>
+        String(sql).includes("SET encrypted_payload = $1"),
+      );
+      expect(updates).toHaveLength(2);
+      const [, [sealed, emptyDoc, id]] = updates[0];
+      expect(id).toBe("note-1");
+      expect(emptyDoc).toBe('{"type":"doc","content":[{"type":"paragraph"}]}');
+      await expect(open(key, sealed as string)).resolves.toEqual(secret);
+      expect(db.execute.mock.calls.map(([sql]) => sql)).toContain("VACUUM");
+    });
+
+    it("does not encrypt pending notes without the session key", async () => {
+      const { encryptPendingPrivateNotes } = await importRepository();
+      const { DatabaseError } = await import("../../lib/errors/DatabaseError");
+
+      await expect(encryptPendingPrivateNotes()).rejects.toBeInstanceOf(
+        DatabaseError,
+      );
+      expect(db.execute).not.toHaveBeenCalled();
+    });
+
+    it("creates a private note already encrypted when unlocked", async () => {
+      const { createNote } = await importRepository();
+      const key = await unlock();
+      db.select.mockResolvedValueOnce([noteRow({ is_private: 1 })]);
+
+      await createNote({ title: "Journal", isPrivate: true });
+
+      const [sql, params] = db.execute.mock.calls[0];
+      expect(sql).toContain("encrypted_payload");
+      expect(params[1]).toBe("");
+      const [id, , , , , , , , , sealed] = params;
+      await expect(open(key, sealed as string, id as string)).resolves.toEqual({
+        title: "Journal",
+        contentJson: '{"type":"doc","content":[{"type":"paragraph"}]}',
+        contentText: "",
+      });
+    });
   });
 });

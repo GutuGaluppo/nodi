@@ -150,9 +150,15 @@ function EditorPane({
           <h2 id="editor-heading">This note could not be opened</h2>
           <p>Your data was not changed.</p>
         </div>
-      ) : selectedNote.isPrivate && unlockedNoteId !== selectedNote.id ? (
+      ) : selectedNote.isPrivate &&
+        (unlockedNoteId !== selectedNote.id || selectedNote.isLocked) ? (
         <PrivateNoteGate
-          onUnlocked={() => setUnlockedNoteId(selectedNote.id)}
+          onUnlocked={async () => {
+            // Wait for the decrypted note, so the editor never opens on the
+            // empty locked copy and autosaves it over the real content.
+            await note.refetch();
+            setUnlockedNoteId(selectedNote.id);
+          }}
         />
       ) : (
         <div className="editor-scroll">

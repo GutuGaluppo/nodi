@@ -71,3 +71,45 @@ column names.
   duplication, high clarity.
 - List queries return a lighter `*Summary` type that omits large fields (the
   note body) so list rendering stays cheap.
+
+## D-003 — Private notes use a wrapped AES-GCM key
+
+**Date:** September 27, 2026
+**Task:** PRIVACY-002 Encrypt private notes at rest
+**Status:** Accepted
+
+### Decision
+
+A random 256-bit AES-GCM **note key** encrypts every private note. A
+key-encryption key derived from the private-notes password (PBKDF2-SHA-256,
+210,000 iterations, its own salt) wraps the note key, which is stored in
+`settings.private_notes_key`. Each note's `{ title, contentJson, contentText }`
+is sealed as one envelope in `notes.encrypted_payload`, with a fresh 96-bit IV
+and the note id as additional authenticated data. Plaintext columns of an
+encrypted note hold empty values. Only the Web Crypto API is used.
+
+### Options considered
+
+- **Encrypt each note directly with a password-derived key** — simpler, but a
+  future password change would have to re-encrypt every note.
+- **SQLCipher for the whole database** — strong, but replaces the SQLite build
+  used by `tauri-plugin-sql`, encrypts public notes the user never asked to
+  protect, and adds a native dependency.
+
+### Rationale
+
+- Wrapping lets a later password change rewrap one key instead of every note.
+- Binding the note id as authenticated data stops ciphertext from being moved
+  between notes.
+- Web Crypto is built into the webview: no dependency, audited primitives.
+
+### Consequences
+
+- The unwrapped key lives only in memory for the session; writes to an
+  encrypted note without it fail instead of overwriting ciphertext.
+- Notes made private while locked, and private notes from before this decision,
+  stay readable until the next unlock, which encrypts them in one pass. The
+  "Your data" page reports how many are waiting.
+- After plaintext leaves the database NODI merges the FTS5 index, runs `VACUUM`,
+  and truncates the WAL so no deleted plaintext pages remain.
+- A forgotten password cannot be recovered.
