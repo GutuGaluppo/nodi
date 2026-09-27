@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import DesktopShell from "../components/layout/DesktopShell";
 import About from "../features/about/About";
 import { useCreateNote } from "../features/notes/useCreateNote";
+import YourData from "../features/privacy/YourData";
 import SearchDialog from "../features/search/SearchDialog";
 import { AppProviders } from "./providers";
 import { useGlobalShortcuts } from "./shortcuts";
@@ -14,10 +15,12 @@ import {
 
 function Workspace({
   onOpenAbout,
+  onOpenYourData,
   theme,
   onThemeChange,
 }: {
   onOpenAbout: () => void;
+  onOpenYourData: () => void;
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
 }) {
@@ -85,6 +88,7 @@ function Workspace({
         theme={theme}
         onThemeChange={onThemeChange}
         onOpenAbout={onOpenAbout}
+        onOpenYourData={onOpenYourData}
         onCreateNote={() => {
           void handleCreateNote();
         }}
@@ -135,7 +139,7 @@ function Workspace({
 }
 
 function App() {
-  const [showAbout, setShowAbout] = useState(false);
+  const [page, setPage] = useState<"workspace" | "about" | "data">("workspace");
   const [theme, setTheme] = useState<ThemePreference>(getStoredThemePreference);
 
   useEffect(() => {
@@ -145,13 +149,16 @@ function App() {
 
   return (
     <AppProviders>
-      {showAbout ? (
-        <About onClose={() => setShowAbout(false)} />
+      {page === "about" ? (
+        <About onClose={() => setPage("workspace")} />
+      ) : page === "data" ? (
+        <YourData onClose={() => setPage("workspace")} />
       ) : (
         <Workspace
           theme={theme}
           onThemeChange={setTheme}
-          onOpenAbout={() => setShowAbout(true)}
+          onOpenAbout={() => setPage("about")}
+          onOpenYourData={() => setPage("data")}
         />
       )}
     </AppProviders>

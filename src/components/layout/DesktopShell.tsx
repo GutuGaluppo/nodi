@@ -15,6 +15,7 @@ interface DesktopShellProps {
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
   onOpenAbout: () => void;
+  onOpenYourData: () => void;
   onCreateNote: () => void;
   selectedNoteId: string | null;
   onSelectNote: (id: string) => void;
@@ -35,6 +36,7 @@ function DesktopShell({
   theme,
   onThemeChange,
   onOpenAbout,
+  onOpenYourData,
   onCreateNote,
   selectedNoteId,
   onSelectNote,
@@ -151,6 +153,9 @@ function DesktopShell({
               <span>Settings</span>
             </summary>
             <div className="settings-popover">
+              <button type="button" onClick={onOpenYourData}>
+                Your data
+              </button>
               <button type="button" onClick={onOpenAbout}>
                 About NODI
               </button>
