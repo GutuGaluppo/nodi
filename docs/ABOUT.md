@@ -438,3 +438,11 @@ NODI reads the text in images with Apple's Vision framework, inside the app, wit
 Search now finds words that only appear inside images. Those notes come after the text matches and are marked "Found in an image". Images in private notes are never read.
 
 ![NODI after OCR-002: a search result found in an image](about/screenshots/ocr-002-searchable-images.png)
+
+## 054 — REL-001 and REL-002 Related notes
+
+**Completed:** September 27, 2026
+
+Each note now shows the notes closest to it in meaning. NODI computes a sentence embedding for every note with Apple's NaturalLanguage framework, on the Mac, and compares notes only within the same language. The panel appears only when a note is genuinely close; private notes are never embedded.
+
+![NODI after REL-002: related notes below the weekly sync](about/screenshots/rel-001-related-notes.png)

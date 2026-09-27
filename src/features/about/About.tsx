@@ -27,6 +27,7 @@ import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-pr
 import privacy002Screenshot from "../../../docs/about/screenshots/privacy-002-encrypted-private-notes.png";
 import privacy003Screenshot from "../../../docs/about/screenshots/privacy-003-network-lockdown.png";
 import privacy004Screenshot from "../../../docs/about/screenshots/privacy-004-your-data.png";
+import rel001Screenshot from "../../../docs/about/screenshots/rel-001-related-notes.png";
 import rem001Screenshot from "../../../docs/about/screenshots/rem-001-reminders.png";
 import search001Screenshot from "../../../docs/about/screenshots/search-001-fts-index.png";
 import search002Screenshot from "../../../docs/about/screenshots/search-002-basic-search.png";
@@ -489,6 +490,14 @@ const evolution = [
     description:
       'Search finds words that only appear in images and marks those notes "Found in an image". Images in private notes are never read.',
     screenshot: ocr002Screenshot,
+  },
+  {
+    id: "REL-001",
+    title: "Notes that find each other",
+    date: "September 27, 2026",
+    description:
+      "Each note shows the notes closest to it in meaning, from sentence embeddings computed on the Mac with Apple's NaturalLanguage framework. Private notes are never embedded.",
+    screenshot: rel001Screenshot,
   },
 ];
 
