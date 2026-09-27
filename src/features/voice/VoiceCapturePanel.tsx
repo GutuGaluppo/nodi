@@ -22,6 +22,10 @@ interface VoiceCapturePanelProps {
   actions?: VoiceAction[];
   onRemoveAction?: (key: string) => void;
   isApplying?: boolean;
+  /** Offered when the recording can be kept with the note. */
+  keepAudio?: { checked: boolean; onChange: (value: boolean) => void };
+  /** Explains why keeping the audio is not offered. */
+  audioUnavailableReason?: string;
 }
 
 const reminderFormatter = new Intl.DateTimeFormat(undefined, {
@@ -110,6 +114,8 @@ function VoiceCapturePanel({
   actions = [],
   onRemoveAction,
   isApplying = false,
+  keepAudio,
+  audioUnavailableReason,
 }: VoiceCapturePanelProps) {
   const [maxDurationSecs, setMaxDurationSecs] = useState(
     DEFAULT_MAX_DURATION_SECS,
@@ -243,6 +249,18 @@ function VoiceCapturePanel({
         ) : plan.text.trim() === "" ? null : (
           <p className="voice-capture-result-text">{plan.text}</p>
         )}
+        {keepAudio && canInsertHere ? (
+          <label className="voice-keep-audio">
+            <input
+              type="checkbox"
+              checked={keepAudio.checked}
+              onChange={(event) => keepAudio.onChange(event.target.checked)}
+            />
+            Guardar o áudio na nota
+          </label>
+        ) : audioUnavailableReason ? (
+          <p className="voice-keep-audio-note">{audioUnavailableReason}</p>
+        ) : null}
         {!canInsertHere ? (
           <p role="alert">
             Esta transcrição pertence a outra nota. Volte para ela para inserir,
@@ -296,7 +314,9 @@ function VoiceCapturePanel({
         : voiceState.phase === "stopping"
           ? "Finalizando gravação…"
           : voiceState.phase === "transcribing"
-            ? "Transcrevendo…"
+            ? voiceState.progress && voiceState.progress.total > 1
+              ? `Transcrevendo… ${voiceState.progress.done} de ${voiceState.progress.total} partes`
+              : "Transcrevendo…"
             : "Cancelando…";
 
   return (

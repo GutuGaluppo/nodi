@@ -27,7 +27,7 @@
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: blob:",
         "font-src": "'self' data:",
-        "media-src": "'self' blob:",
+        "media-src": "'self' blob: asset: http://asset.localhost",
         "connect-src": "ipc: http://ipc.localhost",
         "object-src": "'none'",
         "frame-src": "'none'",
@@ -40,12 +40,16 @@
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: blob:",
         "font-src": "'self' data:",
-        "media-src": "'self' blob:",
+        "media-src": "'self' blob: asset: http://asset.localhost",
         "connect-src": "ipc: http://ipc.localhost ws://localhost:1420 http://localhost:1420",
         "object-src": "'none'",
         "frame-src": "'none'",
         "base-uri": "'self'",
         "form-action": "'none'"
+      },
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$APPDATA/attachments/**"]
       }
     }
   },

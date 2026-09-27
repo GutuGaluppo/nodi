@@ -168,14 +168,14 @@ One screen shows where the user's data lives and proves its state.
 ## VOICE-AUD-001 Keep the recording
 
 - **Goal:** optionally save the captured audio as an attachment of the note.
-- **Scope:** encode in Rust to a compact format (AAC through AVFoundation, or Opus if a dependency is approved); store under the attachments directory, never in SQLite; record duration and size in `attachments`.
-- **Approval needed:** encoding approach.
+- **Scope:** write 16 kHz 16-bit mono WAV (about 1.9 MB per minute, no encoder dependency); store under the attachments directory, never in SQLite; record size and hash in `attachments`. Private notes never keep audio, because the file is not encrypted.
+- **Decision:** WAV instead of AAC or Opus (D-005).
 
 ## VOICE-AUD-002 Timed transcript
 
 - **Goal:** keep Whisper's `segments` (`startMs`, `endMs`, `text`), which are discarded today.
-- **Scope:** migration adding a `transcript_segments` table keyed by attachment; insert segments as a Tiptap node that links each sentence to its time.
-- **Verification:** persistence test for segments; deleting the note removes audio and segments.
+- **Scope:** insert a `voiceRecording` Tiptap node whose attributes hold the attachment reference and the segments. Tiptap JSON is canonical note content (`AGENTS.md`), so the segments are saved, searched, and encrypted with the note; a separate table would duplicate them (see D-005).
+- **Verification:** node round-trip and search-text tests; deleting the note removes its attachment rows, and the launch sweep deletes their files.
 
 ## VOICE-AUD-003 Playback
 
@@ -259,4 +259,8 @@ One screen shows where the user's data lives and proves its state.
 | VOICE-CMD-002 Command preview | Done |
 | REM-001 Reminders (prerequisite from `IMPLEMENTATION.md`) | Done |
 | VOICE-CMD-003 Spoken reminders | Done |
+| ATT-001 File storage, ATT-002 File metadata (prerequisites) | Done |
+| VOICE-AUD-001 Keep the recording | Done |
+| VOICE-AUD-002 Timed transcript | Done |
+| VOICE-AUD-003 Playback and one-hour recordings | Done |
 | All other tasks | Not started |

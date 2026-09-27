@@ -14,6 +14,7 @@ const completed: VoiceCaptureState = {
   sessionId: "s1",
   noteId: "note-1",
   level: 0,
+  progress: null,
   error: null,
   result: {
     sessionId: "s1",
@@ -90,5 +91,28 @@ describe("VoiceCapturePanel preview", () => {
       screen.getByRole("list", { name: "Ao inserir" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Inserir" })).toBeEnabled();
+  });
+
+  it("offers to keep the audio and reports the choice", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    renderPanel({ keepAudio: { checked: false, onChange } });
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Guardar o áudio na nota" }),
+    );
+
+    expect(onChange).toHaveBeenCalledWith(true);
+  });
+
+  it("explains why the audio cannot be kept", () => {
+    renderPanel({
+      audioUnavailableReason: "O áudio não é guardado em notas privadas.",
+    });
+
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("O áudio não é guardado em notas privadas."),
+    ).toBeInTheDocument();
   });
 });

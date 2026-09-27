@@ -6,6 +6,7 @@ pub const EVENT_STATE: &str = "voice-transcription://state";
 pub const EVENT_LEVEL: &str = "voice-transcription://level";
 pub const EVENT_COMPLETED: &str = "voice-transcription://completed";
 pub const EVENT_FAILED: &str = "voice-transcription://failed";
+pub const EVENT_PROGRESS: &str = "voice-transcription://progress";
 
 /// Every event carries `sessionId` so frontend and backend can both discard
 /// events belonging to a session that is no longer the active one (see
@@ -35,6 +36,17 @@ pub struct CompletedPayload {
     pub duration_ms: u64,
     pub segments: Vec<TranscriptionSegment>,
     pub limit_reached: bool,
+    /// True when the recording was staged and can be kept with the note.
+    pub audio_available: bool,
+}
+
+/// Reported after each transcribed chunk of a long recording.
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProgressPayload {
+    pub session_id: String,
+    pub done: usize,
+    pub total: usize,
 }
 
 #[derive(Serialize, Clone)]

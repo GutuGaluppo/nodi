@@ -5,14 +5,15 @@ use std::thread;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
-use super::capture::{self, CaptureOutcome, MAX_CAPTURE_SECS};
-use super::engine::{EngineError, Language, TranscriptionEngine};
+use super::capture::{self, CaptureOutcome, MAX_CAPTURE_SECS, OUTPUT_SAMPLE_RATE};
+use super::engine::{transcribe_in_chunks, EngineError, Language, TranscriptionEngine, CHUNK_SAMPLES};
 use super::engine_fake::PlaceholderEngine;
 use super::engine_whisper::WhisperEngine;
 use super::events::{
-    CompletedPayload, FailedPayload, LevelPayload, StatePayload, EVENT_COMPLETED, EVENT_FAILED,
-    EVENT_LEVEL, EVENT_STATE,
+    CompletedPayload, FailedPayload, LevelPayload, ProgressPayload, StatePayload, EVENT_COMPLETED,
+    EVENT_FAILED, EVENT_LEVEL, EVENT_PROGRESS, EVENT_STATE,
 };
+use crate::attachments;
 use super::session::{new_session_id, ActiveSession, SessionPhase, VoiceState};
 
 /// Model file name expected under the app's data directory (see
@@ -236,12 +237,30 @@ fn spawn_session_watcher(
                 limit_reached,
             }) => {
                 emit_state(&app, &session_id, &note_id, SessionPhase::Transcribing);
+                // Stage the recording so the user can keep it with the note.
+                // Best effort: a failure only means the audio is not offered.
+                let audio_available = attachments::root(&app)
+                    .and_then(|root| {
+                        attachments::stage_recording(&root, &session_id, &samples, OUTPUT_SAMPLE_RATE)
+                    })
+                    .inspect_err(|err| eprintln!("could not stage the recording: {err}"))
+                    .is_ok();
                 let lang = Language::from_code(&language);
                 let app_for_engine = app.clone();
+                let progress_session = session_id.clone();
                 let result = tauri::async_runtime::spawn_blocking(move || {
                     let cache = app_for_engine.state::<EngineCache>();
                     let engine = resolve_engine(&app_for_engine, &cache)?;
-                    engine.transcribe(&samples, lang)
+                    transcribe_in_chunks(engine.as_ref(), &samples, lang, CHUNK_SAMPLES, |done, total| {
+                        let _ = app_for_engine.emit(
+                            EVENT_PROGRESS,
+                            ProgressPayload {
+                                session_id: progress_session.clone(),
+                                done,
+                                total,
+                            },
+                        );
+                    })
                 })
                 .await
                 .ok();
@@ -258,11 +277,15 @@ fn spawn_session_watcher(
                                 duration_ms,
                                 segments: output.segments,
                                 limit_reached,
+                                audio_available,
                             },
                         );
                     }
                     Some(Err(EngineError::EmptyAudio)) => {
                         emit_failed(&app, &session_id, &note_id, "empty-audio", "no speech captured");
+                    }
+                    Some(Err(EngineError::NoSpeech)) => {
+                        emit_failed(&app, &session_id, &note_id, "engine-failed", "no speech detected");
                     }
                     Some(Err(EngineError::Failed(message))) => {
                         emit_failed(&app, &session_id, &note_id, "engine-failed", &message);

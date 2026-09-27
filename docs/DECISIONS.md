@@ -141,3 +141,41 @@ for due reminders at launch and every 30 seconds.
 - Notifications for private notes say "Private note", never the title.
 - A reminder is marked delivered after its notification is shown, so it never
   fires twice; a failed notification stays pending and is retried.
+
+## D-005 — Kept recordings are WAV files with the transcript in the note
+
+**Date:** September 27, 2026
+**Tasks:** ATT-001, ATT-002, VOICE-AUD-001 to VOICE-AUD-003
+**Status:** Accepted
+
+### Decision
+
+- A kept dictation is a 16 kHz 16-bit mono WAV file in content-addressed
+  attachment storage (`attachments/<prefix>/<sha256>/recording.wav`), written
+  with `hound`; its metadata is a row in `attachments`.
+- The timed transcript lives in a `voiceRecording` Tiptap node's attributes,
+  not in a separate table.
+- The webview plays files through Tauri's asset protocol, scoped to
+  `$APPDATA/attachments/**`; the CSP allows it only as a media source.
+- Recordings are resampled to 16 kHz while capturing and kept as 16-bit
+  samples, which allows one-hour recordings; long audio is transcribed in
+  five-minute chunks with progress events.
+
+### Rationale
+
+- WAV needs no encoder dependency and Whisper already works on 16 kHz audio.
+  At about 1.9 MB per minute it is larger than AAC, which is acceptable for
+  local storage; a compressed format can come later without changing the
+  schema.
+- Tiptap JSON is canonical note content (`AGENTS.md`). Keeping the segments
+  there means they are saved, searched, and encrypted with the note for free.
+- `hound` was already a dev-dependency and `sha2` was already in the lockfile
+  through Tauri, so neither adds new code to the build.
+
+### Consequences
+
+- Private notes never keep audio: the WAV file is not encrypted.
+- Files are deleted by a launch-time sweep when no attachment row references
+  them (for example after a note is deleted from the Trash). A recording block
+  removed from a note keeps its file until the note itself is deleted.
+- A word spoken across a five-minute chunk boundary may be split.

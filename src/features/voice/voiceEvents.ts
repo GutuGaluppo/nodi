@@ -2,6 +2,7 @@ export const EVENT_STATE = "voice-transcription://state";
 export const EVENT_LEVEL = "voice-transcription://level";
 export const EVENT_COMPLETED = "voice-transcription://completed";
 export const EVENT_FAILED = "voice-transcription://failed";
+export const EVENT_PROGRESS = "voice-transcription://progress";
 
 /** Mirrors `voice::session::SessionPhase::as_str()` in the Rust backend. */
 export type BackendVoicePhase =
@@ -35,6 +36,14 @@ export interface CompletedEventPayload {
   durationMs: number;
   segments: TranscriptionSegment[];
   limitReached: boolean;
+  /** True when the recording was kept aside and can be saved with the note. */
+  audioAvailable?: boolean;
+}
+
+export interface ProgressEventPayload {
+  sessionId: string;
+  done: number;
+  total: number;
 }
 
 export interface FailedEventPayload {

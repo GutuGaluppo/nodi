@@ -11,13 +11,15 @@ import { TaskList } from "@tiptap/extension-task-list";
 import { Underline } from "@tiptap/extension-underline";
 import type { Extensions } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
+import { VoiceRecording } from "./voiceRecording/VoiceRecordingNode";
 
 export const EDITOR_PLACEHOLDER = "Start writing…";
 
 /**
  * The fixed NODI editor extension set (IMPLEMENTATION.md §26). StarterKit's
  * bundled Link and Underline are disabled so the standalone extensions own that
- * behaviour explicitly. No custom extensions until the base editor is stable.
+ * behaviour explicitly. `VoiceRecording` is NODI's one custom node: a kept
+ * dictation with its timed transcript.
  */
 export const editorExtensions: Extensions = [
   StarterKit.configure({
@@ -39,4 +41,5 @@ export const editorExtensions: Extensions = [
   TableHeader,
   TableCell,
   Placeholder.configure({ placeholder: EDITOR_PLACEHOLDER }),
+  VoiceRecording,
 ];

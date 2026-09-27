@@ -757,3 +757,117 @@
     width: calc(100% - var(--space-10));
   }
 }
+
+.voice-keep-audio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.voice-keep-audio input {
+  accent-color: var(--color-accent);
+}
+
+.voice-keep-audio-note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.voice-recording {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.voice-recording.ProseMirror-selectednode {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.voice-recording-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.voice-recording-label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.voice-recording-duration,
+.voice-recording-time {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.voice-recording-audio {
+  width: 100%;
+  height: 36px;
+}
+
+.voice-recording-missing {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.voice-recording-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voice-recording-segment {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-text);
+  font: inherit;
+  line-height: 1.5;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.voice-recording-segment:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+.voice-recording-segment:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.voice-recording-segment[aria-current="true"] {
+  background: var(--color-accent-soft);
+}
+
+.voice-recording-segment[aria-current="true"] .voice-recording-time {
+  color: var(--color-accent);
+}
+
+.voice-recording-segment:disabled {
+  cursor: default;
+}

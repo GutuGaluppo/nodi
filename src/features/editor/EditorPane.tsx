@@ -1,7 +1,10 @@
+import { invoke } from "@tauri-apps/api/core";
 import type { Editor, JSONContent } from "@tiptap/react";
 import { type Ref, useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Icon from "../../components/ui/Icon";
+import { createAttachment } from "../../db/repositories/attachmentRepository";
+import type { VoiceSegment } from "../../editor/voiceRecording/VoiceRecordingNode";
 import NoteNotebookSelect from "../notebooks/NoteNotebookSelect";
 import { useNote } from "../notes/useNote";
 import { usePermanentlyDeleteNote } from "../notes/usePermanentlyDeleteNote";
@@ -18,7 +21,10 @@ import { useVoiceInsertionTarget } from "../voice/useVoiceInsertionTarget";
 import VoiceCaptureButton from "../voice/VoiceCaptureButton";
 import VoiceCapturePanel from "../voice/VoiceCapturePanel";
 import type { VoiceInsertionPlan } from "../voice/voiceCommandParser";
-import { parseVoiceDictation } from "../voice/voiceDirectives";
+import {
+  parseVoiceDictation,
+  stripLeadingDirectives,
+} from "../voice/voiceDirectives";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
 
@@ -38,6 +44,37 @@ function buildVoiceInsertionContent(
       content: [{ type: "paragraph", content: [{ type: "text", text: item }] }],
     })),
   };
+}
+
+interface StoredAttachment {
+  relativePath: string;
+  sha256: string;
+  size: number;
+  filename: string;
+  mimeType: string;
+}
+
+const KEEP_AUDIO_SETTING = "nodi.voice.keepAudio";
+
+function readKeepAudio(): boolean {
+  try {
+    return window.localStorage.getItem(KEEP_AUDIO_SETTING) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function storeKeepAudio(value: boolean): void {
+  try {
+    window.localStorage.setItem(KEEP_AUDIO_SETTING, String(value));
+  } catch {
+    // The preference is a convenience; losing it changes nothing else.
+  }
+}
+
+/** Throws away a staged recording the user did not keep. Best effort. */
+function discardRecording(sessionId: string): void {
+  void invoke("discard_voice_recording", { sessionId }).catch(() => undefined);
 }
 
 const VOICE_LANGUAGES = [
@@ -105,6 +142,12 @@ function EditorPane({
   const [removedActionKeys, setRemovedActionKeys] = useState<string[]>([]);
   const [applyingVoice, setApplyingVoice] = useState(false);
   const [voiceApplyError, setVoiceApplyError] = useState(false);
+  const [keepAudio, setKeepAudio] = useState(readKeepAudio);
+  const [audioKeepError, setAudioKeepError] = useState(false);
+  const canKeepAudio =
+    voice.state.result?.audioAvailable === true &&
+    selectedNote != null &&
+    !selectedNote.isPrivate;
   const pendingVoiceActions = voiceActions.actions.filter(
     (action) => !removedActionKeys.includes(action.key),
   );
@@ -114,6 +157,7 @@ function EditorPane({
     if (voice.state.result !== null) {
       setRemovedActionKeys([]);
       setVoiceApplyError(false);
+      setAudioKeepError(false);
     }
   }, [voice.state.result]);
 
@@ -130,15 +174,68 @@ function EditorPane({
       return;
     }
     const { plan } = dictation;
-    if (plan.kind === "list" || plan.text.trim() !== "") {
-      const pos = insertionTarget.resolve();
+    const result = voice.state.result;
+    const pos = insertionTarget.resolve();
+    const content: (JSONContent | string)[] = [];
+    setApplyingVoice(true);
+
+    let recording: JSONContent | null = null;
+    if (result !== null && canKeepAudio && keepAudio) {
+      try {
+        const stored = await invoke<StoredAttachment>("keep_voice_recording", {
+          sessionId: result.sessionId,
+        });
+        const attachment = await createAttachment({
+          noteId: selectedNote.id,
+          filename: stored.filename,
+          mimeType: stored.mimeType,
+          relativePath: stored.relativePath,
+          sha256: stored.sha256,
+          size: stored.size,
+        });
+        const segments: VoiceSegment[] = stripLeadingDirectives(
+          result.segments.map((segment) => ({
+            startMs: segment.startMs,
+            endMs: segment.endMs,
+            text: segment.text,
+          })),
+          dictation.organize,
+        );
+        recording = {
+          type: "voiceRecording",
+          attrs: {
+            attachmentId: attachment.id,
+            src: attachment.relativePath,
+            durationMs: result.durationMs,
+            segments,
+          },
+        };
+      } catch {
+        setAudioKeepError(true);
+      }
+    } else if (result?.audioAvailable) {
+      discardRecording(result.sessionId);
+    }
+
+    // A kept recording carries the transcript itself; a list is still
+    // inserted as a real list next to it.
+    if (recording !== null) content.push(recording);
+    if (
+      plan.kind === "list" ||
+      (recording === null && plan.text.trim() !== "")
+    ) {
+      content.push(buildVoiceInsertionContent(plan));
+    }
+    if (content.length > 0) {
       editor
         .chain()
         .focus()
-        .insertContentAt(pos, buildVoiceInsertionContent(plan))
+        .insertContentAt(
+          pos,
+          content.length === 1 ? content[0] : (content as JSONContent[]),
+        )
         .run();
     }
-    setApplyingVoice(true);
     try {
       await voiceActions.apply(selectedNote.id, pendingVoiceActions);
     } catch {
@@ -316,6 +413,12 @@ function EditorPane({
               <ReminderControl noteId={selectedNote.id} />
             </div>
           ) : null}
+          {audioKeepError ? (
+            <p className="inline-error" role="alert">
+              O áudio não pôde ser guardado. O texto ditado foi inserido sem a
+              gravação.
+            </p>
+          ) : null}
           {voiceApplyError ? (
             <p className="inline-error" role="alert">
               O texto ditado foi inserido, mas o título, o caderno ou as tags
@@ -335,7 +438,28 @@ function EditorPane({
               onStop={voice.stop}
               onCancel={voice.cancel}
               onInsert={() => void handleInsertVoiceResult()}
-              onDismiss={voice.dismiss}
+              onDismiss={() => {
+                if (voice.state.result?.audioAvailable) {
+                  discardRecording(voice.state.result.sessionId);
+                }
+                voice.dismiss();
+              }}
+              keepAudio={
+                canKeepAudio
+                  ? {
+                      checked: keepAudio,
+                      onChange: (value) => {
+                        setKeepAudio(value);
+                        storeKeepAudio(value);
+                      },
+                    }
+                  : undefined
+              }
+              audioUnavailableReason={
+                voice.state.result?.audioAvailable && selectedNote.isPrivate
+                  ? "O áudio não é guardado em notas privadas."
+                  : undefined
+              }
               plan={dictation?.plan}
               actions={pendingVoiceActions}
               onRemoveAction={(key) =>

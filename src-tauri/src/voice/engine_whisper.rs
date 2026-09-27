@@ -94,7 +94,7 @@ impl TranscriptionEngine for WhisperEngine {
         }
 
         if text.is_empty() {
-            return Err(EngineError::Failed("no speech detected".into()));
+            return Err(EngineError::NoSpeech);
         }
 
         Ok(TranscriptionOutput { text, segments })

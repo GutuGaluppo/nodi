@@ -12,7 +12,16 @@ type Policy = Record<string, string>;
 
 const IPC_SOURCES = ["ipc:", "http://ipc.localhost"];
 const DEV_SERVER_SOURCES = ["ws://localhost:1420", "http://localhost:1420"];
-const LOCAL_SOURCES = ["'self'", "'none'", "'unsafe-inline'", "data:", "blob:"];
+const LOCAL_SOURCES = [
+  "'self'",
+  "'none'",
+  "'unsafe-inline'",
+  "data:",
+  "blob:",
+  // Tauri's asset protocol serves local attachment files only.
+  "asset:",
+  "http://asset.localhost",
+];
 
 function sources(policy: Policy, directive: string): string[] {
   return (policy[directive] ?? "").split(/\s+/).filter(Boolean);
@@ -54,6 +63,15 @@ describe("network lockdown", () => {
         ...DEV_SERVER_SOURCES,
       ]),
     ).toEqual([]);
+  });
+
+  it("limits the asset protocol to the attachments directory", () => {
+    const assets = (
+      tauriConfig.app.security as {
+        assetProtocol?: { enable: boolean; scope: string[] };
+      }
+    ).assetProtocol;
+    expect(assets?.scope).toEqual(["$APPDATA/attachments/**"]);
   });
 
   it("grants no network permission to the window", () => {

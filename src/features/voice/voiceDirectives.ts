@@ -148,6 +148,47 @@ export function parseVoiceDictation(
   return { plan, organize };
 }
 
+/**
+ * Removes spoken directives from the start of a timed transcript, so a kept
+ * recording's sentences show what was said about the note, not "Title: …" or
+ * "Remind me tomorrow at 9". Segments left empty are dropped; later segments
+ * keep their timing untouched.
+ */
+export function stripLeadingDirectives<T extends { text: string }>(
+  segments: T[],
+  organize: VoiceOrganization,
+  now: Date = new Date(),
+): T[] {
+  const result = [...segments];
+  const trimFirst = (strip: (text: string) => string) => {
+    while (result.length > 0) {
+      const text = strip(result[0].text).trim();
+      if (text === "") {
+        result.shift();
+        return;
+      }
+      result[0] = { ...result[0], text };
+      return;
+    }
+  };
+
+  if (organize.title) {
+    trimFirst((text) => {
+      const match = TITLE_PATTERN.exec(text);
+      return match ? text.slice(match[0].length) : text;
+    });
+  }
+  if (organize.reminder) {
+    trimFirst((text) => {
+      const spoken = findLeadingSpokenReminder(text, now);
+      return spoken
+        ? text.slice(spoken.length).replace(REMINDER_CONNECTOR, "")
+        : text;
+    });
+  }
+  return result;
+}
+
 /** Lowercases and strips accents so "Café" matches a spoken "cafe". */
 export function normalizeName(name: string): string {
   return name

@@ -6,9 +6,11 @@ import {
   EVENT_COMPLETED,
   EVENT_FAILED,
   EVENT_LEVEL,
+  EVENT_PROGRESS,
   EVENT_STATE,
   type FailedEventPayload,
   type LevelEventPayload,
+  type ProgressEventPayload,
   type StateEventPayload,
 } from "./voiceEvents";
 
@@ -32,6 +34,8 @@ export interface VoiceCaptureState {
   sessionId: string | null;
   noteId: string | null;
   level: number;
+  /** Chunks transcribed so far, for long recordings. */
+  progress: { done: number; total: number } | null;
   result: CompletedEventPayload | null;
   error: VoiceCaptureError | null;
 }
@@ -44,6 +48,7 @@ type Action =
   | { type: "cancel-requested" }
   | { type: "backend-state"; payload: StateEventPayload }
   | { type: "level"; level: number }
+  | { type: "progress"; payload: ProgressEventPayload }
   | { type: "completed"; payload: CompletedEventPayload }
   | { type: "failed"; payload: FailedEventPayload }
   | { type: "dismiss" };
@@ -59,6 +64,7 @@ const initialState: VoiceCaptureState = {
   sessionId: null,
   noteId: null,
   level: 0,
+  progress: null,
   result: null,
   error: null,
 };
@@ -93,6 +99,14 @@ function reducer(state: VoiceCaptureState, action: Action): VoiceCaptureState {
     }
     case "level":
       return { ...state, level: action.level };
+    case "progress":
+      if (action.payload.sessionId !== state.sessionId) {
+        return state;
+      }
+      return {
+        ...state,
+        progress: { done: action.payload.done, total: action.payload.total },
+      };
     case "completed":
       if (action.payload.sessionId !== state.sessionId) {
         return state;
@@ -175,6 +189,9 @@ export function useVoiceCapture() {
         if (event.payload.sessionId === sessionIdRef.current) {
           dispatch({ type: "level", level: event.payload.level });
         }
+      }).catch(() => undefined),
+      listen<ProgressEventPayload>(EVENT_PROGRESS, (event) => {
+        dispatch({ type: "progress", payload: event.payload });
       }).catch(() => undefined),
       listen<CompletedEventPayload>(EVENT_COMPLETED, (event) => {
         dispatchAfterMinimumTranscribingTime({

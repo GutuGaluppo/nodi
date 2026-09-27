@@ -7,13 +7,14 @@ use std::time::Duration;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::SampleFormat;
 
-/// Hard cap on a single recording, per docs/VOICE_TRANSCRIPTION_APPROACH.md
-/// decision #8. Chosen at the conservative end of the 10-15 minute range to
-/// leave memory headroom, since the MVP keeps the whole buffer in `Vec<f32>`.
-pub const MAX_CAPTURE_SECS: u64 = 600;
+/// Hard cap on a single recording: one hour, long enough for a meeting
+/// (VOICE-AUD-003). Audio is resampled to 16 kHz while recording and kept as
+/// 16-bit samples, so an hour costs about 115 MB instead of the ~690 MB a
+/// 48 kHz `f32` buffer would need.
+pub const MAX_CAPTURE_SECS: u64 = 3_600;
 
 /// Target sample rate the transcription engine expects.
-const OUTPUT_SAMPLE_RATE: u32 = 16_000;
+pub const OUTPUT_SAMPLE_RATE: u32 = 16_000;
 
 pub enum CaptureCommand {
     Stop,
@@ -21,8 +22,9 @@ pub enum CaptureCommand {
 }
 
 pub enum CaptureOutcome {
+    /// 16 kHz mono samples.
     Stopped {
-        samples: Vec<f32>,
+        samples: Vec<i16>,
         duration_ms: u64,
         limit_reached: bool,
     },
@@ -222,8 +224,9 @@ fn run_capture_loop(
     overrun: Arc<AtomicBool>,
     input_sample_rate: u32,
 ) {
-    let mut buffer: Vec<f32> = Vec::new();
-    let max_samples = input_sample_rate as u64 * MAX_CAPTURE_SECS;
+    let mut buffer: Vec<i16> = Vec::new();
+    let mut resampler = StreamingResampler::new(input_sample_rate, OUTPUT_SAMPLE_RATE);
+    let max_samples = OUTPUT_SAMPLE_RATE as u64 * MAX_CAPTURE_SECS;
     let mut limit_reached = false;
     let mut cancelled = false;
 
@@ -242,7 +245,7 @@ fn run_capture_loop(
             Ok(chunk) => {
                 let level = rms(&chunk);
                 let _ = level_tx.send(level);
-                buffer.extend_from_slice(&chunk);
+                resampler.push(&chunk, &mut buffer);
                 if buffer.len() as u64 >= max_samples {
                     limit_reached = true;
                     break;
@@ -265,10 +268,10 @@ fn run_capture_loop(
         return;
     }
 
-    let duration_ms = buffer.len() as u64 * 1000 / input_sample_rate.max(1) as u64;
-    let samples = resample_linear(&buffer, input_sample_rate, OUTPUT_SAMPLE_RATE);
+    resampler.finish(&mut buffer);
+    let duration_ms = buffer.len() as u64 * 1000 / OUTPUT_SAMPLE_RATE as u64;
     let _ = outcome_tx.send(CaptureOutcome::Stopped {
-        samples,
+        samples: buffer,
         duration_ms,
         limit_reached,
     });
@@ -282,51 +285,111 @@ fn rms(chunk: &[f32]) -> f32 {
     (sum_squares / chunk.len() as f32).sqrt()
 }
 
-/// One-shot linear resample, run once on the full buffer at stop time rather
-/// than per audio callback. Simpler and safer than streaming resampling with
-/// phase tracking; good enough until the spike shows it isn't (see approach
-/// doc section 3, "resampling").
-fn resample_linear(input: &[f32], input_rate: u32, output_rate: u32) -> Vec<f32> {
-    if input.is_empty() || input_rate == output_rate {
-        return input.to_vec();
+/// Linear resampler that works on the stream chunk by chunk, carrying the
+/// last sample across chunk boundaries so the output is continuous. Resampling
+/// while recording keeps memory proportional to 16 kHz audio rather than to
+/// the device's native rate.
+pub struct StreamingResampler {
+    step: f64,
+    /// Position of the next output sample, relative to `carry` (index 0) when
+    /// there is one, or to the start of the next chunk otherwise.
+    next: f64,
+    carry: Option<f32>,
+}
+
+impl StreamingResampler {
+    pub fn new(input_rate: u32, output_rate: u32) -> Self {
+        Self {
+            step: input_rate.max(1) as f64 / output_rate.max(1) as f64,
+            next: 0.0,
+            carry: None,
+        }
     }
 
-    let ratio = input_rate as f64 / output_rate as f64;
-    let output_len = (input.len() as f64 / ratio).floor() as usize;
-    (0..output_len)
-        .map(|i| {
-            let src_pos = i as f64 * ratio;
-            let idx = src_pos.floor() as usize;
-            let frac = (src_pos - idx as f64) as f32;
-            let a = input[idx.min(input.len() - 1)];
-            let b = input[(idx + 1).min(input.len() - 1)];
-            a + (b - a) * frac
-        })
-        .collect()
+    pub fn push(&mut self, chunk: &[f32], out: &mut Vec<i16>) {
+        if chunk.is_empty() {
+            return;
+        }
+        let carry = self.carry;
+        let offset = usize::from(carry.is_some());
+        let len = chunk.len() + offset;
+        let sample = |index: usize| -> f32 {
+            match carry {
+                Some(value) if index == 0 => value,
+                _ => chunk[index - offset],
+            }
+        };
+        while self.next + 1.0 < len as f64 {
+            let index = self.next.floor() as usize;
+            let frac = (self.next - index as f64) as f32;
+            let a = sample(index);
+            let b = sample(index + 1);
+            out.push(to_i16(a + (b - a) * frac));
+            self.next += self.step;
+        }
+        self.carry = Some(sample(len - 1));
+        self.next -= (len - 1) as f64;
+    }
+
+    /// Emits the final carried sample when the stream ends exactly on it.
+    pub fn finish(&mut self, out: &mut Vec<i16>) {
+        if let Some(last) = self.carry.take() {
+            if self.next <= 0.0 {
+                out.push(to_i16(last));
+            }
+        }
+    }
+}
+
+fn to_i16(sample: f32) -> i16 {
+    (sample.clamp(-1.0, 1.0) * i16::MAX as f32).round() as i16
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn resample_linear_keeps_length_when_rates_match() {
-        let input = vec![0.1, 0.2, 0.3, 0.4];
-        let output = resample_linear(&input, 16_000, 16_000);
-        assert_eq!(output, input);
+    fn resample(chunks: &[&[f32]], input_rate: u32, output_rate: u32) -> Vec<i16> {
+        let mut resampler = StreamingResampler::new(input_rate, output_rate);
+        let mut out = Vec::new();
+        for chunk in chunks {
+            resampler.push(chunk, &mut out);
+        }
+        resampler.finish(&mut out);
+        out
     }
 
     #[test]
-    fn resample_linear_halves_length_when_input_rate_doubles_output_rate() {
-        let input: Vec<f32> = (0..100).map(|i| i as f32).collect();
-        let output = resample_linear(&input, 32_000, 16_000);
+    fn resampler_keeps_every_sample_when_rates_match() {
+        let output = resample(&[&[0.1, 0.2], &[0.3, 0.4]], 16_000, 16_000);
+        assert_eq!(output, vec![3277, 6553, 9830, 13107]);
+    }
+
+    #[test]
+    fn resampler_halves_length_when_input_rate_doubles_output_rate() {
+        let input: Vec<f32> = (0..100).map(|i| i as f32 / 100.0).collect();
+        let output = resample(&[&input[..37], &input[37..]], 32_000, 16_000);
         assert_eq!(output.len(), 50);
     }
 
     #[test]
-    fn resample_linear_handles_empty_input() {
-        let output = resample_linear(&[], 44_100, 16_000);
-        assert!(output.is_empty());
+    fn resampler_output_does_not_depend_on_chunk_boundaries() {
+        let input: Vec<f32> = (0..480).map(|i| (i as f32 / 40.0).sin() * 0.5).collect();
+        let whole = resample(&[&input], 48_000, 16_000);
+        let split = resample(&[&input[..101], &input[101..333], &input[333..]], 48_000, 16_000);
+        assert_eq!(whole, split);
+        assert_eq!(whole.len(), 160);
+    }
+
+    #[test]
+    fn resampler_handles_empty_input() {
+        assert!(resample(&[&[]], 44_100, 16_000).is_empty());
+    }
+
+    #[test]
+    fn samples_are_clamped_to_16_bit_range() {
+        assert_eq!(to_i16(2.0), i16::MAX);
+        assert_eq!(to_i16(-2.0), -i16::MAX);
     }
 
     #[test]

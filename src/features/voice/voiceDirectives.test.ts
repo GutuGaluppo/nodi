@@ -3,6 +3,7 @@ import {
   normalizeName,
   parseVoiceDictation,
   resolveName,
+  stripLeadingDirectives,
 } from "./voiceDirectives";
 
 describe("parseVoiceDictation", () => {
@@ -141,6 +142,41 @@ describe("spoken reminders in a dictation", () => {
       plan: { kind: "text", text },
       organize: { tags: [] },
     });
+  });
+});
+
+describe("stripLeadingDirectives", () => {
+  const now = new Date(2026, 9, 1, 14, 20, 0);
+
+  it("drops a spoken title from the first sentence and keeps the timing of the rest", () => {
+    const segments = [
+      { startMs: 0, endMs: 1_500, text: "Title: Launch sync." },
+      { startMs: 1_500, endMs: 5_000, text: "We ship in October." },
+    ];
+    expect(
+      stripLeadingDirectives(segments, { title: "Launch sync", tags: [] }, now),
+    ).toEqual([{ startMs: 1_500, endMs: 5_000, text: "We ship in October." }]);
+  });
+
+  it("trims a leading reminder that shares a sentence with the note", () => {
+    const segments = [
+      {
+        startMs: 0,
+        endMs: 4_000,
+        text: "Remind me tomorrow at 9 to call the printer.",
+      },
+    ];
+    const reminder = new Date(2026, 9, 2, 9, 0);
+    expect(
+      stripLeadingDirectives(segments, { tags: [], reminder }, now),
+    ).toEqual([{ startMs: 0, endMs: 4_000, text: "call the printer." }]);
+  });
+
+  it("leaves a transcript without directives alone", () => {
+    const segments = [{ startMs: 0, endMs: 900, text: "Title case matters." }];
+    expect(stripLeadingDirectives(segments, { tags: [] }, now)).toEqual(
+      segments,
+    );
   });
 });
 
