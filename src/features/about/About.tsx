@@ -19,6 +19,7 @@ import land003Screenshot from "../../../docs/about/screenshots/land-003-tour.png
 import mac001Screenshot from "../../../docs/about/screenshots/mac-001-quick-capture.png";
 import mac002Screenshot from "../../../docs/about/screenshots/mac-002-spotlight.png";
 import mac003Screenshot from "../../../docs/about/screenshots/mac-003-share-extension.png";
+import mac005Screenshot from "../../../docs/about/screenshots/mac-005-menu-bar-icon.png";
 import mirror001Screenshot from "../../../docs/about/screenshots/mirror-001-markdown-mirror.png";
 import nb001Screenshot from "../../../docs/about/screenshots/nb-001-notebooks.png";
 import nb002Screenshot from "../../../docs/about/screenshots/nb-002-move-note.png";
@@ -552,6 +553,14 @@ const evolution = [
     description:
       "Dictations keep their recording by default, in a highlighted row that explains the playable transcript. Turning it off is remembered, and private notes never keep audio.",
     screenshot: voiceAud004Screenshot,
+  },
+  {
+    id: "MAC-005",
+    title: "A clear menu bar icon",
+    date: "September 27, 2026",
+    description:
+      "NODI's menu bar item is now the quill alone on a transparent background, so it reads like the other menu bar icons in light and dark mode instead of a solid square.",
+    screenshot: mac005Screenshot,
   },
 ];
 

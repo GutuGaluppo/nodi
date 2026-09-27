@@ -494,3 +494,11 @@ The landing page's animated tour was recorded again with the new features: a rec
 Dictations now keep their recording by default, so the playable transcript is there without looking for an option. The choice sits in a highlighted row of the voice panel that explains what it gives the note, and turning it off is remembered. Private notes still never keep audio.
 
 ![NODI after VOICE-AUD-004: the highlighted option to keep the recording](about/screenshots/voice-aud-004-keep-audio-default.png)
+
+## 061 — MAC-005 A clear menu bar icon
+
+**Completed:** September 27, 2026
+
+NODI's menu bar item showed a solid square, because its template image was cut from the whole app icon. It is now the quill alone on a transparent background, so macOS tints it like the other menu bar icons in light and dark mode. A test now checks that the icon's background stays clear.
+
+![NODI with the new menu bar icon, on a light and a dark menu bar](about/screenshots/mac-005-menu-bar-icon.png)
