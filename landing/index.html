@@ -219,14 +219,16 @@
     padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent);
   }
   @media (max-width: 860px) {
-    .feature { grid-template-columns: 1fr; }
+    .feature { grid-template-columns: minmax(0, 1fr); }
     .feature:nth-of-type(even) .feature-copy { order: 0; }
   }
   .minor {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0;
     margin-top: clamp(64px, 8vw, 104px); border-top: 1px solid var(--border);
   }
   .minor div { padding: 24px 24px 8px 0; display: grid; gap: 8px; align-content: start; }
+  @media (max-width: 860px) { .minor { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .minor { grid-template-columns: minmax(0, 1fr); } }
   .minor p { color: var(--muted); font-size: 0.95rem; }
 
   /* ---------- Results ---------- */
@@ -279,7 +281,7 @@
   .transcript small { color: var(--muted); font-size: 0.76rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
   .transcript .fine { grid-column: 1 / -1; color: var(--muted); font-size: 0.86rem; border-top: 1px solid var(--border); padding-top: 14px; }
   @media (max-width: 720px) {
-    .transcript { grid-template-columns: 1fr; }
+    .transcript { grid-template-columns: minmax(0, 1fr); }
     .transcript .arrow { transform: rotate(90deg); justify-self: start; }
   }
 
@@ -297,7 +299,7 @@
   }
   .path code { white-space: nowrap; font-size: 0.84rem; }
   .path span { font-size: 0.86rem; color: var(--muted); }
-  @media (max-width: 860px) { .privacy { grid-template-columns: 1fr; } }
+  @media (max-width: 860px) { .privacy { grid-template-columns: minmax(0, 1fr); } }
 
   /* ---------- Specs ---------- */
   .specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); border-top: 1px solid var(--border); }
@@ -318,7 +320,7 @@
   .terminal .c { color: #7e857c; }
   .terminal .p { color: #6db58d; user-select: none; }
   .copy { font: 500 0.76rem var(--font-ui); background: #232723; color: #e8ebe6; border: 1px solid #343a34; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-  @media (max-width: 860px) { .install { grid-template-columns: 1fr; } }
+  @media (max-width: 860px) { .install { grid-template-columns: minmax(0, 1fr); } }
 
   .site-footer { border-top: 1px solid var(--border); padding-block: 32px 48px; color: var(--muted); font-size: 0.86rem; }
   .site-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
@@ -359,7 +361,7 @@
         <span data-i18n="meta.notebook">Notebook</span><span class="pill" data-i18n="meta.mac">This Mac</span>
         <span data-i18n="meta.tags">Tags</span><span class="pill tag"># local-first</span><span class="pill tag"># offline</span>
       </div>
-      <p class="lead" data-i18n="hero.lead">NODI is a quiet, native notes app for the Mac. Rich text, notebooks, tags, instant search and on-device voice dictation, all stored in one SQLite file on your disk. No account, no cloud, no sync server.</p>
+      <p class="lead" data-i18n="hero.lead">NODI is a quiet, native notes app for the Mac. Rich text, notebooks, instant search, voice notes, and images you can search, all stored on your disk. Private notes are encrypted. No account, no cloud, no sync server.</p>
       <div class="actions">
         <a class="btn btn-primary" href="#tour" data-i18n="hero.cta1">Watch the tour</a>
         <a class="btn btn-ghost" href="#install" data-i18n="hero.cta2">Build from source</a>
@@ -441,7 +443,7 @@
         <div class="feature-copy">
           <span class="label" data-i18n="f4.label">Private notes</span>
           <h3 data-i18n="f4.title">Lock the notes that are only yours</h3>
-          <p data-i18n="f4.body">Put any note behind a password. NODI stores only a salted verifier, never the password itself, and private notes are kept out of the search index.</p>
+          <p data-i18n="f4.body">Put any note behind a password. Its title and content are encrypted with AES-256 on your disk; the password itself is never stored, and private notes stay out of search, Spotlight, and the Markdown mirror.</p>
         </div>
         <div class="window">
           <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>NODI</span></div>
@@ -450,11 +452,39 @@
         </div>
       </article>
 
+      <article class="feature">
+        <div class="feature-copy">
+          <span class="label" data-i18n="f5.label">Voice</span>
+          <h3 data-i18n="f5.title">Speak a note, keep what was said</h3>
+          <p data-i18n="f5.body">Dictate and whisper.cpp transcribes on your Mac. Say a title, a notebook, tags, or “remind me tomorrow at 9” and NODI files the note. Keep the recording, and every sentence plays back from the moment it was spoken.</p>
+        </div>
+        <div class="window">
+          <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>NODI</span></div>
+          <img class="shot-l" src="assets/voice-light.webp" width="1600" height="1000" loading="lazy" data-i18n-alt="f5.alt" alt="A voice recording in NODI with its timed transcript, playing from one sentence." />
+          <img class="shot-d" src="assets/voice-dark.webp" width="1600" height="1000" loading="lazy" data-i18n-alt="f5.alt" alt="A voice recording in NODI with its timed transcript, playing from one sentence." />
+        </div>
+      </article>
+
+      <article class="feature">
+        <div class="feature-copy">
+          <span class="label" data-i18n="f6.label">Images</span>
+          <h3 data-i18n="f6.title">Search what's inside your images</h3>
+          <p data-i18n="f6.body">Paste, drop, or insert a screenshot or the photo of a receipt. Apple's Vision framework reads its text on your Mac, and search finds it, marked “Found in an image”.</p>
+        </div>
+        <div class="window">
+          <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>NODI</span></div>
+          <img class="shot-l" src="assets/image-search-light.webp" width="1600" height="1000" loading="lazy" data-i18n-alt="f6.alt" alt="A NODI search for “pastel” finding a receipt image." />
+          <img class="shot-d" src="assets/image-search-dark.webp" width="1600" height="1000" loading="lazy" data-i18n-alt="f6.alt" alt="A NODI search for “pastel” finding a receipt image." />
+        </div>
+      </article>
+
       <div class="minor">
-        <div><h3 data-i18n="m1.title">Voice dictation on your Mac</h3><p data-i18n="m1.body">whisper.cpp transcribes your voice locally, accelerated by Metal. The audio never leaves your Mac.</p></div>
-        <div><h3 data-i18n="m2.title">A Trash with a way back</h3><p data-i18n="m2.body">Deleted notes wait in Trash until you restore them or delete them for good.</p></div>
-        <div><h3 data-i18n="m3.title">Light and dark</h3><p data-i18n="m3.body">Follows your system setting or your own choice, with the same calm palette in both.</p></div>
-        <div><h3 data-i18n="m4.title">Built in the open</h3><p data-i18n="m4.body">The About page inside the app keeps a dated screenshot of every step in NODI's history.</p></div>
+        <div><h3 data-i18n="m1.title">Reminders that come back</h3><p data-i18n="m1.body">Any note can carry a reminder, delivered as a macOS notification. Private notes appear as “Private note”.</p></div>
+        <div><h3 data-i18n="m2.title">Related notes</h3><p data-i18n="m2.body">Each note shows the notes closest to it in meaning, computed on your Mac with Apple's NaturalLanguage framework.</p></div>
+        <div><h3 data-i18n="m3.title">A Markdown mirror</h3><p data-i18n="m3.body">Keep a folder of Markdown files that mirrors your notes, so they outlive the app. Files you add yourself are left alone.</p></div>
+        <div><h3 data-i18n="m4.title">Capture from anywhere</h3><p data-i18n="m4.body">⌥⌘N and the menu bar start a note, “NODI” joins the Share menu, and public notes can appear in Spotlight.</p></div>
+        <div><h3 data-i18n="m5.title">Light and dark</h3><p data-i18n="m5.body">Follows your system setting or your own choice, with the same calm palette in both.</p></div>
+        <div><h3 data-i18n="m6.title">Built in the open</h3><p data-i18n="m6.body">The About page inside the app keeps a dated screenshot of every step in NODI's history.</p></div>
       </div>
     </div>
   </section>
@@ -518,14 +548,15 @@
       <div class="section-head" style="margin: 0;">
         <p class="eyebrow" data-i18n="privacy.eyebrow">Privacy</p>
         <h2 id="privacy-title" data-i18n="privacy.title">What NODI never does</h2>
-        <p class="lead" data-i18n="privacy.lead">There is no backend to trust, because there is no backend.</p>
+        <p class="lead" data-i18n="privacy.lead">There is no backend to trust, because there is no backend. And the parts that understand your notes run on your Mac.</p>
       </div>
       <div>
         <ul class="never">
           <li data-i18n="never.1">Ask you to create an account</li>
           <li data-i18n="never.2">Upload your notes to a server</li>
-          <li data-i18n="never.3">Send your voice to the cloud for transcription</li>
+          <li data-i18n="never.3">Send your voice, images, or notes to the cloud to be understood</li>
           <li data-i18n="never.4">Track what you write</li>
+          <li data-i18n="never.5">Store private notes in readable form</li>
         </ul>
         <div class="path">
           <span data-i18n="privacy.where">Everything lives in one file you can back up yourself:</span>
@@ -547,7 +578,11 @@
         <div><dt data-i18n="s.storage">Storage</dt><dd data-i18n="s.storage.v">SQLite with versioned migrations</dd></div>
         <div><dt data-i18n="s.docs">Note format</dt><dd data-i18n="s.docs.v">Tiptap JSON</dd></div>
         <div><dt data-i18n="s.search">Search</dt><dd data-i18n="s.search.v">SQLite FTS5 full-text index</dd></div>
-        <div><dt data-i18n="s.voice">Voice</dt><dd data-i18n="s.voice.v">whisper.cpp with Metal, on-device</dd></div>
+        <div><dt data-i18n="s.crypto">Private notes</dt><dd data-i18n="s.crypto.v">AES-256-GCM, key wrapped by PBKDF2</dd></div>
+        <div><dt data-i18n="s.images">Image text</dt><dd data-i18n="s.images.v">Apple Vision, on-device</dd></div>
+        <div><dt data-i18n="s.related">Related notes</dt><dd data-i18n="s.related.v">Apple NaturalLanguage embeddings</dd></div>
+        <div><dt data-i18n="s.mac">macOS</dt><dd data-i18n="s.mac.v">Share menu · Spotlight · ⌥⌘N</dd></div>
+        <div><dt data-i18n="s.voice">Voice</dt><dd data-i18n="s.voice.v">whisper.cpp with Metal, on-device · up to 1 hour</dd></div>
       </dl>
     </div>
   </section>
@@ -558,7 +593,7 @@
         <div class="section-head" style="margin: 0;">
           <p class="eyebrow" data-i18n="install.eyebrow">Install</p>
           <h2 id="install-title" data-i18n="install.title">Build NODI on your Mac</h2>
-          <p class="lead" data-i18n="install.lead">NODI is built from source for now. You need Node.js, pnpm, Rust, the Xcode Command Line Tools and CMake.</p>
+          <p class="lead" data-i18n="install.lead">NODI is built from source for now. You need Node.js, pnpm, Rust, Xcode (or its Command Line Tools) and CMake.</p>
         </div>
         <ol class="steps">
           <li><span data-i18n-html="install.s1"><strong>Install dependencies</strong> with pnpm.</span></li>
@@ -594,7 +629,7 @@
       "hero.eyebrow": "Local-first notes for macOS",
       "hero.title": "Your notes live <em>here.</em> Nowhere else.",
       "meta.notebook": "Notebook", "meta.mac": "This Mac", "meta.tags": "Tags",
-      "hero.lead": "NODI is a quiet, native notes app for the Mac. Rich text, notebooks, tags, instant search and on-device voice dictation, all stored in one SQLite file on your disk. No account, no cloud, no sync server.",
+      "hero.lead": "NODI is a quiet, native notes app for the Mac. Rich text, notebooks, instant search, voice notes, and images you can search, all stored on your disk. Private notes are encrypted. No account, no cloud, no sync server.",
       "hero.cta1": "Watch the tour", "hero.cta2": "Build from source", "hero.req": "macOS 15 Sequoia or later",
       "tour.title": "A tour of NODI",
       "tour.alt": "Animated tour of NODI: opening notes, filtering a notebook, searching with Command-K, dictating a to-do list and switching to dark mode.",
@@ -611,12 +646,12 @@
       "f3.body": "Group notebooks into stacks, tag notes across them, and keep the notes and notebooks you open every day one click away in Shortcuts.",
       "f3.alt": "The Product notebook open in NODI, with the Work stack and shortcuts in the sidebar.",
       "f4.label": "Private notes", "f4.title": "Lock the notes that are only yours",
-      "f4.body": "Put any note behind a password. NODI stores only a salted verifier, never the password itself, and private notes are kept out of the search index.",
+      "f4.body": "Put any note behind a password. Its title and content are encrypted with AES-256 on your disk; the password itself is never stored, and private notes stay out of search, Spotlight, and the Markdown mirror.",
       "f4.alt": "A locked private note in NODI asking for a password.",
-      "m1.title": "Voice dictation on your Mac", "m1.body": "whisper.cpp transcribes your voice locally, accelerated by Metal. The audio never leaves your Mac.",
-      "m2.title": "A Trash with a way back", "m2.body": "Deleted notes wait in Trash until you restore them or delete them for good.",
-      "m3.title": "Light and dark", "m3.body": "Follows your system setting or your own choice, with the same calm palette in both.",
-      "m4.title": "Built in the open", "m4.body": "The About page inside the app keeps a dated screenshot of every step in NODI's history.",
+      "m1.title": "Reminders that come back", "m1.body": "Any note can carry a reminder, delivered as a macOS notification. Private notes appear as “Private note”.",
+      "m2.title": "Related notes", "m2.body": "Each note shows the notes closest to it in meaning, computed on your Mac with Apple's NaturalLanguage framework.",
+      "m3.title": "A Markdown mirror", "m3.body": "Keep a folder of Markdown files that mirrors your notes, so they outlive the app. Files you add yourself are left alone.",
+      "m4.title": "Capture from anywhere", "m4.body": "⌥⌘N and the menu bar start a note, “NODI” joins the Share menu, and public notes can appear in Spotlight.",
       "results.eyebrow": "Before and after", "results.title": "What NODI makes of your input",
       "results.lead": "Two small examples of what happens to what you give NODI.",
       "r1.title": "Spoken sentence → checklist",
@@ -626,23 +661,44 @@
       "r3.title": "Light ↔ dark", "r3.body": "The same note in both themes. Drag the handle, or focus it and use the arrow keys: light on the left, dark on the right.",
       "r3.before": "Light", "r3.after": "Dark", "r3.aria": "Compare light and dark themes",
       "privacy.eyebrow": "Privacy", "privacy.title": "What NODI never does",
-      "privacy.lead": "There is no backend to trust, because there is no backend.",
+      "privacy.lead": "There is no backend to trust, because there is no backend. And the parts that understand your notes run on your Mac.",
       "never.1": "Ask you to create an account", "never.2": "Upload your notes to a server",
-      "never.3": "Send your voice to the cloud for transcription", "never.4": "Track what you write",
+      "never.3": "Send your voice, images, or notes to the cloud to be understood", "never.4": "Track what you write",
       "privacy.where": "Everything lives in one file you can back up yourself:",
       "specs.eyebrow": "Under the hood", "specs.title": "Built with boring, durable parts",
       "s.platform": "Platform", "s.platform.v": "macOS 15 Sequoia or later", "s.app": "App",
       "s.storage": "Storage", "s.storage.v": "SQLite with versioned migrations",
       "s.docs": "Note format", "s.docs.v": "Tiptap JSON",
       "s.search": "Search", "s.search.v": "SQLite FTS5 full-text index",
-      "s.voice": "Voice", "s.voice.v": "whisper.cpp with Metal, on-device",
+      "s.voice": "Voice", "s.voice.v": "whisper.cpp with Metal, on-device · up to 1 hour",
       "install.eyebrow": "Install", "install.title": "Build NODI on your Mac",
-      "install.lead": "NODI is built from source for now. You need Node.js, pnpm, Rust, the Xcode Command Line Tools and CMake.",
+      "install.lead": "NODI is built from source for now. You need Node.js, pnpm, Rust, Xcode (or its Command Line Tools) and CMake.",
       "install.s1": "<strong>Install dependencies</strong> with pnpm.",
       "install.s2": "<strong>Build the app.</strong> Tauri produces a .dmg in src-tauri/target/release/bundle/dmg/.",
       "install.s3": "<strong>Open the .dmg</strong> and drag NODI into Applications.",
       "install.copy": "Copy", "install.copied": "Copied", "install.c1": "check your toolchain", "install.c2": "install and build",
       "footer.note": "Screenshots and animation show the real NODI interface with demo notes.",
+      "f5.label": "Voice",
+      "f5.title": "Speak a note, keep what was said",
+      "f5.body": "Dictate and whisper.cpp transcribes on your Mac. Say a title, a notebook, tags, or “remind me tomorrow at 9” and NODI files the note. Keep the recording, and every sentence plays back from the moment it was spoken.",
+      "f5.alt": "A voice recording in NODI with its timed transcript, playing from one sentence.",
+      "f6.label": "Images",
+      "f6.title": "Search what's inside your images",
+      "f6.body": "Paste, drop, or insert a screenshot or the photo of a receipt. Apple's Vision framework reads its text on your Mac, and search finds it, marked “Found in an image”.",
+      "f6.alt": "A NODI search for “pastel” finding a receipt image.",
+      "never.5": "Store private notes in readable form",
+      "s.crypto": "Private notes",
+      "s.crypto.v": "AES-256-GCM, key wrapped by PBKDF2",
+      "s.images": "Image text",
+      "s.images.v": "Apple Vision, on-device",
+      "s.related": "Related notes",
+      "s.related.v": "Apple NaturalLanguage embeddings",
+      "s.mac": "macOS",
+      "s.mac.v": "Share menu · Spotlight · ⌥⌘N",
+      "m5.title": "Light and dark",
+      "m5.body": "Follows your system setting or your own choice, with the same calm palette in both.",
+      "m6.title": "Built in the open",
+      "m6.body": "The About page inside the app keeps a dated screenshot of every step in NODI's history.",
       said: "“Make a to-do list: call the printer, review the contract and send the invoice”",
       items: ["call the printer", "review the contract", "send the invoice"]
     },
@@ -651,7 +707,7 @@
       "hero.eyebrow": "Notas locais para macOS",
       "hero.title": "Suas notas moram <em>aqui.</em> Em nenhum outro lugar.",
       "meta.notebook": "Caderno", "meta.mac": "Este Mac", "meta.tags": "Tags",
-      "hero.lead": "NODI é um app de notas nativo e silencioso para o Mac. Texto rico, cadernos, tags, busca instantânea e ditado por voz no próprio dispositivo, tudo guardado em um único arquivo SQLite no seu disco. Sem conta, sem nuvem, sem servidor de sincronização.",
+      "hero.lead": "NODI é um app de notas nativo e silencioso para o Mac. Texto rico, cadernos, busca instantânea, notas de voz e imagens pesquisáveis, tudo guardado no seu disco. Notas privadas são criptografadas. Sem conta, sem nuvem, sem servidor de sincronização.",
       "hero.cta1": "Ver o tour", "hero.cta2": "Compilar o código", "hero.req": "macOS 15 Sequoia ou posterior",
       "tour.title": "Um tour pelo NODI",
       "tour.alt": "Tour animado do NODI: abrindo notas, filtrando um caderno, buscando com Command-K, ditando uma lista de tarefas e ativando o modo escuro.",
@@ -668,12 +724,12 @@
       "f3.body": "Agrupe cadernos em pilhas, marque notas com tags entre eles e deixe as notas e cadernos que você abre todo dia a um clique, em Atalhos.",
       "f3.alt": "O caderno Product aberto no NODI, com a pilha Work e os atalhos na barra lateral.",
       "f4.label": "Notas privadas", "f4.title": "Tranque as notas que são só suas",
-      "f4.body": "Proteja qualquer nota com senha. O NODI guarda apenas um verificador com salt, nunca a senha, e notas privadas ficam fora do índice de busca.",
+      "f4.body": "Proteja qualquer nota com senha. O título e o conteúdo ficam criptografados com AES-256 no seu disco; a senha nunca é guardada, e notas privadas ficam fora da busca, do Spotlight e do espelho Markdown.",
       "f4.alt": "Uma nota privada trancada no NODI pedindo senha.",
-      "m1.title": "Ditado por voz no seu Mac", "m1.body": "O whisper.cpp transcreve sua voz localmente, acelerado por Metal. O áudio nunca sai do seu Mac.",
-      "m2.title": "Uma Lixeira com volta", "m2.body": "Notas apagadas esperam na Lixeira até você restaurá-las ou excluí-las de vez.",
-      "m3.title": "Claro e escuro", "m3.body": "Segue o sistema ou a sua escolha, com a mesma paleta tranquila nos dois temas.",
-      "m4.title": "Construído às claras", "m4.body": "A página Sobre, dentro do app, guarda uma captura datada de cada etapa da história do NODI.",
+      "m1.title": "Lembretes que voltam", "m1.body": "Qualquer nota pode ter um lembrete, entregue como notificação do macOS. Notas privadas aparecem como “Private note”.",
+      "m2.title": "Notas relacionadas", "m2.body": "Cada nota mostra as notas mais próximas em significado, calculadas no seu Mac com o framework NaturalLanguage da Apple.",
+      "m3.title": "Um espelho em Markdown", "m3.body": "Mantenha uma pasta de arquivos Markdown que espelha suas notas, para que elas sobrevivam ao app. Arquivos que você adicionar ficam intactos.",
+      "m4.title": "Capture de qualquer lugar", "m4.body": "⌥⌘N e a barra de menus começam uma nota, “NODI” entra no menu Compartilhar e notas públicas podem aparecer no Spotlight.",
       "results.eyebrow": "Antes e depois", "results.title": "O que o NODI faz com o que você dá a ele",
       "results.lead": "Dois pequenos exemplos do que acontece com o que você entrega ao NODI.",
       "r1.title": "Frase falada → checklist",
@@ -683,23 +739,44 @@
       "r3.title": "Claro ↔ escuro", "r3.body": "A mesma nota nos dois temas. Arraste o controle, ou foque nele e use as setas do teclado: claro à esquerda, escuro à direita.",
       "r3.before": "Claro", "r3.after": "Escuro", "r3.aria": "Comparar os temas claro e escuro",
       "privacy.eyebrow": "Privacidade", "privacy.title": "O que o NODI nunca faz",
-      "privacy.lead": "Não há backend em que confiar, porque não há backend.",
+      "privacy.lead": "Não há backend em que confiar, porque não há backend. E tudo o que entende suas notas roda no seu Mac.",
       "never.1": "Pedir que você crie uma conta", "never.2": "Enviar suas notas para um servidor",
-      "never.3": "Mandar sua voz para a nuvem para transcrever", "never.4": "Rastrear o que você escreve",
+      "never.3": "Mandar sua voz, imagens ou notas para a nuvem para serem entendidas", "never.4": "Rastrear o que você escreve",
       "privacy.where": "Tudo fica em um único arquivo, que você mesmo pode copiar como backup:",
       "specs.eyebrow": "Por dentro", "specs.title": "Feito com peças simples e duráveis",
       "s.platform": "Plataforma", "s.platform.v": "macOS 15 Sequoia ou posterior", "s.app": "App",
       "s.storage": "Armazenamento", "s.storage.v": "SQLite com migrações versionadas",
       "s.docs": "Formato das notas", "s.docs.v": "Tiptap JSON",
       "s.search": "Busca", "s.search.v": "Índice de texto completo SQLite FTS5",
-      "s.voice": "Voz", "s.voice.v": "whisper.cpp com Metal, no dispositivo",
+      "s.voice": "Voz", "s.voice.v": "whisper.cpp com Metal, no dispositivo · até 1 hora",
       "install.eyebrow": "Instalação", "install.title": "Compile o NODI no seu Mac",
-      "install.lead": "Por enquanto o NODI é compilado a partir do código. Você precisa de Node.js, pnpm, Rust, Xcode Command Line Tools e CMake.",
+      "install.lead": "Por enquanto o NODI é compilado a partir do código. Você precisa de Node.js, pnpm, Rust, Xcode (ou as Command Line Tools) e CMake.",
       "install.s1": "<strong>Instale as dependências</strong> com o pnpm.",
       "install.s2": "<strong>Compile o app.</strong> O Tauri gera um .dmg em src-tauri/target/release/bundle/dmg/.",
       "install.s3": "<strong>Abra o .dmg</strong> e arraste o NODI para Aplicativos.",
       "install.copy": "Copiar", "install.copied": "Copiado", "install.c1": "confira suas ferramentas", "install.c2": "instale e compile",
       "footer.note": "Capturas e animação mostram a interface real do NODI com notas de exemplo.",
+      "f5.label": "Voz",
+      "f5.title": "Dite uma nota e guarde o que foi dito",
+      "f5.body": "Dite e o whisper.cpp transcreve no seu Mac. Diga um título, um caderno, tags ou “lembrete amanhã às 9” e o NODI organiza a nota. Guarde a gravação e cada frase toca a partir do momento em que foi dita.",
+      "f5.alt": "Uma gravação de voz no NODI com a transcrição com tempo, tocando a partir de uma frase.",
+      "f6.label": "Imagens",
+      "f6.title": "Pesquise o que está dentro das imagens",
+      "f6.body": "Cole, arraste ou insira um print ou a foto de um recibo. O framework Vision da Apple lê o texto no seu Mac, e a busca encontra, marcado “Found in an image”.",
+      "f6.alt": "Uma busca por “pastel” no NODI encontrando a imagem de um recibo.",
+      "never.5": "Guardar notas privadas de forma legível",
+      "s.crypto": "Notas privadas",
+      "s.crypto.v": "AES-256-GCM, chave protegida por PBKDF2",
+      "s.images": "Texto em imagens",
+      "s.images.v": "Apple Vision, no dispositivo",
+      "s.related": "Notas relacionadas",
+      "s.related.v": "Embeddings do NaturalLanguage da Apple",
+      "s.mac": "macOS",
+      "s.mac.v": "Menu Compartilhar · Spotlight · ⌥⌘N",
+      "m5.title": "Claro e escuro",
+      "m5.body": "Segue o sistema ou a sua escolha, com a mesma paleta tranquila nos dois temas.",
+      "m6.title": "Construído às claras",
+      "m6.body": "A página Sobre, dentro do app, guarda uma captura datada de cada etapa da história do NODI.",
       said: "“Crie uma lista de tarefas: ligar para a gráfica, revisar o contrato e enviar a fatura”",
       items: ["ligar para a gráfica", "revisar o contrato", "enviar a fatura"]
     },
@@ -708,7 +785,7 @@
       "hero.eyebrow": "Notas locales para macOS",
       "hero.title": "Tus notas viven <em>aquí.</em> En ningún otro lugar.",
       "meta.notebook": "Libreta", "meta.mac": "Este Mac", "meta.tags": "Etiquetas",
-      "hero.lead": "NODI es una app de notas nativa y tranquila para Mac. Texto enriquecido, libretas, etiquetas, búsqueda instantánea y dictado por voz en el propio equipo, todo guardado en un único archivo SQLite en tu disco. Sin cuenta, sin nube, sin servidor de sincronización.",
+      "hero.lead": "NODI es una app de notas nativa y tranquila para Mac. Texto enriquecido, libretas, búsqueda instantánea, notas de voz e imágenes que se pueden buscar, todo guardado en tu disco. Las notas privadas se cifran. Sin cuenta, sin nube, sin servidor de sincronización.",
       "hero.cta1": "Ver el recorrido", "hero.cta2": "Compilar el código", "hero.req": "macOS 15 Sequoia o posterior",
       "tour.title": "Un recorrido por NODI",
       "tour.alt": "Recorrido animado de NODI: abrir notas, filtrar una libreta, buscar con Command-K, dictar una lista de tareas y activar el modo oscuro.",
@@ -725,12 +802,12 @@
       "f3.body": "Agrupa libretas en pilas, etiqueta notas entre ellas y ten a un clic, en Accesos directos, las notas y libretas que abres cada día.",
       "f3.alt": "La libreta Product abierta en NODI, con la pila Work y los accesos directos en la barra lateral.",
       "f4.label": "Notas privadas", "f4.title": "Bloquea las notas que son solo tuyas",
-      "f4.body": "Protege cualquier nota con contraseña. NODI guarda solo un verificador con salt, nunca la contraseña, y las notas privadas quedan fuera del índice de búsqueda.",
+      "f4.body": "Protege cualquier nota con contraseña. Su título y contenido se cifran con AES-256 en tu disco; la contraseña nunca se guarda, y las notas privadas quedan fuera de la búsqueda, de Spotlight y del espejo Markdown.",
       "f4.alt": "Una nota privada bloqueada en NODI pidiendo contraseña.",
-      "m1.title": "Dictado por voz en tu Mac", "m1.body": "whisper.cpp transcribe tu voz localmente, acelerado por Metal. El audio nunca sale de tu Mac.",
-      "m2.title": "Una Papelera con vuelta atrás", "m2.body": "Las notas borradas esperan en la Papelera hasta que las restaures o las elimines para siempre.",
-      "m3.title": "Claro y oscuro", "m3.body": "Sigue la configuración del sistema o tu elección, con la misma paleta serena en ambos temas.",
-      "m4.title": "Construido a la vista", "m4.body": "La página Acerca de, dentro de la app, guarda una captura fechada de cada paso en la historia de NODI.",
+      "m1.title": "Recordatorios que vuelven", "m1.body": "Cualquier nota puede tener un recordatorio, entregado como notificación de macOS. Las notas privadas aparecen como “Private note”.",
+      "m2.title": "Notas relacionadas", "m2.body": "Cada nota muestra las notas más cercanas en significado, calculadas en tu Mac con el framework NaturalLanguage de Apple.",
+      "m3.title": "Un espejo en Markdown", "m3.body": "Mantén una carpeta de archivos Markdown que refleja tus notas, para que sobrevivan a la app. Los archivos que añadas no se tocan.",
+      "m4.title": "Captura desde cualquier lugar", "m4.body": "⌥⌘N y la barra de menús empiezan una nota, “NODI” se suma al menú Compartir y las notas públicas pueden aparecer en Spotlight.",
       "results.eyebrow": "Antes y después", "results.title": "Lo que NODI hace con lo que le das",
       "results.lead": "Dos pequeños ejemplos de lo que pasa con lo que le das a NODI.",
       "r1.title": "Frase dictada → lista de verificación",
@@ -740,23 +817,44 @@
       "r3.title": "Claro ↔ oscuro", "r3.body": "La misma nota en ambos temas. Arrastra el control, o enfócalo y usa las flechas del teclado: claro a la izquierda, oscuro a la derecha.",
       "r3.before": "Claro", "r3.after": "Oscuro", "r3.aria": "Comparar los temas claro y oscuro",
       "privacy.eyebrow": "Privacidad", "privacy.title": "Lo que NODI nunca hace",
-      "privacy.lead": "No hay backend en el que confiar, porque no hay backend.",
+      "privacy.lead": "No hay backend en el que confiar, porque no hay backend. Y lo que entiende tus notas se ejecuta en tu Mac.",
       "never.1": "Pedirte que crees una cuenta", "never.2": "Subir tus notas a un servidor",
-      "never.3": "Enviar tu voz a la nube para transcribirla", "never.4": "Rastrear lo que escribes",
+      "never.3": "Enviar tu voz, tus imágenes o tus notas a la nube para entenderlas", "never.4": "Rastrear lo que escribes",
       "privacy.where": "Todo vive en un único archivo del que puedes hacer copia tú mismo:",
       "specs.eyebrow": "Por dentro", "specs.title": "Hecho con piezas sencillas y duraderas",
       "s.platform": "Plataforma", "s.platform.v": "macOS 15 Sequoia o posterior", "s.app": "App",
       "s.storage": "Almacenamiento", "s.storage.v": "SQLite con migraciones versionadas",
       "s.docs": "Formato de notas", "s.docs.v": "Tiptap JSON",
       "s.search": "Búsqueda", "s.search.v": "Índice de texto completo SQLite FTS5",
-      "s.voice": "Voz", "s.voice.v": "whisper.cpp con Metal, en el equipo",
+      "s.voice": "Voz", "s.voice.v": "whisper.cpp con Metal, en el equipo · hasta 1 hora",
       "install.eyebrow": "Instalación", "install.title": "Compila NODI en tu Mac",
-      "install.lead": "Por ahora NODI se compila desde el código. Necesitas Node.js, pnpm, Rust, Xcode Command Line Tools y CMake.",
+      "install.lead": "Por ahora NODI se compila desde el código. Necesitas Node.js, pnpm, Rust, Xcode (o sus Command Line Tools) y CMake.",
       "install.s1": "<strong>Instala las dependencias</strong> con pnpm.",
       "install.s2": "<strong>Compila la app.</strong> Tauri genera un .dmg en src-tauri/target/release/bundle/dmg/.",
       "install.s3": "<strong>Abre el .dmg</strong> y arrastra NODI a Aplicaciones.",
       "install.copy": "Copiar", "install.copied": "Copiado", "install.c1": "revisa tus herramientas", "install.c2": "instala y compila",
       "footer.note": "Las capturas y la animación muestran la interfaz real de NODI con notas de ejemplo.",
+      "f5.label": "Voz",
+      "f5.title": "Dicta una nota y conserva lo que se dijo",
+      "f5.body": "Dicta y whisper.cpp transcribe en tu Mac. Di un título, una libreta, etiquetas o “remind me tomorrow at 9” (los comandos se reconocen en inglés y portugués) y NODI organiza la nota. Conserva la grabación y cada frase se reproduce desde el momento en que se dijo.",
+      "f5.alt": "Una grabación de voz en NODI con su transcripción con tiempos, reproduciéndose desde una frase.",
+      "f6.label": "Imágenes",
+      "f6.title": "Busca lo que hay dentro de tus imágenes",
+      "f6.body": "Pega, arrastra o inserta una captura o la foto de un recibo. El framework Vision de Apple lee su texto en tu Mac y la búsqueda lo encuentra, marcado “Found in an image”.",
+      "f6.alt": "Una búsqueda de “pastel” en NODI que encuentra la imagen de un recibo.",
+      "never.5": "Guardar notas privadas de forma legible",
+      "s.crypto": "Notas privadas",
+      "s.crypto.v": "AES-256-GCM, clave protegida con PBKDF2",
+      "s.images": "Texto en imágenes",
+      "s.images.v": "Apple Vision, en el equipo",
+      "s.related": "Notas relacionadas",
+      "s.related.v": "Embeddings de NaturalLanguage de Apple",
+      "s.mac": "macOS",
+      "s.mac.v": "Menú Compartir · Spotlight · ⌥⌘N",
+      "m5.title": "Claro y oscuro",
+      "m5.body": "Sigue la configuración del sistema o tu elección, con la misma paleta serena en ambos temas.",
+      "m6.title": "Construido a la vista",
+      "m6.body": "La página Acerca de, dentro de la app, guarda una captura fechada de cada paso en la historia de NODI.",
       said: "“Make a to-do list: call the printer, review the contract and send the invoice”",
       items: ["call the printer", "review the contract", "send the invoice"]
     },
@@ -765,7 +863,7 @@
       "hero.eyebrow": "Lokale Notizen für macOS",
       "hero.title": "Deine Notizen wohnen <em>hier.</em> Nirgendwo sonst.",
       "meta.notebook": "Notizbuch", "meta.mac": "Dieser Mac", "meta.tags": "Tags",
-      "hero.lead": "NODI ist eine ruhige, native Notiz-App für den Mac. Formatierter Text, Notizbücher, Tags, Sofortsuche und Sprachdiktat direkt auf dem Gerät, alles in einer einzigen SQLite-Datei auf deiner Festplatte. Kein Konto, keine Cloud, kein Sync-Server.",
+      "hero.lead": "NODI ist eine ruhige, native Notiz-App für den Mac. Formatierter Text, Notizbücher, Sofortsuche, Sprachnotizen und durchsuchbare Bilder, alles auf deiner Festplatte. Private Notizen werden verschlüsselt. Kein Konto, keine Cloud, kein Sync-Server.",
       "hero.cta1": "Rundgang ansehen", "hero.cta2": "Aus dem Quellcode bauen", "hero.req": "macOS 15 Sequoia oder neuer",
       "tour.title": "Ein Rundgang durch NODI",
       "tour.alt": "Animierter Rundgang durch NODI: Notizen öffnen, ein Notizbuch filtern, mit Command-K suchen, eine To-do-Liste diktieren und den Dunkelmodus einschalten.",
@@ -782,12 +880,12 @@
       "f3.body": "Fasse Notizbücher zu Stapeln zusammen, vergib Tags über alle hinweg und halte die Notizen und Notizbücher, die du täglich öffnest, unter Kurzbefehle einen Klick entfernt.",
       "f3.alt": "Das Notizbuch Product in NODI, mit dem Stapel Work und den Kurzbefehlen in der Seitenleiste.",
       "f4.label": "Private Notizen", "f4.title": "Sperre die Notizen, die nur dir gehören",
-      "f4.body": "Schütze jede Notiz mit einem Passwort. NODI speichert nur einen gesalzenen Prüfwert, nie das Passwort selbst, und private Notizen bleiben aus dem Suchindex heraus.",
+      "f4.body": "Schütze jede Notiz mit einem Passwort. Titel und Inhalt werden mit AES-256 auf deiner Festplatte verschlüsselt; das Passwort selbst wird nie gespeichert, und private Notizen bleiben aus Suche, Spotlight und dem Markdown-Spiegel heraus.",
       "f4.alt": "Eine gesperrte private Notiz in NODI, die nach einem Passwort fragt.",
-      "m1.title": "Sprachdiktat auf deinem Mac", "m1.body": "whisper.cpp transkribiert deine Stimme lokal, beschleunigt durch Metal. Die Aufnahme verlässt deinen Mac nie.",
-      "m2.title": "Ein Papierkorb mit Rückweg", "m2.body": "Gelöschte Notizen warten im Papierkorb, bis du sie wiederherstellst oder endgültig löschst.",
-      "m3.title": "Hell und dunkel", "m3.body": "Folgt der Systemeinstellung oder deiner Wahl, mit derselben ruhigen Palette in beiden Modi.",
-      "m4.title": "Offen entwickelt", "m4.body": "Die Über-Seite in der App bewahrt einen datierten Screenshot jedes Schritts in der Geschichte von NODI.",
+      "m1.title": "Erinnerungen, die zurückkommen", "m1.body": "Jede Notiz kann eine Erinnerung haben, zugestellt als macOS-Mitteilung. Private Notizen erscheinen als „Private note“.",
+      "m2.title": "Verwandte Notizen", "m2.body": "Jede Notiz zeigt die Notizen mit der ähnlichsten Bedeutung, berechnet auf deinem Mac mit Apples NaturalLanguage-Framework.",
+      "m3.title": "Ein Markdown-Spiegel", "m3.body": "Halte einen Ordner mit Markdown-Dateien, der deine Notizen spiegelt, damit sie die App überdauern. Eigene Dateien bleiben unberührt.",
+      "m4.title": "Von überall erfassen", "m4.body": "⌥⌘N und die Menüleiste beginnen eine Notiz, „NODI“ erscheint im Teilen-Menü, und öffentliche Notizen können in Spotlight auftauchen.",
       "results.eyebrow": "Vorher und nachher", "results.title": "Was NODI aus deiner Eingabe macht",
       "results.lead": "Zwei kleine Beispiele dafür, was mit deiner Eingabe in NODI passiert.",
       "r1.title": "Gesprochener Satz → Checkliste",
@@ -797,23 +895,44 @@
       "r3.title": "Hell ↔ dunkel", "r3.body": "Dieselbe Notiz in beiden Modi. Zieh den Regler oder fokussiere ihn und nutze die Pfeiltasten: links hell, rechts dunkel.",
       "r3.before": "Hell", "r3.after": "Dunkel", "r3.aria": "Hellen und dunklen Modus vergleichen",
       "privacy.eyebrow": "Datenschutz", "privacy.title": "Was NODI niemals tut",
-      "privacy.lead": "Es gibt kein Backend, dem du vertrauen musst, weil es kein Backend gibt.",
+      "privacy.lead": "Es gibt kein Backend, dem du vertrauen musst, weil es kein Backend gibt. Und was deine Notizen versteht, läuft auf deinem Mac.",
       "never.1": "Dich ein Konto anlegen lassen", "never.2": "Deine Notizen auf einen Server hochladen",
-      "never.3": "Deine Stimme zur Transkription in die Cloud schicken", "never.4": "Verfolgen, was du schreibst",
+      "never.3": "Deine Stimme, Bilder oder Notizen zum Verstehen in die Cloud schicken", "never.4": "Verfolgen, was du schreibst",
       "privacy.where": "Alles liegt in einer einzigen Datei, die du selbst sichern kannst:",
       "specs.eyebrow": "Unter der Haube", "specs.title": "Gebaut aus einfachen, langlebigen Teilen",
       "s.platform": "Plattform", "s.platform.v": "macOS 15 Sequoia oder neuer", "s.app": "App",
       "s.storage": "Speicher", "s.storage.v": "SQLite mit versionierten Migrationen",
       "s.docs": "Notizformat", "s.docs.v": "Tiptap JSON",
       "s.search": "Suche", "s.search.v": "SQLite-FTS5-Volltextindex",
-      "s.voice": "Sprache", "s.voice.v": "whisper.cpp mit Metal, auf dem Gerät",
+      "s.voice": "Sprache", "s.voice.v": "whisper.cpp mit Metal, auf dem Gerät · bis zu 1 Stunde",
       "install.eyebrow": "Installation", "install.title": "NODI auf deinem Mac bauen",
-      "install.lead": "NODI wird vorerst aus dem Quellcode gebaut. Du brauchst Node.js, pnpm, Rust, die Xcode Command Line Tools und CMake.",
+      "install.lead": "NODI wird vorerst aus dem Quellcode gebaut. Du brauchst Node.js, pnpm, Rust, Xcode (oder die Command Line Tools) und CMake.",
       "install.s1": "<strong>Abhängigkeiten installieren</strong> mit pnpm.",
       "install.s2": "<strong>App bauen.</strong> Tauri legt eine .dmg in src-tauri/target/release/bundle/dmg/ ab.",
       "install.s3": "<strong>Die .dmg öffnen</strong> und NODI in den Ordner Programme ziehen.",
       "install.copy": "Kopieren", "install.copied": "Kopiert", "install.c1": "Werkzeuge prüfen", "install.c2": "installieren und bauen",
       "footer.note": "Screenshots und Animation zeigen die echte NODI-Oberfläche mit Beispielnotizen.",
+      "f5.label": "Sprache",
+      "f5.title": "Sprich eine Notiz und behalte, was gesagt wurde",
+      "f5.body": "Diktiere, und whisper.cpp transkribiert auf deinem Mac. Sag einen Titel, ein Notizbuch, Tags oder „remind me tomorrow at 9“ (Befehle werden auf Englisch und Portugiesisch erkannt), und NODI ordnet die Notiz ein. Behalte die Aufnahme, und jeder Satz spielt ab dem Moment, in dem er gesagt wurde.",
+      "f5.alt": "Eine Sprachaufnahme in NODI mit zeitgestempeltem Transkript, abgespielt ab einem Satz.",
+      "f6.label": "Bilder",
+      "f6.title": "Durchsuche, was in deinen Bildern steht",
+      "f6.body": "Füge einen Screenshot oder das Foto einer Quittung ein, per Einfügen, Ziehen oder Schaltfläche. Apples Vision-Framework liest den Text auf deinem Mac, und die Suche findet ihn, markiert mit „Found in an image“.",
+      "f6.alt": "Eine NODI-Suche nach „pastel“, die das Bild einer Quittung findet.",
+      "never.5": "Private Notizen lesbar speichern",
+      "s.crypto": "Private Notizen",
+      "s.crypto.v": "AES-256-GCM, Schlüssel durch PBKDF2 geschützt",
+      "s.images": "Text in Bildern",
+      "s.images.v": "Apple Vision, auf dem Gerät",
+      "s.related": "Verwandte Notizen",
+      "s.related.v": "Embeddings von Apples NaturalLanguage",
+      "s.mac": "macOS",
+      "s.mac.v": "Teilen-Menü · Spotlight · ⌥⌘N",
+      "m5.title": "Hell und dunkel",
+      "m5.body": "Folgt der Systemeinstellung oder deiner Wahl, mit derselben ruhigen Palette in beiden Modi.",
+      "m6.title": "Offen entwickelt",
+      "m6.body": "Die Über-Seite in der App bewahrt einen datierten Screenshot jedes Schritts in der Geschichte von NODI.",
       said: "“Make a to-do list: call the printer, review the contract and send the invoice”",
       items: ["call the printer", "review the contract", "send the invoice"]
     }
