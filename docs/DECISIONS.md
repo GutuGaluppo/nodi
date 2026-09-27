@@ -112,7 +112,8 @@ encrypted note hold empty values. Only the Web Crypto API is used.
   "Your data" page reports how many are waiting.
 - After plaintext leaves the database NODI merges the FTS5 index, runs `VACUUM`,
   and truncates the WAL so no deleted plaintext pages remain.
-- A forgotten password cannot be recovered.
+- A forgotten password cannot be recovered on its own; D-010 adds a recovery
+  key that wraps the same note key.
 
 ## D-004 — Reminders use Tauri's notification plugin
 
@@ -315,3 +316,46 @@ only notes of the same language.
   working otherwise.
 - Opening a note by clicking a Spotlight result was verified up to the hook's
   installation; the click itself needs the Spotlight UI and was not automated.
+
+## D-010 — Private notes are recovered with a recovery key, not an account
+
+**Date:** September 27, 2026
+**Tasks:** PRIV-REC-001 to PRIV-REC-003
+**Status:** Accepted
+
+### Decision
+
+- **Recovery key:** 160 random bits, shown once as eight groups of four
+  Crockford base32 characters. It wraps the same note key as the password
+  (D-003), through HKDF-SHA-256 and AES-GCM, and is stored only in that wrapped
+  form in `settings.private_notes_recovery_key`.
+- **Shown once, stored after confirmation:** NODI keeps nothing until the user
+  types the key's last group. Setup cannot skip it; notes that predate it get
+  the offer at the next unlock, and "Your data" keeps warning until one exists.
+- **Reset:** the recovery key unwraps the note key and a new password wraps it
+  again. Notes are not re-encrypted. The old recovery key keeps working until
+  the user saves the new one NODI offers right away.
+- **Starting over:** with neither password nor recovery key, encrypted private
+  notes are deleted for good after a typed confirmation, and the keys are
+  removed. Private notes still in plaintext are kept and encrypted with the
+  next key.
+- **Making a new key** from "Your data" needs the password, which also
+  retires the previous key.
+
+### Rationale
+
+- No email, account, or server: recovery stays inside NODI's local-only model.
+- The key is random, so a fast KDF is enough; the slow PBKDF2 protects only
+  the human-chosen password.
+- Password hints and security questions are left out: they leak or are
+  guessable. A copy of the key kept in the database "just in case" would undo
+  the encryption.
+
+### Consequences
+
+- Whoever holds the recovery key can open private notes; the UI says so.
+- Settings writes are not transactional: the new password's wrapped key is
+  written before its verifier, so an interruption leaves the recovery key
+  working and the reset can simply run again.
+- Unlocking with Touch ID through the Keychain (PRIV-REC-004) is optional and
+  not built yet.

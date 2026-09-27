@@ -41,3 +41,16 @@ export async function setSetting(key: string, value: string): Promise<void> {
     throw new DatabaseError(`Could not save the "${key}" setting.`, cause);
   }
 }
+
+export async function deleteSetting(key: string): Promise<void> {
+  try {
+    const database = await initializeDatabase();
+    await database.execute("DELETE FROM settings WHERE key = $1", [key]);
+  } catch (cause) {
+    if (cause instanceof DatabaseError) {
+      throw cause;
+    }
+
+    throw new DatabaseError(`Could not remove the "${key}" setting.`, cause);
+  }
+}

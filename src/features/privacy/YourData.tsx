@@ -6,6 +6,7 @@ import ImageTextStatus from "../images/ImageTextStatus";
 import MirrorStatus from "../mirror/MirrorStatus";
 import SpotlightStatus from "../spotlight/SpotlightStatus";
 import { describeNetworkPolicy } from "./networkPolicy";
+import RecoveryKeyStatus from "./RecoveryKeyStatus";
 
 interface YourDataProps {
   onClose: () => void;
@@ -172,7 +173,7 @@ function YourData({ onClose }: YourDataProps) {
                 ) : null}
                 <span className="data-note">
                   Titles and content are sealed with AES-256-GCM. The password
-                  is never stored, so a forgotten password cannot be recovered.
+                  is never stored.
                 </span>
               </>
             ) : (
@@ -180,6 +181,8 @@ function YourData({ onClose }: YourDataProps) {
             )}
           </dd>
         </div>
+
+        <RecoveryKeyStatus />
 
         <div className="data-row">
           <dt>Network</dt>

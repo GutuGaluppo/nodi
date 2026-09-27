@@ -311,6 +311,11 @@ function EditorPane({
             await note.refetch();
             setUnlockedNoteId(selectedNote.id);
           }}
+          onStartedOver={async () => {
+            // Encrypted notes were deleted; close this one if it was among them.
+            const result = await note.refetch();
+            if (!result.data) onNoteRemoved();
+          }}
         />
       ) : (
         <div className="editor-scroll">

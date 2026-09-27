@@ -15,6 +15,7 @@ The rules of `IMPLEMENTATION.md` and `AGENTS.md` still apply: one task at a time
 | J | On-device OCR | OCR-001, OCR-002 | ATT-003 | Native bridge (Vision) |
 | K | Related notes | REL-001, REL-002 | LINK-001 | Exception to "no semantic search in V1" |
 | L | macOS integration | MAC-001, MAC-002, MAC-003, MAC-004 | CAP-001 | Native bridge, app extension target |
+| M | Private notes recovery | PRIV-REC-001, PRIV-REC-002, PRIV-REC-003, PRIV-REC-004 | PRIVACY-002 | None (PRIV-REC-004 needs a native bridge) |
 
 Recommended order: F → G → H → I → J → K → L. F closes a real gap between what the product promises and what the code does, so it comes first.
 
@@ -248,6 +249,21 @@ One screen shows where the user's data lives and proves its state.
 
 ---
 
+# Milestone M — Private notes recovery
+
+**Outcome:** a forgotten private-notes password no longer means losing the notes, without an email address, an account, or a server.
+
+Private notes are encrypted with a random note key that the password only wraps (D-003). A second wrap under a recovery key the user keeps outside the Mac gives a way back in. See D-010.
+
+| Task | Goal | Notes |
+| --- | --- | --- |
+| PRIV-REC-001 Recovery key | Generate a 160-bit key, show it once, store it wrapped only after the user confirms its last group | Required at setup; offered at the next unlock for existing notes; status and "make a new key" in Your data |
+| PRIV-REC-002 Reset with the recovery key | "Forgot password?" takes the recovery key and a new password; notes are not re-encrypted | Offers a new recovery key right away |
+| PRIV-REC-003 Start over | With neither secret, delete encrypted private notes after typing DELETE and set a new password | Plaintext private notes are kept and encrypted with the new key |
+| PRIV-REC-004 Touch ID | Optional copy of the note key in the Keychain, behind Touch ID or the Mac password, never synced to iCloud | Opt-in; needs Security and LocalAuthentication through objc2 |
+
+---
+
 ## Status
 
 | Task | Status |
@@ -275,5 +291,9 @@ One screen shows where the user's data lives and proves its state.
 | MAC-002 Spotlight | Done (opt-in) |
 | MAC-003 Share extension and `nodi://new` | Done |
 | MAC-004 Quick Look | Covered by MIRROR-001; no code needed |
+| PRIV-REC-001 Recovery key | Done |
+| PRIV-REC-002 Reset with the recovery key | Done |
+| PRIV-REC-003 Start over | Done |
+| PRIV-REC-004 Touch ID | Not started (optional) |
 
-All seven milestones are complete. Linking related notes (REL-002) waits for LINK-001, and BACKUP-001 is still open in `IMPLEMENTATION.md`.
+Milestones F to L are complete, and milestone M is done except the optional Touch ID unlock. Linking related notes (REL-002) waits for LINK-001, and BACKUP-001 is still open in `IMPLEMENTATION.md`.

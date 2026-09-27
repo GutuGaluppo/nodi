@@ -1,6 +1,13 @@
-import { setPrivateNoteKey } from "../../db/privateNoteKey";
-import { encryptPendingPrivateNotes } from "../../db/repositories/noteRepository";
 import {
+  clearPrivateNoteKey,
+  setPrivateNoteKey,
+} from "../../db/privateNoteKey";
+import {
+  deleteEncryptedPrivateNotes,
+  encryptPendingPrivateNotes,
+} from "../../db/repositories/noteRepository";
+import {
+  deleteSetting,
   getSetting,
   setSetting,
 } from "../../db/repositories/settingsRepository";
@@ -8,11 +15,20 @@ import { base64ToBytes, bytesToBase64 } from "../../lib/crypto/base64";
 import {
   createNoteKey,
   unwrapNoteKey,
+  unwrapNoteKeyWithRecoveryKey,
   type WrappedNoteKey,
+  wrapNoteKey,
+  wrapNoteKeyWithRecoveryKey,
 } from "../../lib/crypto/noteCipher";
+import {
+  formatRecoveryKey,
+  generateRecoveryKey,
+  parseRecoveryKey,
+} from "../../lib/crypto/recoveryKey";
 
 const PASSWORD_SETTING = "private_notes_password";
 const KEY_SETTING = "private_notes_key";
+const RECOVERY_SETTING = "private_notes_recovery_key";
 const ITERATIONS = 210_000;
 
 interface PasswordVerifier {
@@ -68,13 +84,17 @@ async function encryptPendingNotes(): Promise<void> {
  */
 export async function setPrivateNotesPassword(password: string): Promise<void> {
   await createAndStoreNoteKey(password);
+  await storeVerifier(password);
+  await encryptPendingNotes();
+}
+
+async function storeVerifier(password: string): Promise<void> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const verifier: PasswordVerifier = {
     salt: bytesToBase64(salt),
     hash: await deriveHash(password, salt),
   };
   await setSetting(PASSWORD_SETTING, JSON.stringify(verifier));
-  await encryptPendingNotes();
 }
 
 export async function hasPrivateNotesPassword(): Promise<boolean> {
@@ -111,4 +131,86 @@ export async function unlockPrivateNotes(password: string): Promise<boolean> {
   }
   await encryptPendingNotes();
   return true;
+}
+
+/** A recovery key shown to the user, not stored until they have saved it. */
+export interface RecoveryKeyDraft {
+  /** The key as the user sees it, e.g. `7KQ2-M9XD-…`. */
+  code: string;
+  /** Stores it, replacing any earlier recovery key. */
+  save: () => Promise<void>;
+}
+
+export async function hasRecoveryKey(): Promise<boolean> {
+  return (await getSetting(RECOVERY_SETTING)) !== null;
+}
+
+/**
+ * Makes a new recovery key that opens the same note key as the password.
+ * Returns null for a wrong password. The note key is only extractable inside
+ * this call; the draft holds nothing but the code and the wrapped key.
+ */
+export async function prepareRecoveryKey(
+  password: string,
+): Promise<RecoveryKeyDraft | null> {
+  if (!(await verifyPrivateNotesPassword(password))) return null;
+  const stored = await getSetting(KEY_SETTING);
+  if (!stored) return null;
+  const key = await unwrapNoteKey(
+    password,
+    JSON.parse(stored) as WrappedNoteKey,
+    true,
+  );
+  const recoveryKey = generateRecoveryKey();
+  const wrapped = await wrapNoteKeyWithRecoveryKey(key, recoveryKey);
+  return {
+    code: formatRecoveryKey(recoveryKey),
+    save: () => setSetting(RECOVERY_SETTING, JSON.stringify(wrapped)),
+  };
+}
+
+/**
+ * Sets a new password with the recovery key and opens the session. Notes are
+ * not re-encrypted: only the note key's password lock is replaced. Returns
+ * false when the recovery key is wrong or none was set up.
+ */
+export async function recoverPrivateNotes(
+  recoveryInput: string,
+  newPassword: string,
+): Promise<boolean> {
+  const recoveryKey = parseRecoveryKey(recoveryInput);
+  const stored = await getSetting(RECOVERY_SETTING);
+  if (!recoveryKey || !stored) return false;
+  let key: CryptoKey;
+  try {
+    key = await unwrapNoteKeyWithRecoveryKey(
+      recoveryKey,
+      JSON.parse(stored) as WrappedNoteKey,
+      true,
+    );
+  } catch {
+    return false;
+  }
+  const wrapped = await wrapNoteKey(key, newPassword);
+  // As in setup, the key goes first: if NODI stops before the verifier is
+  // written, the recovery key still works and can simply be used again.
+  await setSetting(KEY_SETTING, JSON.stringify(wrapped));
+  await storeVerifier(newPassword);
+  setPrivateNoteKey(await unwrapNoteKey(newPassword, wrapped));
+  await encryptPendingNotes();
+  return true;
+}
+
+/**
+ * Starts private notes over when both the password and the recovery key are
+ * lost: encrypted private notes are deleted for good, and the next password
+ * creates a new note key. Returns how many notes were deleted.
+ */
+export async function startPrivateNotesOver(): Promise<number> {
+  const deleted = await deleteEncryptedPrivateNotes();
+  await deleteSetting(RECOVERY_SETTING);
+  await deleteSetting(KEY_SETTING);
+  await deleteSetting(PASSWORD_SETTING);
+  clearPrivateNoteKey();
+  return deleted;
 }

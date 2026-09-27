@@ -635,6 +635,39 @@ describe("noteRepository", () => {
       expect(db.execute.mock.calls.map(([sql]) => sql)).toContain("VACUUM");
     });
 
+    it("counts encrypted private notes, including trashed ones", async () => {
+      const { countEncryptedPrivateNotes } = await importRepository();
+      db.select.mockResolvedValueOnce([{ count: 4 }]);
+
+      await expect(countEncryptedPrivateNotes()).resolves.toBe(4);
+      const [sql] = db.select.mock.calls[0];
+      expect(sql).toContain("is_private = 1 AND encrypted_payload IS NOT NULL");
+      expect(sql).not.toContain("deleted_at");
+    });
+
+    it("starting over deletes only encrypted private notes and compacts the file", async () => {
+      const { deleteEncryptedPrivateNotes } = await importRepository();
+      db.execute.mockResolvedValueOnce({ rowsAffected: 3 });
+
+      await expect(deleteEncryptedPrivateNotes()).resolves.toBe(3);
+
+      const [sql] = db.execute.mock.calls[0];
+      expect(sql).toBe(
+        "DELETE FROM notes WHERE is_private = 1 AND encrypted_payload IS NOT NULL",
+      );
+      expect(db.execute.mock.calls.map(([statement]) => statement)).toContain(
+        "VACUUM",
+      );
+    });
+
+    it("does not compact when there was nothing to delete", async () => {
+      const { deleteEncryptedPrivateNotes } = await importRepository();
+      db.execute.mockResolvedValueOnce({ rowsAffected: 0 });
+
+      await expect(deleteEncryptedPrivateNotes()).resolves.toBe(0);
+      expect(db.execute).toHaveBeenCalledOnce();
+    });
+
     it("does not encrypt pending notes without the session key", async () => {
       const { encryptPendingPrivateNotes } = await importRepository();
       const { DatabaseError } = await import("../../lib/errors/DatabaseError");

@@ -602,6 +602,40 @@ export async function encryptPendingPrivateNotes(): Promise<number> {
   }
 }
 
+/** Private notes sealed with the note key, including those in the Trash. */
+export async function countEncryptedPrivateNotes(): Promise<number> {
+  try {
+    const database = await initializeDatabase();
+    const [row] = await database.select<{ count: number }[]>(
+      "SELECT COUNT(*) AS count FROM notes WHERE is_private = 1 AND encrypted_payload IS NOT NULL",
+    );
+    return row?.count ?? 0;
+  } catch (cause) {
+    rethrowAsDatabaseError(cause, "Could not count private notes.");
+  }
+}
+
+/**
+ * Permanently removes every encrypted private note, for starting over after
+ * the password and the recovery key are both lost: without the note key they
+ * can never be read again. Private notes still in plaintext are kept, and are
+ * encrypted with the next key. Irreversible — callers must confirm first.
+ */
+export async function deleteEncryptedPrivateNotes(): Promise<number> {
+  try {
+    const database = await initializeDatabase();
+    const result = await database.execute(
+      "DELETE FROM notes WHERE is_private = 1 AND encrypted_payload IS NOT NULL",
+    );
+    if (result.rowsAffected > 0) {
+      await scrubDeletedPlaintext(database);
+    }
+    return result.rowsAffected;
+  } catch (cause) {
+    rethrowAsDatabaseError(cause, "Could not delete the private notes.");
+  }
+}
+
 /**
  * Move a note to the Trash. Preserves the record and its body, bumps
  * `revision`/`updated_at`. A no-op when the note is missing or already trashed.

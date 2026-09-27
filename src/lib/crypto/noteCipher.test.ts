@@ -4,7 +4,11 @@ import {
   decryptNotePayload,
   encryptNotePayload,
   unwrapNoteKey,
+  unwrapNoteKeyWithRecoveryKey,
+  wrapNoteKey,
+  wrapNoteKeyWithRecoveryKey,
 } from "./noteCipher";
+import { generateRecoveryKey } from "./recoveryKey";
 
 const payload = {
   title: "Journal",
@@ -78,5 +82,54 @@ describe("noteCipher", () => {
     await expect(
       decryptNotePayload(otherKey, "note-1", sealed),
     ).rejects.toThrow();
+  });
+
+  it("opens the same note key with a recovery key, and only with that key", async () => {
+    const { key, wrapped } = await createNoteKey("correct horse");
+    const sealed = await encryptNotePayload(key, "note-1", payload);
+    const recoveryKey = generateRecoveryKey();
+    const recoveryWrapped = await wrapNoteKeyWithRecoveryKey(
+      await unwrapNoteKey("correct horse", wrapped, true),
+      recoveryKey,
+    );
+
+    const recovered = await unwrapNoteKeyWithRecoveryKey(
+      recoveryKey,
+      recoveryWrapped,
+    );
+    await expect(
+      decryptNotePayload(recovered, "note-1", sealed),
+    ).resolves.toEqual(payload);
+    await expect(
+      unwrapNoteKeyWithRecoveryKey(generateRecoveryKey(), recoveryWrapped),
+    ).rejects.toThrow();
+  });
+
+  it("moves the note key to a new password without re-encrypting notes", async () => {
+    const { key, wrapped } = await createNoteKey("correct horse");
+    const sealed = await encryptNotePayload(key, "note-1", payload);
+
+    const rewrapped = await wrapNoteKey(
+      await unwrapNoteKey("correct horse", wrapped, true),
+      "battery staple",
+    );
+
+    await expect(
+      decryptNotePayload(
+        await unwrapNoteKey("battery staple", rewrapped),
+        "note-1",
+        sealed,
+      ),
+    ).resolves.toEqual(payload);
+    await expect(unwrapNoteKey("correct horse", rewrapped)).rejects.toThrow();
+  });
+
+  it("keeps the session key non-extractable unless asked", async () => {
+    const { key, wrapped } = await createNoteKey("correct horse");
+    expect(key.extractable).toBe(false);
+    expect((await unwrapNoteKey("correct horse", wrapped)).extractable).toBe(
+      false,
+    );
+    await expect(wrapNoteKey(key, "battery staple")).rejects.toThrow();
   });
 });

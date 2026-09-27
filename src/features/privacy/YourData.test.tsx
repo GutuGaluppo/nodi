@@ -14,6 +14,12 @@ vi.mock("../../db/repositories/storageRepository", () => ({
   getStorageReport: vi.fn(),
 }));
 
+vi.mock("./privateNotePassword", () => ({
+  hasPrivateNotesPassword: vi.fn(async () => false),
+  hasRecoveryKey: vi.fn(async () => false),
+  prepareRecoveryKey: vi.fn(),
+}));
+
 vi.mock("@tauri-apps/api/path", () => ({
   appDataDir: vi.fn(
     async () => "/Users/me/Library/Application Support/com.nodi.app",

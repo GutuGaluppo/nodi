@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   settings: new Map<string, string>(),
   encryptPendingPrivateNotes: vi.fn(),
+  deleteEncryptedPrivateNotes: vi.fn(),
 }));
 
 vi.mock("../../db/repositories/settingsRepository", () => ({
@@ -10,17 +11,22 @@ vi.mock("../../db/repositories/settingsRepository", () => ({
   setSetting: vi.fn(async (key: string, value: string) => {
     mocks.settings.set(key, value);
   }),
+  deleteSetting: vi.fn(async (key: string) => {
+    mocks.settings.delete(key);
+  }),
 }));
 
 vi.mock("../../db/repositories/noteRepository", () => ({
   encryptPendingPrivateNotes: mocks.encryptPendingPrivateNotes,
+  deleteEncryptedPrivateNotes: mocks.deleteEncryptedPrivateNotes,
 }));
 
 async function load() {
   const password = await import("./privateNotePassword");
   const session = await import("../../db/privateNoteKey");
   const cipher = await import("../../lib/crypto/noteCipher");
-  return { ...password, ...session, ...cipher };
+  const recovery = await import("../../lib/crypto/recoveryKey");
+  return { ...password, ...session, ...cipher, ...recovery };
 }
 
 const payload = { title: "Journal", contentJson: "{}", contentText: "secret" };
@@ -30,6 +36,7 @@ describe("private notes password", () => {
     vi.resetModules();
     mocks.settings.clear();
     mocks.encryptPendingPrivateNotes.mockReset().mockResolvedValue(0);
+    mocks.deleteEncryptedPrivateNotes.mockReset().mockResolvedValue(2);
   });
 
   it("stores a verifier and a wrapped key, never the password, and opens the session", async () => {
@@ -106,5 +113,124 @@ describe("private notes password", () => {
     await expect(unlockPrivateNotes("correct horse")).resolves.toBe(true);
 
     consoleError.mockRestore();
+  });
+
+  describe("recovery", () => {
+    async function setUpWithRecoveryKey() {
+      const modules = await load();
+      await modules.setPrivateNotesPassword("correct horse");
+      const key = modules.getPrivateNoteKey();
+      if (!key) throw new Error("setup did not open the session");
+      const sealed = await modules.encryptNotePayload(key, "note-1", payload);
+      const draft = await modules.prepareRecoveryKey("correct horse");
+      if (!draft) throw new Error("no recovery key was prepared");
+      return { ...modules, sealed, draft };
+    }
+
+    it("stores nothing until the recovery key is saved, and never the key itself", async () => {
+      const { draft, hasRecoveryKey } = await setUpWithRecoveryKey();
+
+      expect(mocks.settings.has("private_notes_recovery_key")).toBe(false);
+      await draft.save();
+
+      expect(await hasRecoveryKey()).toBe(true);
+      const stored = [...mocks.settings.values()].join(" ");
+      expect(stored).not.toContain(draft.code);
+      expect(stored).not.toContain(draft.code.replace(/-/g, ""));
+    });
+
+    it("prepares no recovery key for a wrong password", async () => {
+      const { prepareRecoveryKey } = await setUpWithRecoveryKey();
+      await expect(prepareRecoveryKey("wrong password")).resolves.toBeNull();
+    });
+
+    it("sets a new password with the recovery key and keeps the notes readable", async () => {
+      const { draft, sealed } = await setUpWithRecoveryKey();
+      await draft.save();
+      const before = mocks.settings.get("private_notes_recovery_key");
+      const {
+        recoverPrivateNotes,
+        unlockPrivateNotes,
+        getPrivateNoteKey,
+        clearPrivateNoteKey,
+        decryptNotePayload,
+      } = await load();
+      clearPrivateNoteKey();
+      mocks.encryptPendingPrivateNotes.mockClear();
+
+      await expect(
+        recoverPrivateNotes(draft.code.toLowerCase(), "battery staple"),
+      ).resolves.toBe(true);
+
+      const key = getPrivateNoteKey();
+      if (!key) throw new Error("recovery did not open the session");
+      await expect(decryptNotePayload(key, "note-1", sealed)).resolves.toEqual(
+        payload,
+      );
+      expect(mocks.encryptPendingPrivateNotes).toHaveBeenCalledOnce();
+      // The recovery key keeps working until the user saves a new one.
+      expect(mocks.settings.get("private_notes_recovery_key")).toBe(before);
+
+      clearPrivateNoteKey();
+      await expect(unlockPrivateNotes("correct horse")).resolves.toBe(false);
+      await expect(unlockPrivateNotes("battery staple")).resolves.toBe(true);
+    });
+
+    it("rejects a wrong or missing recovery key without changing anything", async () => {
+      const {
+        draft,
+        recoverPrivateNotes,
+        formatRecoveryKey,
+        generateRecoveryKey,
+      } = await setUpWithRecoveryKey();
+      const snapshot = new Map(mocks.settings);
+
+      await expect(
+        recoverPrivateNotes(
+          formatRecoveryKey(generateRecoveryKey()),
+          "x".repeat(8),
+        ),
+      ).resolves.toBe(false);
+      await expect(
+        recoverPrivateNotes("not a key", "x".repeat(8)),
+      ).resolves.toBe(false);
+      // Not saved yet: there is nothing to recover with.
+      await expect(
+        recoverPrivateNotes(draft.code, "x".repeat(8)),
+      ).resolves.toBe(false);
+      expect(mocks.settings).toEqual(snapshot);
+    });
+
+    it("replacing the recovery key retires the old one", async () => {
+      const { draft, prepareRecoveryKey, recoverPrivateNotes } =
+        await setUpWithRecoveryKey();
+      await draft.save();
+      const next = await prepareRecoveryKey("correct horse");
+      await next?.save();
+
+      await expect(
+        recoverPrivateNotes(draft.code, "x".repeat(8)),
+      ).resolves.toBe(false);
+      await expect(
+        recoverPrivateNotes(next?.code ?? "", "x".repeat(8)),
+      ).resolves.toBe(true);
+    });
+
+    it("starting over deletes encrypted notes and every key, then allows a new password", async () => {
+      const {
+        draft,
+        startPrivateNotesOver,
+        getPrivateNoteKey,
+        hasPrivateNotesPassword,
+      } = await setUpWithRecoveryKey();
+      await draft.save();
+
+      await expect(startPrivateNotesOver()).resolves.toBe(2);
+
+      expect(mocks.deleteEncryptedPrivateNotes).toHaveBeenCalledOnce();
+      expect([...mocks.settings.keys()]).toEqual([]);
+      expect(getPrivateNoteKey()).toBeNull();
+      await expect(hasPrivateNotesPassword()).resolves.toBe(false);
+    });
   });
 });

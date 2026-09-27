@@ -47,6 +47,17 @@ describe("settingsRepository", () => {
     );
   });
 
+  it("removes a value with a parameterized statement", async () => {
+    const { deleteSetting } = await import("./settingsRepository");
+
+    await deleteSetting("private_notes_key");
+
+    expect(db.execute).toHaveBeenCalledWith(
+      "DELETE FROM settings WHERE key = $1",
+      ["private_notes_key"],
+    );
+  });
+
   it("wraps an underlying failure as a DatabaseError", async () => {
     db.select.mockRejectedValue(new Error("disk I/O error"));
     const { getSetting } = await import("./settingsRepository");
