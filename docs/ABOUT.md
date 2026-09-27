@@ -326,3 +326,27 @@ Bullet, numbered, and task lists now use a compact line height. Checklist text s
 NODI gains a static, four-language landing page (Portuguese, English, Spanish, and German) in `landing/`. It uses real captures of the current interface with demo notes, an animated tour, and before-and-after comparisons for voice-to-checklist, search filtering, and light and dark themes. The page adds no dependency to the app.
 
 ![NODI during LAND-001, showing a dictated checklist inserted into a note](about/screenshots/land-001-landing-page.png)
+
+## 040 — PRIVACY-002 Encrypted private notes
+
+**Completed:** September 27, 2026
+
+Private notes are now encrypted at rest. A random AES-256-GCM key seals each private note's title and content, and a key derived from the password wraps that key; the password itself is never stored. Private notes created before this change are encrypted on the first unlock, and NODI compacts the search index and database afterward so no deleted plaintext remains.
+
+![NODI during PRIVACY-002, asking for the password that encrypts private notes](about/screenshots/privacy-002-encrypted-private-notes.png)
+
+## 041 — PRIVACY-003 Network lockdown
+
+**Completed:** September 27, 2026
+
+NODI now ships a restrictive Content Security Policy that only allows connections to its own local process. A test fails the build if the policy or the app's permissions ever allow a remote connection. The capture shows the native window running under the new policy.
+
+![The native NODI window running under the PRIVACY-003 security policy](about/screenshots/privacy-003-network-lockdown.png)
+
+## 042 — PRIVACY-004 Your data
+
+**Completed:** September 27, 2026
+
+Settings → Your data shows where the database lives, its size and integrity, how many private notes are encrypted, and the enforced network policy. Every value is read locally each time the page opens.
+
+![NODI's Your data page after PRIVACY-004](about/screenshots/privacy-004-your-data.png)

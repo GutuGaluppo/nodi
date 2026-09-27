@@ -20,6 +20,9 @@ import note001Screenshot from "../../../docs/about/screenshots/note-001-note-rep
 import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-list.png";
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
+import privacy002Screenshot from "../../../docs/about/screenshots/privacy-002-encrypted-private-notes.png";
+import privacy003Screenshot from "../../../docs/about/screenshots/privacy-003-network-lockdown.png";
+import privacy004Screenshot from "../../../docs/about/screenshots/privacy-004-your-data.png";
 import search001Screenshot from "../../../docs/about/screenshots/search-001-fts-index.png";
 import search002Screenshot from "../../../docs/about/screenshots/search-002-basic-search.png";
 import search003Screenshot from "../../../docs/about/screenshots/search-003-filters.png";
@@ -363,6 +366,30 @@ const evolution = [
     description:
       "A four-language landing page presents NODI with real interface captures, an animated tour, and before-and-after comparisons of voice dictation, search, and themes.",
     screenshot: land001Screenshot,
+  },
+  {
+    id: "PRIVACY-002",
+    title: "Private notes are sealed",
+    date: "September 27, 2026",
+    description:
+      "Private notes are encrypted at rest with AES-256-GCM. The password wraps the key and is never stored, and older private notes are encrypted on the first unlock.",
+    screenshot: privacy002Screenshot,
+  },
+  {
+    id: "PRIVACY-003",
+    title: "The network stays closed",
+    date: "September 27, 2026",
+    description:
+      "A restrictive Content Security Policy only allows NODI's own local process, and a test fails the build if a remote connection is ever allowed.",
+    screenshot: privacy003Screenshot,
+  },
+  {
+    id: "PRIVACY-004",
+    title: "Your data, in plain view",
+    date: "September 27, 2026",
+    description:
+      "Settings → Your data shows the database location, size, integrity, encrypted private notes, and the enforced network policy, all read locally.",
+    screenshot: privacy004Screenshot,
   },
 ];
 
