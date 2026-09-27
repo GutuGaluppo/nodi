@@ -3,6 +3,7 @@ import DesktopShell from "../components/layout/DesktopShell";
 import About from "../features/about/About";
 import { useCreateNote } from "../features/notes/useCreateNote";
 import YourData from "../features/privacy/YourData";
+import ReminderScheduler from "../features/reminders/ReminderScheduler";
 import SearchDialog from "../features/search/SearchDialog";
 import { AppProviders } from "./providers";
 import { useGlobalShortcuts } from "./shortcuts";
@@ -149,6 +150,7 @@ function App() {
 
   return (
     <AppProviders>
+      <ReminderScheduler />
       {page === "about" ? (
         <About onClose={() => setPage("workspace")} />
       ) : page === "data" ? (

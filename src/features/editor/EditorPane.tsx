@@ -9,6 +9,7 @@ import { useRestoreNote } from "../notes/useRestoreNote";
 import { useTrashNote } from "../notes/useTrashNote";
 import { useUpdateNote } from "../notes/useUpdateNote";
 import PrivateNoteGate from "../privacy/PrivateNoteGate";
+import ReminderControl from "../reminders/ReminderControl";
 import ShortcutToggle from "../shortcuts/ShortcutToggle";
 import NoteTagPicker from "../tags/NoteTagPicker";
 import { useVoiceActions } from "../voice/useVoiceActions";
@@ -312,6 +313,7 @@ function EditorPane({
                 activeTagId={activeTagId}
                 onRemovedFromActiveTag={onNoteRemoved}
               />
+              <ReminderControl noteId={selectedNote.id} />
             </div>
           ) : null}
           {voiceApplyError ? (

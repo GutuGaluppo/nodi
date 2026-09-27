@@ -113,3 +113,31 @@ encrypted note hold empty values. Only the Web Crypto API is used.
 - After plaintext leaves the database NODI merges the FTS5 index, runs `VACUUM`,
   and truncates the WAL so no deleted plaintext pages remain.
 - A forgotten password cannot be recovered.
+
+## D-004 — Reminders use Tauri's notification plugin
+
+**Date:** September 27, 2026
+**Task:** REM-001 Reminders
+**Status:** Accepted
+
+### Decision
+
+Reminders are stored in a `reminders` table and delivered as local macOS
+notifications through the official `tauri-plugin-notification` (Rust) and
+`@tauri-apps/plugin-notification` (JavaScript). A scheduler in the app checks
+for due reminders at launch and every 30 seconds.
+
+### Rationale
+
+- `IMPLEMENTATION.md` asks for local OS notifications and no remote push; the
+  plugin talks to Notification Center on the Mac and has no network code.
+- It is maintained by the Tauri team, alongside the SQL plugin NODI already
+  uses, and needs only the `notification:default` permission.
+
+### Consequences
+
+- Reminders fire only while NODI is running; one that came due while NODI was
+  closed fires on the next launch. The UI does not promise otherwise.
+- Notifications for private notes say "Private note", never the title.
+- A reminder is marked delivered after its notification is shown, so it never
+  fires twice; a failed notification stays pending and is retried.

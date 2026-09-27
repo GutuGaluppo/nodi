@@ -11,6 +11,7 @@ const SAVED_SEARCHES: &str = include_str!("../migrations/0006_saved_searches.sql
 const PRIVATE_NOTES: &str = include_str!("../migrations/0007_private_notes.sql");
 const PRIVATE_NOTE_ENCRYPTION: &str =
     include_str!("../migrations/0008_private_note_encryption.sql");
+const REMINDERS: &str = include_str!("../migrations/0009_reminders.sql");
 
 pub fn all() -> Vec<Migration> {
     vec![
@@ -60,6 +61,12 @@ pub fn all() -> Vec<Migration> {
             version: 8,
             description: "private note encryption",
             sql: PRIVATE_NOTE_ENCRYPTION,
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 9,
+            description: "reminders",
+            sql: REMINDERS,
             kind: MigrationKind::Up,
         },
     ]
@@ -114,6 +121,7 @@ mod tests {
             "notebooks",
             "notes",
             "notes_fts",
+            "reminders",
             "saved_searches",
             "settings",
             "shortcuts",
@@ -128,14 +136,16 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 8);
+        assert_eq!(applied_count, 9);
 
         let note_columns =
             sqlx::query_scalar::<_, String>("SELECT name FROM pragma_table_info('notes')")
                 .fetch_all(&pool)
                 .await
                 .expect("note columns should be readable");
-        assert!(note_columns.iter().any(|column| column == "encrypted_payload"));
+        assert!(note_columns
+            .iter()
+            .any(|column| column == "encrypted_payload"));
     }
 
     #[tokio::test]
@@ -187,6 +197,12 @@ mod tests {
         .execute(&pool)
         .await
         .expect("shortcut fixture should be inserted");
+        sqlx::query(
+            "INSERT INTO reminders (id, note_id, remind_at, created_at) VALUES ('r1', 'n1', 'soon', 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("reminder fixture should be inserted");
 
         sqlx::query("DELETE FROM notes WHERE id = 'n1'")
             .execute(&pool)
@@ -199,12 +215,17 @@ mod tests {
             "note_tags",
             "notes_fts",
             "shortcuts",
+            "reminders",
         ] {
             let count = sqlx::query_scalar::<_, i64>(&format!(
                 "SELECT COUNT(*) FROM {table} WHERE {} = 'n1'",
                 if table == "shortcuts" {
                     "target_id"
-                } else if table == "attachments" || table == "note_tags" || table == "notes_fts" {
+                } else if table == "attachments"
+                    || table == "note_tags"
+                    || table == "notes_fts"
+                    || table == "reminders"
+                {
                     "note_id"
                 } else {
                     "id"

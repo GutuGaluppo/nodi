@@ -173,6 +173,62 @@
   border-color: var(--color-accent);
 }
 
+.note-reminder-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.note-reminder-control input {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font: inherit;
+}
+
+.note-reminder {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-lg);
+  color: var(--color-accent-hover);
+  background: var(--color-accent-soft);
+}
+
+.note-reminder button {
+  color: inherit;
+  line-height: 1;
+}
+
+.note-reminder-time {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.note-reminder-time svg {
+  width: 13px;
+  height: 13px;
+}
+
+.note-reminder-add {
+  padding: var(--space-1) var(--space-2);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+}
+
+.note-reminder-add:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
 .editor-title-row .note-title-field {
   width: auto;
   flex: 1;
