@@ -1,11 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { spotlightKeys } from "./SpotlightSync";
-import { getLastSpotlightRun, setSpotlightEnabled } from "./spotlight";
+import {
+  getLastSpotlightRun,
+  isSpotlightEnabled,
+  setSpotlightEnabled,
+} from "./spotlight";
 
 /** The Spotlight row on the "Your data" page (MAC-002). */
 function SpotlightStatus() {
   const client = useQueryClient();
-  const enabled = useQuery<boolean>({ queryKey: spotlightKeys.enabled });
+  const enabled = useQuery({
+    queryKey: spotlightKeys.enabled,
+    queryFn: isSpotlightEnabled,
+  });
   const lastRun = useQuery({
     queryKey: spotlightKeys.lastRun,
     queryFn: getLastSpotlightRun,
