@@ -1,3 +1,4 @@
+import { NodeSelection } from "@tiptap/pm/state";
 import {
   type Editor,
   EditorContent,
@@ -26,6 +27,8 @@ interface NoteEditorProps {
   onChange?: (draft: { contentJson: string; contentText: string }) => void;
   onBlur?: () => void;
   onEditorReady?: (editor: Editor | null) => void;
+  /** Receives images pasted into the note; the editor inserts nothing itself. */
+  onPasteImages?: (files: File[]) => void;
 }
 
 /**
@@ -40,8 +43,12 @@ function NoteEditor({
   onChange,
   onBlur,
   onEditorReady,
+  onPasteImages,
 }: NoteEditorProps) {
   const synchronizing = useRef(false);
+  // The editor is created once; read the latest callback through a ref.
+  const pasteImagesRef = useRef(onPasteImages);
+  pasteImagesRef.current = onPasteImages;
   const editor = useEditor(
     {
       extensions: editorExtensions,
@@ -52,6 +59,14 @@ function NoteEditor({
           role: "textbox",
           "aria-multiline": "true",
           "aria-label": "Note body",
+        },
+        handlePaste: (_view, event) => {
+          const images = Array.from(event.clipboardData?.files ?? []).filter(
+            (file) => file.type.startsWith("image/"),
+          );
+          if (images.length === 0 || !pasteImagesRef.current) return false;
+          pasteImagesRef.current(images);
+          return true;
         },
       },
       onUpdate: ({ editor: instance }) => {
@@ -97,7 +112,10 @@ function NoteEditor({
       <BubbleMenu
         editor={editor}
         options={{ placement: "top", offset: 10 }}
-        shouldShow={({ state }) => !state.selection.empty}
+        // Text formatting means nothing for a selected image or recording.
+        shouldShow={({ state }) =>
+          !state.selection.empty && !(state.selection instanceof NodeSelection)
+        }
       >
         <EditorToolbar editor={editor} />
       </BubbleMenu>

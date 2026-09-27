@@ -11,14 +11,22 @@ use std::collections::HashSet;
 use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::Serialize;
 use sha2::{Digest, Sha256};
+use tauri::ipc::{InvokeBody, Request};
 use tauri::{AppHandle, Manager};
+use tauri_plugin_dialog::DialogExt;
 
 pub const ATTACHMENTS_DIR: &str = "attachments";
 const STAGING_DIR: &str = ".staging";
 const RECORDING_FILE_NAME: &str = "recording.wav";
+/// Largest image NODI will import (ATT-003).
+pub const MAX_IMAGE_BYTES: u64 = 50 * 1024 * 1024;
+
+static IMPORT_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -182,6 +190,137 @@ pub fn clear_staging(root: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Identifies an image from its first bytes; the file name is never trusted.
+/// Returns the MIME type and file extension.
+pub fn sniff_image(bytes: &[u8]) -> Option<(&'static str, &'static str)> {
+    if bytes.starts_with(&[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]) {
+        Some(("image/png", "png"))
+    } else if bytes.starts_with(&[0xFF, 0xD8, 0xFF]) {
+        Some(("image/jpeg", "jpg"))
+    } else if bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a") {
+        Some(("image/gif", "gif"))
+    } else if bytes.len() >= 12 && &bytes[..4] == b"RIFF" && &bytes[8..12] == b"WEBP" {
+        Some(("image/webp", "webp"))
+    } else if bytes.len() >= 12
+        && &bytes[4..8] == b"ftyp"
+        && matches!(&bytes[8..12], b"heic" | b"heix" | b"mif1" | b"msf1")
+    {
+        Some(("image/heic", "heic"))
+    } else {
+        None
+    }
+}
+
+/// Stores image bytes as an attachment after checking type and size.
+pub fn store_image_bytes(root: &Path, bytes: &[u8]) -> Result<StoredAttachment, String> {
+    if bytes.len() as u64 > MAX_IMAGE_BYTES {
+        return Err("the image is larger than 50 MB".into());
+    }
+    let (mime_type, extension) =
+        sniff_image(bytes).ok_or("the file is not a PNG, JPEG, GIF, WebP, or HEIC image")?;
+    let staging = root.join(STAGING_DIR);
+    fs::create_dir_all(&staging).map_err(|err| err.to_string())?;
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let sequence = IMPORT_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let temporary = staging.join(format!("import-{unique:x}-{sequence:x}.tmp"));
+    fs::write(&temporary, bytes).map_err(|err| err.to_string())?;
+    store_file(root, &temporary, &format!("image.{extension}"), mime_type).map_err(|err| {
+        let _ = fs::remove_file(&temporary);
+        err.to_string()
+    })
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RejectedFile {
+    pub name: String,
+    pub reason: String,
+}
+
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageImport {
+    pub stored: Vec<StoredAttachment>,
+    pub rejected: Vec<RejectedFile>,
+}
+
+/// Imports images from paths the user dropped or picked. Anything that is not
+/// an image, or is too large, is rejected with a reason and never read in full.
+pub fn import_image_paths(root: &Path, paths: &[PathBuf]) -> ImageImport {
+    let mut result = ImageImport::default();
+    for path in paths {
+        let name = path
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let outcome = fs::metadata(path)
+            .map_err(|err| err.to_string())
+            .and_then(|metadata| {
+                if !metadata.is_file() {
+                    Err("not a file".to_string())
+                } else if metadata.len() > MAX_IMAGE_BYTES {
+                    Err("the image is larger than 50 MB".to_string())
+                } else {
+                    fs::read(path).map_err(|err| err.to_string())
+                }
+            })
+            .and_then(|bytes| store_image_bytes(root, &bytes));
+        match outcome {
+            Ok(stored) => result.stored.push(stored),
+            Err(reason) => result.rejected.push(RejectedFile { name, reason }),
+        }
+    }
+    result
+}
+
+/// Imports a pasted image, sent as the raw request body.
+#[tauri::command]
+pub fn import_image_bytes(
+    app: AppHandle,
+    request: Request<'_>,
+) -> Result<StoredAttachment, String> {
+    let InvokeBody::Raw(bytes) = request.body() else {
+        return Err("expected the image bytes".into());
+    };
+    store_image_bytes(&root(&app)?, bytes)
+}
+
+/// Imports images dropped onto the window.
+#[tauri::command]
+pub async fn import_image_files(app: AppHandle, paths: Vec<String>) -> Result<ImageImport, String> {
+    let root = root(&app)?;
+    let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
+    tauri::async_runtime::spawn_blocking(move || import_image_paths(&root, &paths))
+        .await
+        .map_err(|err| err.to_string())
+}
+
+/// Opens the native file picker for images and imports the chosen files.
+#[tauri::command]
+pub async fn pick_image_files(app: AppHandle) -> Result<ImageImport, String> {
+    let root = root(&app)?;
+    let dialog_app = app.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let picked = dialog_app
+            .dialog()
+            .file()
+            .set_title("Insert images")
+            .add_filter("Images", &["png", "jpg", "jpeg", "gif", "webp", "heic"])
+            .blocking_pick_files()
+            .unwrap_or_default();
+        let paths: Vec<PathBuf> = picked
+            .into_iter()
+            .filter_map(|file| file.into_path().ok())
+            .collect();
+        import_image_paths(&root, &paths)
+    })
+    .await
+    .map_err(|err| err.to_string())
+}
+
 #[tauri::command]
 pub fn keep_voice_recording(
     app: AppHandle,
@@ -307,6 +446,68 @@ mod tests {
         assert!(stage_recording(&root, "../../etc/passwd", &[1], 16_000).is_err());
         assert!(stage_recording(&root, "", &[1], 16_000).is_err());
         clear_staging(&root).unwrap();
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    fn png_bytes() -> Vec<u8> {
+        let mut bytes = vec![0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
+        bytes.extend_from_slice(b"rest of a png");
+        bytes
+    }
+
+    #[test]
+    fn recognizes_images_by_their_first_bytes() {
+        assert_eq!(sniff_image(&png_bytes()), Some(("image/png", "png")));
+        assert_eq!(
+            sniff_image(&[0xFF, 0xD8, 0xFF, 0xE0]),
+            Some(("image/jpeg", "jpg"))
+        );
+        assert_eq!(sniff_image(b"GIF89a...."), Some(("image/gif", "gif")));
+        assert_eq!(
+            sniff_image(b"RIFF\0\0\0\0WEBPVP8 "),
+            Some(("image/webp", "webp"))
+        );
+        assert_eq!(
+            sniff_image(b"\0\0\0\x18ftypheic...."),
+            Some(("image/heic", "heic"))
+        );
+        assert_eq!(sniff_image(b"%PDF-1.7"), None);
+        assert_eq!(sniff_image(b""), None);
+    }
+
+    #[test]
+    fn stores_an_image_under_its_hash_with_a_safe_name() {
+        let root = temp_root("image");
+
+        let stored = store_image_bytes(&root, &png_bytes()).unwrap();
+
+        assert_eq!(stored.mime_type, "image/png");
+        assert_eq!(stored.filename, "image.png");
+        assert!(stored.relative_path.ends_with("/image.png"));
+        assert!(fs::read_dir(root.join(".staging"))
+            .unwrap()
+            .next()
+            .is_none());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn rejects_files_that_are_not_images() {
+        let root = temp_root("reject");
+        let document = root.join("notes.txt");
+        let image = root.join("photo.png");
+        fs::write(&document, b"plain text").unwrap();
+        fs::write(&image, png_bytes()).unwrap();
+
+        let import = import_image_paths(&root, &[document, image, root.join("missing.png")]);
+
+        assert_eq!(import.stored.len(), 1);
+        let rejected: Vec<&str> = import
+            .rejected
+            .iter()
+            .map(|file| file.name.as_str())
+            .collect();
+        assert_eq!(rejected, vec!["notes.txt", "missing.png"]);
         fs::remove_dir_all(root).unwrap();
     }
 }

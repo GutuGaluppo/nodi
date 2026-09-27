@@ -98,7 +98,8 @@ function renderInline(nodes: TiptapNode[] = []): string {
 }
 
 function renderImage(node: TiptapNode): string {
-  const src = String(node.attrs?.src ?? "");
+  // Attachment images keep their stored path, relative to NODI's data folder.
+  const src = String(node.attrs?.path ?? node.attrs?.src ?? "");
   const alt = String(node.attrs?.alt ?? "").replace(/[[\]]/g, "");
   return src ? `![${alt}](${src})` : "";
 }

@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { initializeDatabase } from "../db/database";
 import { ensureDeviceId } from "../db/deviceId";
+import { initAttachmentUrls } from "../lib/attachments/attachmentUrl";
 import App from "./App";
 import StartupScreen from "./StartupScreen";
 import { applyThemePreference, getStoredThemePreference } from "./theme";
@@ -27,6 +28,7 @@ async function bootstrapApplication(): Promise<void> {
     if (import.meta.env.VITE_E2E !== "true") {
       await initializeDatabase();
       await ensureDeviceId();
+      await initAttachmentUrls();
     }
 
     renderApplication(<App />);

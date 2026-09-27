@@ -112,6 +112,20 @@ export async function getAttachment(id: string): Promise<Attachment | null> {
   }
 }
 
+/** How many files a note carries, to warn before it becomes private. */
+export async function countAttachments(noteId: string): Promise<number> {
+  try {
+    const database = await initializeDatabase();
+    const rows = await database.select<{ count: number }[]>(
+      "SELECT COUNT(*) AS count FROM attachments WHERE note_id = $1",
+      [noteId],
+    );
+    return rows[0]?.count ?? 0;
+  } catch (cause) {
+    rethrow(cause, "Could not count the note's attachments.");
+  }
+}
+
 /** Every stored file path still referenced, for the launch-time sweep. */
 export async function listAttachmentPaths(): Promise<string[]> {
   try {

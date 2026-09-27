@@ -1,10 +1,16 @@
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import type { Editor, JSONContent } from "@tiptap/react";
 import { type Ref, useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Icon from "../../components/ui/Icon";
-import { createAttachment } from "../../db/repositories/attachmentRepository";
+import {
+  countAttachments,
+  createAttachment,
+} from "../../db/repositories/attachmentRepository";
 import type { VoiceSegment } from "../../editor/voiceRecording/VoiceRecordingNode";
+import type { StoredAttachment } from "../../lib/attachments/storedAttachment";
+import { useImageInsertion } from "../images/useImageInsertion";
 import NoteNotebookSelect from "../notebooks/NoteNotebookSelect";
 import { useNote } from "../notes/useNote";
 import { usePermanentlyDeleteNote } from "../notes/usePermanentlyDeleteNote";
@@ -44,14 +50,6 @@ function buildVoiceInsertionContent(
       content: [{ type: "paragraph", content: [{ type: "text", text: item }] }],
     })),
   };
-}
-
-interface StoredAttachment {
-  relativePath: string;
-  sha256: string;
-  size: number;
-  filename: string;
-  mimeType: string;
 }
 
 const KEEP_AUDIO_SETTING = "nodi.voice.keepAudio";
@@ -120,10 +118,46 @@ function EditorPane({
   const deleteNote = usePermanentlyDeleteNote();
   const updateNote = useUpdateNote();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingPrivateFiles, setConfirmingPrivateFiles] = useState(0);
   const [unlockedNoteId, setUnlockedNoteId] = useState<string | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
   const [voiceLanguage, setVoiceLanguage] = useState<string>("pt-BR");
   const selectedNote = note.data;
+
+  const images = useImageInsertion(editor, selectedNote ?? null);
+  const dropImages = images.drop;
+
+  // Files dropped on the window arrive as paths through Tauri, not as HTML
+  // drop events. Only an open, editable note accepts them.
+  useEffect(() => {
+    if (editor === null || view !== "notes") return;
+    let unlisten: (() => void) | undefined;
+    let active = true;
+    try {
+      getCurrentWebview()
+        .onDragDropEvent((event) => {
+          if (event.payload.type !== "drop" || event.payload.paths.length === 0)
+            return;
+          const scale = window.devicePixelRatio || 1;
+          const at = editor.view.posAtCoords({
+            left: event.payload.position.x / scale,
+            top: event.payload.position.y / scale,
+          });
+          void dropImages(event.payload.paths, at?.pos);
+        })
+        .then((stop) => {
+          if (active) unlisten = stop;
+          else stop();
+        })
+        .catch(() => undefined);
+    } catch {
+      // Not running inside Tauri (for example in tests): nothing to listen to.
+    }
+    return () => {
+      active = false;
+      unlisten?.();
+    };
+  }, [editor, view, dropImages]);
 
   const voice = useVoiceCapture();
   const insertionTarget = useVoiceInsertionTarget(editor);
@@ -324,6 +358,17 @@ function EditorPane({
                     ))}
                   </select>
                 ) : null}
+                <button
+                  className="icon-action"
+                  type="button"
+                  aria-label="Insert image"
+                  title="Insert image"
+                  data-tooltip="Insert image"
+                  disabled={images.busy}
+                  onClick={() => void images.pick()}
+                >
+                  <Icon name="image" />
+                </button>
                 <VoiceCaptureButton
                   phase={voice.state.phase}
                   disabled={false}
@@ -349,7 +394,17 @@ function EditorPane({
                       : "Make note private"
                   }
                   disabled={updateNote.isPending}
-                  onClick={() => {
+                  onClick={async () => {
+                    if (!selectedNote.isPrivate) {
+                      // Files are not encrypted; say so before going private.
+                      const files = await countAttachments(
+                        selectedNote.id,
+                      ).catch(() => 0);
+                      if (files > 0) {
+                        setConfirmingPrivateFiles(files);
+                        return;
+                      }
+                    }
                     updateNote.mutate({
                       id: selectedNote.id,
                       patch: { isPrivate: !selectedNote.isPrivate },
@@ -413,6 +468,11 @@ function EditorPane({
               <ReminderControl noteId={selectedNote.id} />
             </div>
           ) : null}
+          {images.message ? (
+            <p className="inline-error" role="alert">
+              {images.message}
+            </p>
+          ) : null}
           {audioKeepError ? (
             <p className="inline-error" role="alert">
               O áudio não pôde ser guardado. O texto ditado foi inserido sem a
@@ -474,7 +534,23 @@ function EditorPane({
             autoFocus={focusEditor}
             onAutoFocus={onEditorFocused}
             onEditorReady={setEditor}
+            onPasteImages={(files) => void images.paste(files)}
           />
+          {confirmingPrivateFiles > 0 ? (
+            <ConfirmDialog
+              title="Make this note private?"
+              description={`The note's text will be encrypted, but its ${confirmingPrivateFiles === 1 ? "image or recording stays" : `${confirmingPrivateFiles} images and recordings stay`} unencrypted on this Mac. Text read from its images is deleted.`}
+              confirmLabel="Make private"
+              isPending={updateNote.isPending}
+              onCancel={() => setConfirmingPrivateFiles(0)}
+              onConfirm={() => {
+                updateNote.mutate(
+                  { id: selectedNote.id, patch: { isPrivate: true } },
+                  { onSettled: () => setConfirmingPrivateFiles(0) },
+                );
+              }}
+            />
+          ) : null}
           {confirmingDelete ? (
             <ConfirmDialog
               title="Delete this note forever?"

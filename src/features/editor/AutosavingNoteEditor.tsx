@@ -9,6 +9,7 @@ interface AutosavingNoteEditorProps {
   autoFocus?: boolean;
   onAutoFocus?: () => void;
   onEditorReady?: (editor: Editor | null) => void;
+  onPasteImages?: (files: File[]) => void;
 }
 
 const STATUS_LABELS = {
@@ -24,6 +25,7 @@ function AutosavingNoteEditor({
   autoFocus,
   onAutoFocus,
   onEditorReady,
+  onPasteImages,
 }: AutosavingNoteEditorProps) {
   const update = useUpdateNote();
   const autosave = useNoteAutosave(note.id, async (id, draft) => {
@@ -57,6 +59,7 @@ function AutosavingNoteEditor({
           void autosave.flush();
         }}
         onEditorReady={onEditorReady}
+        onPasteImages={onPasteImages}
       />
     </>
   );
