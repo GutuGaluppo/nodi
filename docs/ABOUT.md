@@ -518,3 +518,11 @@ A forgotten private-notes password no longer means losing those notes, and no em
 The Spotlight row on the "Your data" page read its on/off setting through a query that only the background Spotlight sync knew how to load. Opening the page or toggling Spotlight logged errors in the console. The row now loads the setting itself, and a test renders it alone to keep it that way.
 
 ![NODI after MAC-006: the Spotlight row in Your data](about/screenshots/mac-006-spotlight-status.png)
+
+## 064 — PRIV-REC-004 Private notes with Touch ID
+
+**Completed:** September 27, 2026
+
+Private notes can now open with Touch ID. Turned on in "Your data" with the private-notes password, it seals a copy of the notes' key with this Mac's Secure Enclave; macOS then asks for Touch ID, or the Mac's password when Touch ID is not set up. The sealed copy works on no other Mac. Touch ID can also reset a forgotten password, next to the recovery key. It is off by default, because anyone who can pass Touch ID on the Mac can then open private notes.
+
+![NODI during PRIV-REC-004: a private note offering Touch ID](about/screenshots/priv-rec-004-touch-id.png)

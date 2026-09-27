@@ -31,6 +31,7 @@ import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note
 import ocr001Screenshot from "../../../docs/about/screenshots/ocr-001-image-text.png";
 import ocr002Screenshot from "../../../docs/about/screenshots/ocr-002-searchable-images.png";
 import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
+import privRec004Screenshot from "../../../docs/about/screenshots/priv-rec-004-touch-id.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
 import privacy002Screenshot from "../../../docs/about/screenshots/privacy-002-encrypted-private-notes.png";
 import privacy003Screenshot from "../../../docs/about/screenshots/privacy-003-network-lockdown.png";
@@ -579,6 +580,14 @@ const evolution = [
     description:
       "The Spotlight row in Your data now reads its setting by itself, so opening the page or toggling Spotlight no longer logs errors.",
     screenshot: mac006Screenshot,
+  },
+  {
+    id: "PRIV-REC-004",
+    title: "Private notes with Touch ID",
+    date: "September 27, 2026",
+    description:
+      "Private notes can open with Touch ID, or the Mac's password, through a key sealed by this Mac's Secure Enclave. It also resets a forgotten password, and it is off until you turn it on.",
+    screenshot: privRec004Screenshot,
   },
 ];
 
