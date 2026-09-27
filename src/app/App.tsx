@@ -6,6 +6,7 @@ import ImageTextIndexer from "../features/images/ImageTextIndexer";
 import MirrorSync from "../features/mirror/MirrorSync";
 import { useCreateNote } from "../features/notes/useCreateNote";
 import YourData from "../features/privacy/YourData";
+import RelatedNotesIndexer from "../features/related/RelatedNotesIndexer";
 import ReminderScheduler from "../features/reminders/ReminderScheduler";
 import SearchDialog from "../features/search/SearchDialog";
 import { AppProviders } from "./providers";
@@ -157,6 +158,7 @@ function App() {
       <AttachmentSweeper />
       <MirrorSync />
       <ImageTextIndexer />
+      <RelatedNotesIndexer />
       {page === "about" ? (
         <About onClose={() => setPage("workspace")} />
       ) : page === "data" ? (

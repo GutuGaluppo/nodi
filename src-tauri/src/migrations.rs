@@ -13,6 +13,7 @@ const PRIVATE_NOTE_ENCRYPTION: &str =
     include_str!("../migrations/0008_private_note_encryption.sql");
 const REMINDERS: &str = include_str!("../migrations/0009_reminders.sql");
 const ATTACHMENT_TEXT: &str = include_str!("../migrations/0010_attachment_text.sql");
+const NOTE_EMBEDDINGS: &str = include_str!("../migrations/0011_note_embeddings.sql");
 
 pub fn all() -> Vec<Migration> {
     vec![
@@ -76,6 +77,12 @@ pub fn all() -> Vec<Migration> {
             sql: ATTACHMENT_TEXT,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 11,
+            description: "note embeddings",
+            sql: NOTE_EMBEDDINGS,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -124,6 +131,7 @@ mod tests {
         for expected in [
             "attachment_text",
             "attachments",
+            "note_embeddings",
             "note_tags",
             "notebook_stacks",
             "notebooks",
@@ -144,7 +152,7 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 10);
+        assert_eq!(applied_count, 11);
 
         let note_columns =
             sqlx::query_scalar::<_, String>("SELECT name FROM pragma_table_info('notes')")
@@ -284,6 +292,12 @@ mod tests {
             .expect("image text should be searchable");
         assert_eq!(found, vec!["a1", "a2"]);
 
+        sqlx::query(
+            "INSERT INTO note_embeddings (note_id, language, vector, source_updated_at) VALUES ('n1', 'en', 'AAAA', 'now')",
+        )
+        .execute(&pool)
+        .await
+        .expect("embedding fixture should be inserted");
         sqlx::query("UPDATE notes SET is_private = 1 WHERE id = 'n1'")
             .execute(&pool)
             .await
@@ -306,6 +320,11 @@ mod tests {
             .await
             .expect("attachment text should be readable");
         assert_eq!(rows, 0);
+        let embeddings = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM note_embeddings")
+            .fetch_one(&pool)
+            .await
+            .expect("embeddings should be readable");
+        assert_eq!(embeddings, 0, "private notes keep no embedding");
     }
 
     #[tokio::test]

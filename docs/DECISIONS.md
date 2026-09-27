@@ -244,3 +244,34 @@ Tiptap-to-Markdown converter shared with future exports.
   becomes private; its recognized text is deleted by a trigger.
 - Recognition runs one image at a time, at launch and three seconds after
   changes; an unreadable image is stored with empty text so it is not retried.
+
+## D-008 — Related notes use on-device NaturalLanguage embeddings
+
+**Date:** September 27, 2026
+**Tasks:** REL-001, REL-002
+**Status:** Accepted (exception to "no semantic embeddings in V1", limited to on-device computation, approved by the owner on September 27, 2026)
+
+### Decision
+
+Each active, non-private note gets a sentence embedding from Apple's
+NaturalLanguage framework (`objc2-natural-language`, same `objc2` family Tauri
+already ships), computed in the app. Vectors are stored in `note_embeddings`
+as base64 float32 with the note's language and the `updated_at` they were
+computed from. The panel ranks by cosine similarity in the webview, comparing
+only notes of the same language.
+
+### Rationale
+
+- No model download, no network, no vector database: the framework is on every
+  Mac. Ranking 5,000 notes takes well under the 50 ms budget in plain code.
+- Scores were calibrated on real notes: related ones scored 0.68–0.76 and
+  unrelated ones up to 0.58. A note is shown when it scores at least 0.5 and
+  within 0.12 of the best match, so the panel stays quiet when nothing fits.
+
+### Consequences
+
+- Vectors from different languages live in different spaces (English and
+  Portuguese even have different dimensions) and are never compared.
+- A note in a language without sentence embeddings gets no vector and no panel.
+- Private notes never get a vector, and a trigger deletes it when a note turns
+  private. Linking related notes waits for LINK-001.

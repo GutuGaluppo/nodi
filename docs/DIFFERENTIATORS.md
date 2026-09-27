@@ -269,4 +269,6 @@ One screen shows where the user's data lives and proves its state.
 | ATT-003 Image insertion (prerequisite) | Done |
 | OCR-001 Vision bridge | Done |
 | OCR-002 Searchable image text | Done |
+| REL-001 On-device embeddings | Done |
+| REL-002 Related notes panel | Done |
 | All other tasks | Not started |

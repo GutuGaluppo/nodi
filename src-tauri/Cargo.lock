@@ -2585,6 +2585,7 @@ dependencies = [
  "hound",
  "objc2",
  "objc2-foundation",
+ "objc2-natural-language",
  "objc2-vision",
  "serde",
  "serde_json",
@@ -2925,6 +2926,19 @@ dependencies = [
  "bitflags 2.13.1",
  "objc2",
  "objc2-core-foundation",
+]
+
+[[package]]
+name = "objc2-natural-language"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43f3395c4eda23486f1ca42da8256021a99cf94ebe3cf189bfafeb7e197f8a6d"
+dependencies = [
+ "bitflags 2.13.1",
+ "block2",
+ "objc2",
+ "objc2-core-ml",
+ "objc2-foundation",
 ]
 
 [[package]]

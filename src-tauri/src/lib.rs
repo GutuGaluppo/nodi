@@ -1,4 +1,5 @@
 mod attachments;
+mod embeddings;
 mod migrations;
 mod mirror;
 mod ocr;
@@ -36,6 +37,7 @@ pub fn run() {
             attachments::import_image_files,
             attachments::pick_image_files,
             ocr::recognize_attachment_text,
+            embeddings::embed_notes,
             mirror::get_mirror_folder,
             mirror::choose_mirror_folder,
             mirror::clear_mirror_folder,

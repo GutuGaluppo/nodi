@@ -188,6 +188,7 @@ function DesktopShell({
         onEditorFocused={onEditorFocused}
         view={activeView}
         onNoteRemoved={onNoteRemoved}
+        onOpenNote={onSelectNote}
         activeNotebookId={activeView === "notes" ? selectedNotebookId : null}
         activeTagId={activeView === "notes" ? selectedTagId : null}
         libraryCollapsed={libraryCollapsed}

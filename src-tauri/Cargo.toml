@@ -30,7 +30,8 @@ tauri-plugin-dialog = "2"
 [target.'cfg(target_os = "macos")'.dependencies]
 whisper-rs = { version = "0.16", features = ["metal"] }
 objc2 = "0.6"
-objc2-foundation = { version = "0.3", features = ["NSArray", "NSString", "NSURL", "NSDictionary", "NSError"] }
+objc2-foundation = { version = "0.3", features = ["NSArray", "NSString", "NSURL", "NSDictionary", "NSError", "NSValue"] }
+objc2-natural-language = { version = "0.3", features = ["NLEmbedding", "NLLanguage", "NLLanguageRecognizer"] }
 objc2-vision = { version = "0.3", features = ["VNRequest", "VNRequestHandler", "VNRecognizeTextRequest", "VNObservation", "VNTypes"] }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]

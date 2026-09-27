@@ -18,6 +18,7 @@ import { useRestoreNote } from "../notes/useRestoreNote";
 import { useTrashNote } from "../notes/useTrashNote";
 import { useUpdateNote } from "../notes/useUpdateNote";
 import PrivateNoteGate from "../privacy/PrivateNoteGate";
+import RelatedNotes from "../related/RelatedNotes";
 import ReminderControl from "../reminders/ReminderControl";
 import ShortcutToggle from "../shortcuts/ShortcutToggle";
 import NoteTagPicker from "../tags/NoteTagPicker";
@@ -89,6 +90,7 @@ interface EditorPaneProps {
   onEditorFocused: () => void;
   view: "notes" | "trash";
   onNoteRemoved: () => void;
+  onOpenNote?: (noteId: string) => void;
   activeNotebookId: string | null;
   activeTagId: string | null;
   libraryCollapsed: boolean;
@@ -107,6 +109,7 @@ function EditorPane({
   onEditorFocused,
   view,
   onNoteRemoved,
+  onOpenNote,
   activeNotebookId,
   activeTagId,
   libraryCollapsed,
@@ -536,6 +539,9 @@ function EditorPane({
             onEditorReady={setEditor}
             onPasteImages={(files) => void images.paste(files)}
           />
+          {view === "notes" && !selectedNote.isPrivate && onOpenNote ? (
+            <RelatedNotes noteId={selectedNote.id} onOpenNote={onOpenNote} />
+          ) : null}
           {confirmingPrivateFiles > 0 ? (
             <ConfirmDialog
               title="Make this note private?"
