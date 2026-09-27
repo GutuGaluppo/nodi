@@ -172,6 +172,14 @@ mod tests {
             .rgba()
             .chunks(4)
             .all(|px| px[0] == 0 && px[1] == 0 && px[2] == 0));
+        // Only the glyph is drawn: corners and most of the canvas stay clear,
+        // or the menu bar shows a solid square.
+        let alpha: Vec<u8> = icon.rgba().chunks(4).map(|px| px[3]).collect();
+        for corner in [0, 43, 44 * 43, 44 * 44 - 1] {
+            assert_eq!(alpha[corner], 0);
+        }
+        let clear = alpha.iter().filter(|&&a| a == 0).count();
+        assert!(clear * 2 > alpha.len(), "only {clear} clear pixels");
     }
 
     fn parse(url: &str) -> Option<Capture> {
