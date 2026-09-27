@@ -446,3 +446,27 @@ Search now finds words that only appear inside images. Those notes come after th
 Each note now shows the notes closest to it in meaning. NODI computes a sentence embedding for every note with Apple's NaturalLanguage framework, on the Mac, and compares notes only within the same language. The panel appears only when a note is genuinely close; private notes are never embedded.
 
 ![NODI after REL-002: related notes below the weekly sync](about/screenshots/rel-001-related-notes.png)
+
+## 055 — MAC-001 Quick capture
+
+**Completed:** September 27, 2026
+
+⌥⌘N works from any app, and NODI now has a menu bar item: both bring NODI forward with a new note, ready for typing.
+
+![NODI after MAC-001: a note started with the quick capture shortcut](about/screenshots/mac-001-quick-capture.png)
+
+## 056 — MAC-002 Spotlight
+
+**Completed:** September 27, 2026
+
+Public notes can appear in Spotlight, and choosing one opens it in NODI. It stays off until turned on in "Your data", private notes are never included, and turning it off removes every entry.
+
+![NODI after MAC-002: Spotlight on the Your data page](about/screenshots/mac-002-spotlight.png)
+
+## 057 — MAC-003 Share to NODI
+
+**Completed:** September 27, 2026
+
+"NODI" joins the macOS Share menu. Sharing a page or text from Safari and other apps creates a note with the text and a link to the source. The same `nodi://new` link works from Shortcuts. Quick Look (MAC-004) needed no new code: the Markdown mirror already produces files it previews.
+
+![NODI after MAC-003: a note created from the Share menu](about/screenshots/mac-003-share-extension.png)

@@ -14,6 +14,9 @@ import fnd004DarkScreenshot from "../../../docs/about/screenshots/fnd-004-dark-m
 import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
 import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
 import land001Screenshot from "../../../docs/about/screenshots/land-001-landing-page.png";
+import mac001Screenshot from "../../../docs/about/screenshots/mac-001-quick-capture.png";
+import mac002Screenshot from "../../../docs/about/screenshots/mac-002-spotlight.png";
+import mac003Screenshot from "../../../docs/about/screenshots/mac-003-share-extension.png";
 import mirror001Screenshot from "../../../docs/about/screenshots/mirror-001-markdown-mirror.png";
 import nb001Screenshot from "../../../docs/about/screenshots/nb-001-notebooks.png";
 import nb002Screenshot from "../../../docs/about/screenshots/nb-002-move-note.png";
@@ -498,6 +501,30 @@ const evolution = [
     description:
       "Each note shows the notes closest to it in meaning, from sentence embeddings computed on the Mac with Apple's NaturalLanguage framework. Private notes are never embedded.",
     screenshot: rel001Screenshot,
+  },
+  {
+    id: "MAC-001",
+    title: "Capture from anywhere",
+    date: "September 27, 2026",
+    description:
+      "⌥⌘N and a new menu bar item bring NODI forward with a new note, from any app.",
+    screenshot: mac001Screenshot,
+  },
+  {
+    id: "MAC-002",
+    title: "Notes in Spotlight",
+    date: "September 27, 2026",
+    description:
+      "Public notes can appear in Spotlight and open in NODI. It is off until turned on, and private notes are never included.",
+    screenshot: mac002Screenshot,
+  },
+  {
+    id: "MAC-003",
+    title: "Share to NODI",
+    date: "September 27, 2026",
+    description:
+      "NODI joins the macOS Share menu: pages and text shared from other apps become notes with a link to their source.",
+    screenshot: mac003Screenshot,
   },
 ];
 
