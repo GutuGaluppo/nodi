@@ -42,6 +42,9 @@ import ui005Screenshot from "../../../docs/about/screenshots/ui-005-reference-si
 import ui006Screenshot from "../../../docs/about/screenshots/ui-006-system-section.png";
 import ui007Screenshot from "../../../docs/about/screenshots/ui-007-settings-relocated.png";
 import ui008Screenshot from "../../../docs/about/screenshots/ui-008-compact-lists.png";
+import voiceAud001Screenshot from "../../../docs/about/screenshots/voice-aud-001-keep-recording.png";
+import voiceAud002Screenshot from "../../../docs/about/screenshots/voice-aud-002-timed-transcript.png";
+import voiceAud003Screenshot from "../../../docs/about/screenshots/voice-aud-003-playback.png";
 import voiceCmd001Screenshot from "../../../docs/about/screenshots/voice-cmd-001-organizing-commands.png";
 import voiceCmd002Screenshot from "../../../docs/about/screenshots/voice-cmd-002-command-preview.png";
 import voiceCmd003Screenshot from "../../../docs/about/screenshots/voice-cmd-003-spoken-reminders.png";
@@ -426,6 +429,30 @@ const evolution = [
     description:
       "Dictations can set reminders in Portuguese and English, and the preview shows the exact date and time before anything is set.",
     screenshot: voiceCmd003Screenshot,
+  },
+  {
+    id: "VOICE-AUD-001",
+    title: "Keep what was said",
+    date: "September 27, 2026",
+    description:
+      "Dictations can keep their audio as a local file in NODI's attachment storage, outside SQLite. Recordings not kept are deleted, and private notes never keep audio.",
+    screenshot: voiceAud001Screenshot,
+  },
+  {
+    id: "VOICE-AUD-002",
+    title: "Every sentence has a time",
+    date: "September 27, 2026",
+    description:
+      "A kept recording becomes a block with Whisper's timed sentences, saved, searched, and encrypted as part of the note.",
+    screenshot: voiceAud002Screenshot,
+  },
+  {
+    id: "VOICE-AUD-003",
+    title: "Play from any sentence",
+    date: "September 27, 2026",
+    description:
+      "Clicking a sentence plays the recording from that moment and highlights it. Recordings can now run for an hour, transcribed in parts with progress shown.",
+    screenshot: voiceAud003Screenshot,
   },
 ];
 

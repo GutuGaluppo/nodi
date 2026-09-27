@@ -382,3 +382,27 @@ Any note can carry a reminder. NODI shows it as a local macOS notification when 
 Dictations can set reminders: "lembrete amanhã às 10", "remind me on Friday at 3pm", "lembrete em 2 horas". The preview shows the exact date and time before anything is set.
 
 ![NODI after VOICE-CMD-003: a spoken reminder in the voice preview](about/screenshots/voice-cmd-003-spoken-reminders.png)
+
+## 047 — VOICE-AUD-001 Keep the recording
+
+**Completed:** September 27, 2026
+
+A dictation can now keep its audio. NODI stores the recording as a local WAV file in its attachment storage, content-addressed and outside SQLite, and records its metadata in the database (ATT-001 and ATT-002). Recordings the user does not keep are deleted; private notes never keep audio.
+
+![NODI after VOICE-AUD-001: the voice panel offering to keep the recording](about/screenshots/voice-aud-001-keep-recording.png)
+
+## 048 — VOICE-AUD-002 Timed transcript
+
+**Completed:** September 27, 2026
+
+A kept recording becomes a block in the note with Whisper's timed sentences. The transcript is part of the note itself, so it is searchable and, for private notes, encrypted.
+
+![NODI after VOICE-AUD-002: a recording block with its timed transcript](about/screenshots/voice-aud-002-timed-transcript.png)
+
+## 049 — VOICE-AUD-003 Playback and one-hour recordings
+
+**Completed:** September 27, 2026
+
+Clicking a sentence plays the recording from the moment it was spoken, and the sentence being heard is highlighted. Recordings can now run for an hour: audio is resampled while recording and transcribed in five-minute parts, with progress shown.
+
+![NODI after VOICE-AUD-003: playing a recording from a transcript sentence](about/screenshots/voice-aud-003-playback.png)
