@@ -366,3 +366,19 @@ A dictation can now organize its note. "Title: …", "in notebook …", "no cade
 Before inserting, the voice panel lists every change a dictation will make, marks notebooks and tags that do not exist yet as new, and lets the user remove any of them. Nothing is created until the user inserts.
 
 ![NODI after VOICE-CMD-002: the voice panel previewing a title, notebook, and tags](about/screenshots/voice-cmd-002-command-preview.png)
+
+## 045 — REM-001 Reminders
+
+**Completed:** September 27, 2026
+
+Any note can carry a reminder. NODI shows it as a local macOS notification when it comes due, or at the next launch if NODI was closed; private notes appear as "Private note". Nothing is sent anywhere.
+
+![NODI after REM-001: a reminder on the launch plan note](about/screenshots/rem-001-reminders.png)
+
+## 046 — VOICE-CMD-003 Spoken reminders
+
+**Completed:** September 27, 2026
+
+Dictations can set reminders: "lembrete amanhã às 10", "remind me on Friday at 3pm", "lembrete em 2 horas". The preview shows the exact date and time before anything is set.
+
+![NODI after VOICE-CMD-003: a spoken reminder in the voice preview](about/screenshots/voice-cmd-003-spoken-reminders.png)

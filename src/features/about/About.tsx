@@ -23,6 +23,7 @@ import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-pr
 import privacy002Screenshot from "../../../docs/about/screenshots/privacy-002-encrypted-private-notes.png";
 import privacy003Screenshot from "../../../docs/about/screenshots/privacy-003-network-lockdown.png";
 import privacy004Screenshot from "../../../docs/about/screenshots/privacy-004-your-data.png";
+import rem001Screenshot from "../../../docs/about/screenshots/rem-001-reminders.png";
 import search001Screenshot from "../../../docs/about/screenshots/search-001-fts-index.png";
 import search002Screenshot from "../../../docs/about/screenshots/search-002-basic-search.png";
 import search003Screenshot from "../../../docs/about/screenshots/search-003-filters.png";
@@ -43,6 +44,7 @@ import ui007Screenshot from "../../../docs/about/screenshots/ui-007-settings-rel
 import ui008Screenshot from "../../../docs/about/screenshots/ui-008-compact-lists.png";
 import voiceCmd001Screenshot from "../../../docs/about/screenshots/voice-cmd-001-organizing-commands.png";
 import voiceCmd002Screenshot from "../../../docs/about/screenshots/voice-cmd-002-command-preview.png";
+import voiceCmd003Screenshot from "../../../docs/about/screenshots/voice-cmd-003-spoken-reminders.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -408,6 +410,22 @@ const evolution = [
     description:
       "The voice panel previews every change a dictation will make, marks new notebooks and tags, and lets the user remove any of them before inserting.",
     screenshot: voiceCmd002Screenshot,
+  },
+  {
+    id: "REM-001",
+    title: "Notes that come back to you",
+    date: "September 27, 2026",
+    description:
+      'Any note can carry a reminder, delivered as a local macOS notification, or at the next launch if NODI was closed. Private notes appear as "Private note".',
+    screenshot: rem001Screenshot,
+  },
+  {
+    id: "VOICE-CMD-003",
+    title: "Say when",
+    date: "September 27, 2026",
+    description:
+      "Dictations can set reminders in Portuguese and English, and the preview shows the exact date and time before anything is set.",
+    screenshot: voiceCmd003Screenshot,
   },
 ];
 
