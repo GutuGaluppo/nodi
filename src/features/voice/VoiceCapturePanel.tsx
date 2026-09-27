@@ -1,8 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
 import Icon from "../../components/ui/Icon";
+import type { VoiceAction } from "./useVoiceActions";
 import type { VoiceCapturePhase, VoiceCaptureState } from "./useVoiceCapture";
-import { parseVoiceCommand } from "./voiceCommandParser";
+import {
+  parseVoiceCommand,
+  type VoiceInsertionPlan,
+} from "./voiceCommandParser";
 
 interface VoiceCapturePanelProps {
   voiceState: VoiceCaptureState;
@@ -12,6 +16,26 @@ interface VoiceCapturePanelProps {
   onCancel: () => void;
   onInsert: () => void;
   onDismiss: () => void;
+  /** The parsed dictation; defaults to the plain list parser. */
+  plan?: VoiceInsertionPlan;
+  /** Organizing changes the dictation asks for, previewed before inserting. */
+  actions?: VoiceAction[];
+  onRemoveAction?: (key: string) => void;
+  isApplying?: boolean;
+}
+
+function describeAction(action: VoiceAction): {
+  label: string;
+  isNew: boolean;
+} {
+  if (action.kind === "title") {
+    return { label: `Título: ${action.value}`, isNew: false };
+  }
+  const isNew = action.target.id === undefined;
+  return {
+    label: `${action.kind === "notebook" ? "Caderno" : "Tag"}: ${action.target.name}`,
+    isNew,
+  };
 }
 
 const DEFAULT_MAX_DURATION_SECS = 600;
@@ -68,6 +92,10 @@ function VoiceCapturePanel({
   onCancel,
   onInsert,
   onDismiss,
+  plan: parsedPlan,
+  actions = [],
+  onRemoveAction,
+  isApplying = false,
 }: VoiceCapturePanelProps) {
   const [maxDurationSecs, setMaxDurationSecs] = useState(
     DEFAULT_MAX_DURATION_SECS,
@@ -155,9 +183,36 @@ function VoiceCapturePanel({
   }
 
   if (voiceState.phase === "completed" && voiceState.result !== null) {
-    const plan = parseVoiceCommand(voiceState.result.text);
+    const plan = parsedPlan ?? parseVoiceCommand(voiceState.result.text);
     return (
       <div className="voice-capture-panel voice-capture-result">
+        {actions.length > 0 ? (
+          <ul className="voice-capture-actions-preview" aria-label="Ao inserir">
+            {actions.map((action) => {
+              const { label, isNew } = describeAction(action);
+              return (
+                <li key={action.key} className="voice-action-chip">
+                  <span>{label}</span>
+                  {isNew ? (
+                    <span className="voice-action-new">
+                      {action.kind === "notebook" ? "novo" : "nova"}
+                    </span>
+                  ) : null}
+                  {onRemoveAction ? (
+                    <button
+                      type="button"
+                      aria-label={`Remover ${label}`}
+                      title={`Remover ${label}`}
+                      onClick={() => onRemoveAction(action.key)}
+                    >
+                      <Icon name="x" />
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
         {plan.kind === "list" ? (
           <>
             <p className="voice-capture-result-hint">
@@ -171,7 +226,7 @@ function VoiceCapturePanel({
               ))}
             </ul>
           </>
-        ) : (
+        ) : plan.text.trim() === "" ? null : (
           <p className="voice-capture-result-text">{plan.text}</p>
         )}
         {!canInsertHere ? (
@@ -188,6 +243,7 @@ function VoiceCapturePanel({
               aria-label="Inserir"
               title="Inserir"
               data-tooltip="Inserir"
+              disabled={isApplying}
               onClick={onInsert}
             >
               <Icon name="check" />

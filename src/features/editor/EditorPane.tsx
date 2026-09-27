@@ -1,5 +1,5 @@
 import type { Editor, JSONContent } from "@tiptap/react";
-import { type Ref, useState } from "react";
+import { type Ref, useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Icon from "../../components/ui/Icon";
 import NoteNotebookSelect from "../notebooks/NoteNotebookSelect";
@@ -11,14 +11,13 @@ import { useUpdateNote } from "../notes/useUpdateNote";
 import PrivateNoteGate from "../privacy/PrivateNoteGate";
 import ShortcutToggle from "../shortcuts/ShortcutToggle";
 import NoteTagPicker from "../tags/NoteTagPicker";
+import { useVoiceActions } from "../voice/useVoiceActions";
 import { useVoiceCapture } from "../voice/useVoiceCapture";
 import { useVoiceInsertionTarget } from "../voice/useVoiceInsertionTarget";
 import VoiceCaptureButton from "../voice/VoiceCaptureButton";
 import VoiceCapturePanel from "../voice/VoiceCapturePanel";
-import {
-  parseVoiceCommand,
-  type VoiceInsertionPlan,
-} from "../voice/voiceCommandParser";
+import type { VoiceInsertionPlan } from "../voice/voiceCommandParser";
+import { parseVoiceDictation } from "../voice/voiceDirectives";
 import AutosavingNoteEditor from "./AutosavingNoteEditor";
 import NoteTitle from "./NoteTitle";
 
@@ -94,6 +93,28 @@ function EditorPane({
     voice.state.result !== null &&
     selectedNote != null &&
     voice.state.result.noteId === selectedNote.id;
+  const dictation = useMemo(
+    () =>
+      voice.state.result === null
+        ? null
+        : parseVoiceDictation(voice.state.result.text),
+    [voice.state.result],
+  );
+  const voiceActions = useVoiceActions(dictation?.organize ?? null);
+  const [removedActionKeys, setRemovedActionKeys] = useState<string[]>([]);
+  const [applyingVoice, setApplyingVoice] = useState(false);
+  const [voiceApplyError, setVoiceApplyError] = useState(false);
+  const pendingVoiceActions = voiceActions.actions.filter(
+    (action) => !removedActionKeys.includes(action.key),
+  );
+
+  // A new dictation starts with every spoken action selected again.
+  useEffect(() => {
+    if (voice.state.result !== null) {
+      setRemovedActionKeys([]);
+      setVoiceApplyError(false);
+    }
+  }, [voice.state.result]);
 
   function handleStartVoiceCapture(): void {
     if (selectedNote == null) {
@@ -103,15 +124,28 @@ function EditorPane({
     void voice.start(selectedNote.id, voiceLanguage);
   }
 
-  function handleInsertVoiceResult(): void {
-    if (editor === null || voice.state.result === null) {
+  async function handleInsertVoiceResult(): Promise<void> {
+    if (editor === null || dictation === null || selectedNote == null) {
       return;
     }
-    const pos = insertionTarget.resolve();
-    const plan = parseVoiceCommand(voice.state.result.text);
-    const content = buildVoiceInsertionContent(plan);
-    editor.chain().focus().insertContentAt(pos, content).run();
-    voice.dismiss();
+    const { plan } = dictation;
+    if (plan.kind === "list" || plan.text.trim() !== "") {
+      const pos = insertionTarget.resolve();
+      editor
+        .chain()
+        .focus()
+        .insertContentAt(pos, buildVoiceInsertionContent(plan))
+        .run();
+    }
+    setApplyingVoice(true);
+    try {
+      await voiceActions.apply(selectedNote.id, pendingVoiceActions);
+    } catch {
+      setVoiceApplyError(true);
+    } finally {
+      setApplyingVoice(false);
+      voice.dismiss();
+    }
   }
 
   return (
@@ -280,6 +314,12 @@ function EditorPane({
               />
             </div>
           ) : null}
+          {voiceApplyError ? (
+            <p className="inline-error" role="alert">
+              O texto ditado foi inserido, mas o título, o caderno ou as tags
+              não puderam ser aplicados. Ajuste-os manualmente.
+            </p>
+          ) : null}
           {trashNote.isError || restoreNote.isError ? (
             <p className="inline-error" role="alert">
               This note could not be {view === "notes" ? "moved" : "restored"}.
@@ -292,8 +332,14 @@ function EditorPane({
               canInsertHere={canInsertVoiceResultHere}
               onStop={voice.stop}
               onCancel={voice.cancel}
-              onInsert={handleInsertVoiceResult}
+              onInsert={() => void handleInsertVoiceResult()}
               onDismiss={voice.dismiss}
+              plan={dictation?.plan}
+              actions={pendingVoiceActions}
+              onRemoveAction={(key) =>
+                setRemovedActionKeys((keys) => [...keys, key])
+              }
+              isApplying={applyingVoice || !voiceActions.isReady}
             />
           ) : null}
           <AutosavingNoteEditor
