@@ -105,6 +105,45 @@ describe("parseVoiceDictation", () => {
   });
 });
 
+describe("spoken reminders in a dictation", () => {
+  // Thursday, October 1, 2026, 14:20 local time.
+  const now = new Date(2026, 9, 1, 14, 20, 0);
+
+  it("takes a leading reminder and keeps the rest as the note", () => {
+    const dictation = parseVoiceDictation(
+      "Remind me tomorrow at 9 to call the printer",
+      now,
+    );
+    expect(dictation.organize.reminder).toEqual(new Date(2026, 9, 2, 9, 0));
+    expect(dictation.plan).toEqual({ kind: "text", text: "call the printer" });
+  });
+
+  it("reads a reminder before the colon alongside a notebook", () => {
+    const dictation = parseVoiceDictation(
+      "Crie uma lista de tarefas no caderno Casa, lembrete sexta às 15h: pagar a conta de luz",
+      now,
+    );
+    expect(dictation.organize).toEqual({
+      notebook: "Casa",
+      tags: [],
+      reminder: new Date(2026, 9, 2, 15, 0),
+    });
+    expect(dictation.plan).toEqual({
+      kind: "list",
+      listType: "task",
+      items: ["pagar a conta de luz"],
+    });
+  });
+
+  it("does not read a reminder in the middle of plain dictation", () => {
+    const text = "Ela disse remind me tomorrow at 9 e foi embora.";
+    expect(parseVoiceDictation(text, now)).toEqual({
+      plan: { kind: "text", text },
+      organize: { tags: [] },
+    });
+  });
+});
+
 describe("resolveName", () => {
   const notebooks = [
     { id: "nb-1", name: "Casa" },

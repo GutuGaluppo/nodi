@@ -1,4 +1,8 @@
 import {
+  findLeadingSpokenReminder,
+  findSpokenReminder,
+} from "./spokenReminder";
+import {
   parseVoiceCommand,
   type VoiceInsertionPlan,
 } from "./voiceCommandParser";
@@ -9,17 +13,19 @@ import {
  *   "Título: Reunião de sexta. Decidimos lançar em outubro."
  *   "Crie uma lista de compras no caderno Casa com a tag mercado: leite e pão"
  *   "In notebook Work with tags launch and urgent: call the printer"
+ *   "Remind me tomorrow at 9 to call the printer"
  *
- * A title is recognized at the very start. Notebook and tag directives are
- * recognized in the part of the dictation before the first colon, so ordinary
- * sentences that happen to mention a notebook are left alone. Like the list
- * parser, this is a fixed grammar, not an LLM.
+ * A title is recognized at the very start. Notebook, tag, and reminder
+ * directives are recognized in the part of the dictation before the first
+ * colon, so ordinary sentences that happen to mention a notebook are left
+ * alone; without a colon, a reminder phrase is recognized only at the start.
+ * Like the list parser, this is a fixed grammar, not an LLM.
  */
 export interface VoiceOrganization {
   title?: string;
   notebook?: string;
   tags: string[];
-  reminder?: string;
+  reminder?: Date;
 }
 
 export interface VoiceDictation {
@@ -57,15 +63,27 @@ function removeSpan(text: string, match: RegExpExecArray): string {
   return `${text.slice(0, match.index)} ${text.slice(match.index + match[0].length)}`;
 }
 
-/** Takes notebook and tag directives out of a header; returns what remains. */
-function extractDirectives(header: string): {
+/** Takes reminder, notebook, and tag directives out of a header; returns what remains. */
+function extractDirectives(
+  header: string,
+  now: Date,
+): {
   rest: string;
   notebook?: string;
   tags: string[];
+  reminder?: Date;
 } {
   let rest = header;
   let notebook: string | undefined;
   let tags: string[] = [];
+  let reminder: Date | undefined;
+
+  // The reminder goes first, so its words never end up inside a notebook name.
+  const spoken = findSpokenReminder(rest, now);
+  if (spoken) {
+    reminder = spoken.at;
+    rest = `${rest.slice(0, spoken.index)} ${rest.slice(spoken.index + spoken.length)}`;
+  }
 
   const notebookMatch = NOTEBOOK_PATTERN.exec(rest);
   if (notebookMatch) {
@@ -85,10 +103,16 @@ function extractDirectives(header: string): {
     .replace(/\s+/g, " ")
     .replace(/[\s,]+(?:e|and)?\s*$/iu, "")
     .trim();
-  return { rest, notebook, tags };
+  return { rest, notebook, tags, reminder };
 }
 
-export function parseVoiceDictation(rawText: string): VoiceDictation {
+/** Connectors left after a leading reminder: "remind me tomorrow at 9 to call…". */
+const REMINDER_CONNECTOR = /^[\s,.:;-]*(?:(?:de|para|pra|que|to|that)\s+)?/iu;
+
+export function parseVoiceDictation(
+  rawText: string,
+  now: Date = new Date(),
+): VoiceDictation {
   const organize: VoiceOrganization = { tags: [] };
   let text = rawText.trim();
 
@@ -102,11 +126,18 @@ export function parseVoiceDictation(rawText: string): VoiceDictation {
   if (colon !== -1) {
     const header = text.slice(0, colon);
     const body = text.slice(colon + 1).trim();
-    const { rest, notebook, tags } = extractDirectives(header);
-    if (notebook !== undefined || tags.length > 0) {
+    const { rest, notebook, tags, reminder } = extractDirectives(header, now);
+    if (notebook !== undefined || tags.length > 0 || reminder !== undefined) {
       organize.notebook = notebook;
       organize.tags = tags;
+      organize.reminder = reminder;
       text = rest === "" ? body : `${rest}: ${body}`;
+    }
+  } else {
+    const spoken = findLeadingSpokenReminder(text, now);
+    if (spoken) {
+      organize.reminder = spoken.at;
+      text = text.slice(spoken.length).replace(REMINDER_CONNECTOR, "").trim();
     }
   }
 

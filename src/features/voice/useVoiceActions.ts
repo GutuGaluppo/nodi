@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useCreateNotebook, useNotebooks } from "../notebooks/notebookQueries";
 import { useUpdateNote } from "../notes/useUpdateNote";
+import { useSetReminder } from "../reminders/reminderQueries";
 import { useAddTagToNote } from "../tags/noteTagQueries";
 import { useCreateTag, useTags } from "../tags/tagQueries";
 import {
@@ -13,7 +14,8 @@ import {
 export type VoiceAction =
   | { key: string; kind: "title"; value: string }
   | { key: string; kind: "notebook"; target: ResolvedTarget }
-  | { key: string; kind: "tag"; target: ResolvedTarget };
+  | { key: string; kind: "tag"; target: ResolvedTarget }
+  | { key: string; kind: "reminder"; at: Date };
 
 /**
  * Turns spoken directives into concrete actions against the user's existing
@@ -27,6 +29,7 @@ export function useVoiceActions(organize: VoiceOrganization | null) {
   const createNotebook = useCreateNotebook();
   const createTag = useCreateTag();
   const addTagToNote = useAddTagToNote();
+  const setReminder = useSetReminder();
 
   const actions = useMemo<VoiceAction[]>(() => {
     if (organize === null) return [];
@@ -52,6 +55,9 @@ export function useVoiceActions(organize: VoiceOrganization | null) {
       seen.add(key);
       list.push({ key, kind: "tag", target });
     }
+    if (organize.reminder) {
+      list.push({ key: "reminder", kind: "reminder", at: organize.reminder });
+    }
     return list;
   }, [organize, notebooks.data, tags.data]);
 
@@ -68,6 +74,8 @@ export function useVoiceActions(organize: VoiceOrganization | null) {
             action.target.id ??
             (await createNotebook.mutateAsync(action.target.name)).id;
           await updateNote.mutateAsync({ id: noteId, patch: { notebookId } });
+        } else if (action.kind === "reminder") {
+          await setReminder.mutateAsync({ noteId, remindAt: action.at });
         } else {
           const tagId =
             action.target.id ??
@@ -76,7 +84,7 @@ export function useVoiceActions(organize: VoiceOrganization | null) {
         }
       }
     },
-    [updateNote, createNotebook, createTag, addTagToNote],
+    [updateNote, createNotebook, createTag, addTagToNote, setReminder],
   );
 
   return { actions, apply, isReady: !notebooks.isPending && !tags.isPending };

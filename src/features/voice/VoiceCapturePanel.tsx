@@ -24,12 +24,26 @@ interface VoiceCapturePanelProps {
   isApplying?: boolean;
 }
 
+const reminderFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
 function describeAction(action: VoiceAction): {
   label: string;
   isNew: boolean;
 } {
   if (action.kind === "title") {
     return { label: `Título: ${action.value}`, isNew: false };
+  }
+  if (action.kind === "reminder") {
+    return {
+      label: `Lembrete: ${reminderFormatter.format(action.at)}`,
+      isNew: false,
+    };
   }
   const isNew = action.target.id === undefined;
   return {

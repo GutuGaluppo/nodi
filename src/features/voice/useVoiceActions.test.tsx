@@ -9,6 +9,7 @@ import {
 } from "../../db/repositories/notebookRepository";
 import { updateNote } from "../../db/repositories/noteRepository";
 import { addTagToNote } from "../../db/repositories/noteTagRepository";
+import { setReminder } from "../../db/repositories/reminderRepository";
 import { createTag, listTags } from "../../db/repositories/tagRepository";
 import { useVoiceActions } from "./useVoiceActions";
 
@@ -26,6 +27,11 @@ vi.mock("../../db/repositories/tagRepository", () => ({
   createTag: vi.fn(),
   deleteTag: vi.fn(),
   renameTag: vi.fn(),
+}));
+vi.mock("../../db/repositories/reminderRepository", () => ({
+  setReminder: vi.fn(),
+  getPendingReminder: vi.fn(),
+  clearReminder: vi.fn(),
 }));
 vi.mock("../../db/repositories/noteTagRepository", () => ({
   addTagToNote: vi.fn(),
@@ -161,5 +167,28 @@ describe("useVoiceActions", () => {
 
     expect(createTag).not.toHaveBeenCalled();
     expect(addTagToNote).not.toHaveBeenCalled();
+  });
+
+  it("sets a spoken reminder on the note", async () => {
+    const at = new Date(2026, 9, 2, 9, 0);
+    vi.mocked(setReminder).mockResolvedValue({
+      id: "r1",
+      noteId: "note-1",
+      remindAt: at.toISOString(),
+      createdAt: stamp,
+      deliveredAt: null,
+    });
+    const { result } = renderHook(
+      () => useVoiceActions({ tags: [], reminder: at }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+    expect(result.current.actions).toEqual([
+      { key: "reminder", kind: "reminder", at },
+    ]);
+
+    await result.current.apply("note-1", result.current.actions);
+
+    expect(setReminder).toHaveBeenCalledWith("note-1", at);
   });
 });
