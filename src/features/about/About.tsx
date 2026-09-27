@@ -55,6 +55,7 @@ import ui008Screenshot from "../../../docs/about/screenshots/ui-008-compact-list
 import voiceAud001Screenshot from "../../../docs/about/screenshots/voice-aud-001-keep-recording.png";
 import voiceAud002Screenshot from "../../../docs/about/screenshots/voice-aud-002-timed-transcript.png";
 import voiceAud003Screenshot from "../../../docs/about/screenshots/voice-aud-003-playback.png";
+import voiceAud004Screenshot from "../../../docs/about/screenshots/voice-aud-004-keep-audio-default.png";
 import voiceCmd001Screenshot from "../../../docs/about/screenshots/voice-cmd-001-organizing-commands.png";
 import voiceCmd002Screenshot from "../../../docs/about/screenshots/voice-cmd-002-command-preview.png";
 import voiceCmd003Screenshot from "../../../docs/about/screenshots/voice-cmd-003-spoken-reminders.png";
@@ -543,6 +544,14 @@ const evolution = [
     description:
       "The landing page's animated tour now shows images in notes, related notes, kept voice recordings, search inside images, and dark mode.",
     screenshot: land003Screenshot,
+  },
+  {
+    id: "VOICE-AUD-004",
+    title: "Recordings kept by default",
+    date: "September 27, 2026",
+    description:
+      "Dictations keep their recording by default, in a highlighted row that explains the playable transcript. Turning it off is remembered, and private notes never keep audio.",
+    screenshot: voiceAud004Screenshot,
   },
 ];
 

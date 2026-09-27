@@ -486,3 +486,11 @@ The landing page now presents what NODI has become, in all four languages: encry
 The landing page's animated tour was recorded again with the new features: a receipt image in a note, related notes, a dictated note with a spoken title whose recording plays from any sentence, a search that finds a word inside the image, and dark mode.
 
 ![NODI during LAND-003, in dark mode with a kept voice recording](about/screenshots/land-003-tour.png)
+
+## 060 — VOICE-AUD-004 Recordings kept by default
+
+**Completed:** September 27, 2026
+
+Dictations now keep their recording by default, so the playable transcript is there without looking for an option. The choice sits in a highlighted row of the voice panel that explains what it gives the note, and turning it off is remembered. Private notes still never keep audio.
+
+![NODI after VOICE-AUD-004: the highlighted option to keep the recording](about/screenshots/voice-aud-004-keep-audio-default.png)
