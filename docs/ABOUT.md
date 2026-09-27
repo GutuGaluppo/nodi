@@ -470,3 +470,11 @@ Public notes can appear in Spotlight, and choosing one opens it in NODI. It stay
 "NODI" joins the macOS Share menu. Sharing a page or text from Safari and other apps creates a note with the text and a link to the source. The same `nodi://new` link works from Shortcuts. Quick Look (MAC-004) needed no new code: the Markdown mirror already produces files it previews.
 
 ![NODI after MAC-003: a note created from the Share menu](about/screenshots/mac-003-share-extension.png)
+
+## 058 — LAND-002 Landing page update
+
+**Completed:** September 27, 2026
+
+The landing page now presents what NODI has become, in all four languages: encrypted private notes, voice notes with playable transcripts, searchable images, reminders, related notes, the Markdown mirror, and capture from anywhere on the Mac. The privacy section explains that everything that understands your notes runs on the Mac, and the page no longer scrolls sideways on phones.
+
+![NODI during LAND-002, in dark mode with an image in a note](about/screenshots/land-002-landing-update.png)

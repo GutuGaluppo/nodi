@@ -14,6 +14,7 @@ import fnd004DarkScreenshot from "../../../docs/about/screenshots/fnd-004-dark-m
 import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
 import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
 import land001Screenshot from "../../../docs/about/screenshots/land-001-landing-page.png";
+import land002Screenshot from "../../../docs/about/screenshots/land-002-landing-update.png";
 import mac001Screenshot from "../../../docs/about/screenshots/mac-001-quick-capture.png";
 import mac002Screenshot from "../../../docs/about/screenshots/mac-002-spotlight.png";
 import mac003Screenshot from "../../../docs/about/screenshots/mac-003-share-extension.png";
@@ -525,6 +526,14 @@ const evolution = [
     description:
       "NODI joins the macOS Share menu: pages and text shared from other apps become notes with a link to their source.",
     screenshot: mac003Screenshot,
+  },
+  {
+    id: "LAND-002",
+    title: "The landing page catches up",
+    date: "September 27, 2026",
+    description:
+      "The four-language landing page now presents encrypted private notes, voice notes, searchable images, reminders, related notes, the Markdown mirror, and capture from anywhere.",
+    screenshot: land002Screenshot,
   },
 ];
 
