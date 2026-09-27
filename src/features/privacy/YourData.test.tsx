@@ -17,6 +17,11 @@ vi.mock("../../db/repositories/storageRepository", () => ({
 vi.mock("./privateNotePassword", () => ({
   hasPrivateNotesPassword: vi.fn(async () => false),
   hasRecoveryKey: vi.fn(async () => false),
+  isTouchIdEnabled: vi.fn(async () => false),
+  getTouchIdSupport: vi.fn(async () => ({
+    available: false,
+    biometrics: false,
+  })),
   prepareRecoveryKey: vi.fn(),
 }));
 

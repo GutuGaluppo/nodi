@@ -1096,3 +1096,27 @@
   background: var(--color-surface);
   font: inherit;
 }
+
+.gate-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.gate-buttons .primary-button {
+  margin-top: 0;
+}
+
+.private-note-gate .gate-touch-id {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--space-2);
+}
+
+.gate-touch-id .icon {
+  width: 16px;
+  height: 16px;
+}

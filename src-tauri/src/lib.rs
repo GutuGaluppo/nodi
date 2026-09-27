@@ -5,6 +5,7 @@ mod mirror;
 mod ocr;
 mod quick_capture;
 mod spotlight;
+mod touch_id;
 mod voice;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -50,6 +51,9 @@ pub fn run() {
             spotlight::spotlight_replace_notes,
             spotlight::spotlight_clear,
             spotlight::take_pending_open,
+            touch_id::touch_id_support,
+            touch_id::touch_id_seal,
+            touch_id::touch_id_unseal,
             mirror::get_mirror_folder,
             mirror::choose_mirror_folder,
             mirror::clear_mirror_folder,

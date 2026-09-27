@@ -96,6 +96,9 @@ Command Line Tools também serve).
   Atalhos.
 - Notas no Spotlight ficam desligadas até você ativá-las em **Configurações →
   Your data**.
+- O Touch ID das notas privadas (`src-tauri/native/Keyguard.swift`) também é
+  compilado com o `swiftc`, pelo `build.rs`, em qualquer build ou `cargo test`.
+  Ele fica desligado até você ativá-lo em **Configurações → Your data**.
 
 ## Fazer a primeira instalação
 

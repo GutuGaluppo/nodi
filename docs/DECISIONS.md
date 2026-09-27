@@ -357,5 +357,42 @@ only notes of the same language.
 - Settings writes are not transactional: the new password's wrapped key is
   written before its verifier, so an interruption leaves the recovery key
   working and the reset can simply run again.
-- Unlocking with Touch ID through the Keychain (PRIV-REC-004) is optional and
-  not built yet.
+- Touch ID (PRIV-REC-004) is described in D-011.
+
+## D-011 — Touch ID seals the note key to the Secure Enclave with CryptoKit
+
+**Date:** September 27, 2026
+**Task:** PRIV-REC-004 Touch ID
+**Status:** Accepted
+
+### Decision
+
+- An opt-in copy of the note key is sealed to a CryptoKit
+  `SecureEnclave.P256.KeyAgreement` key created with `.userPresence`: Touch ID,
+  or the Mac's password when Touch ID is not enrolled. Sealing is ECIES-style
+  (an ephemeral P-256 key, HKDF-SHA-256, AES-GCM) against the enclave key's
+  public half, so turning it on needs only the private-notes password.
+- The sealed text, including the enclave key's data representation, is kept
+  in `settings.private_notes_touch_id`. It is useless on any other Mac.
+- It unlocks private notes and, like the recovery key, can reset a forgotten
+  password. Turning it off, or starting private notes over, deletes it.
+- The Swift code (`src-tauri/native/Keyguard.swift`) is compiled by `build.rs`
+  into a static library with a small C interface. The Swift runtime ships with
+  macOS.
+
+### Rationale
+
+- A Keychain item protected by Touch ID needs the data-protection keychain,
+  which requires a team-signed app with a keychain access group. NODI's local
+  builds are signed ad hoc. CryptoKit's Secure Enclave keys are not Keychain
+  items and work with ad-hoc signing.
+- No new crate: Swift is already part of the build for the Share extension.
+
+### Consequences
+
+- Anyone who can pass Touch ID or knows this Mac's login password can open
+  private notes; the Your data row says so and it is off by default.
+- Building NODI on macOS now needs `swiftc` (Xcode or the Command Line Tools),
+  already a requirement for the Share extension.
+- The prompt itself cannot be automated: sealing, bad input and support
+  detection are tested natively, and the prompt was checked by hand.

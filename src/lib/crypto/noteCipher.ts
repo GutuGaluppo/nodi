@@ -131,6 +131,25 @@ function unwrapWith(
   );
 }
 
+/** The raw bytes of an extractable note key, for sealing it elsewhere. */
+export async function exportNoteKey(key: CryptoKey): Promise<Uint8Array> {
+  return new Uint8Array(await crypto.subtle.exportKey("raw", key));
+}
+
+/** Imports raw note key bytes, such as those opened by Touch ID. */
+export function importNoteKey(
+  raw: Uint8Array,
+  extractable = false,
+): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    "raw",
+    asBuffer(raw),
+    { name: "AES-GCM", length: 256 },
+    extractable,
+    ["encrypt", "decrypt"],
+  );
+}
+
 /** Wraps an extractable note key with a password, for storage. */
 export async function wrapNoteKey(
   key: CryptoKey,

@@ -5,16 +5,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { countEncryptedPrivateNotes } from "../../db/repositories/noteRepository";
 import PrivateNoteGate from "./PrivateNoteGate";
 import {
+  getTouchIdSupport,
   hasPrivateNotesPassword,
   hasRecoveryKey,
+  isTouchIdEnabled,
   prepareRecoveryKey,
   recoverPrivateNotes,
+  resetPasswordWithTouchId,
   setPrivateNotesPassword,
   startPrivateNotesOver,
   unlockPrivateNotes,
+  unlockWithTouchId,
 } from "./privateNotePassword";
 
 vi.mock("./privateNotePassword", () => ({
+  getTouchIdSupport: vi.fn(),
+  isTouchIdEnabled: vi.fn(),
+  resetPasswordWithTouchId: vi.fn(),
+  unlockWithTouchId: vi.fn(),
   hasPrivateNotesPassword: vi.fn(),
   hasRecoveryKey: vi.fn(),
   prepareRecoveryKey: vi.fn(),
@@ -47,6 +55,12 @@ function renderGate(
 describe("PrivateNoteGate", () => {
   beforeEach(() => {
     vi.mocked(hasPrivateNotesPassword).mockReset().mockResolvedValue(true);
+    vi.mocked(isTouchIdEnabled).mockReset().mockResolvedValue(false);
+    vi.mocked(getTouchIdSupport)
+      .mockReset()
+      .mockResolvedValue({ available: true, biometrics: true });
+    vi.mocked(unlockWithTouchId).mockReset();
+    vi.mocked(resetPasswordWithTouchId).mockReset();
     vi.mocked(hasRecoveryKey).mockReset().mockResolvedValue(true);
     vi.mocked(setPrivateNotesPassword).mockReset().mockResolvedValue();
     vi.mocked(unlockPrivateNotes).mockReset();
@@ -238,5 +252,92 @@ describe("PrivateNoteGate", () => {
       await screen.findByRole("heading", { name: "Set a password" }),
     ).toBeInTheDocument();
     expect(onStartedOver).toHaveBeenCalledOnce();
+  });
+
+  it("offers Touch ID only once it is turned on", async () => {
+    renderGate();
+    expect(await screen.findByLabelText("Password")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Unlock with Touch ID/ }),
+    ).toBeNull();
+  });
+
+  it("unlocks with Touch ID, and stays locked when the prompt is cancelled", async () => {
+    vi.mocked(isTouchIdEnabled).mockResolvedValue(true);
+    vi.mocked(unlockWithTouchId)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    const user = userEvent.setup();
+    const { onUnlocked } = renderGate();
+
+    const touch = await screen.findByRole("button", {
+      name: "Unlock with Touch ID",
+    });
+    await user.click(touch);
+    expect(onUnlocked).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).toBeNull();
+
+    await user.click(touch);
+    expect(onUnlocked).toHaveBeenCalledOnce();
+  });
+
+  it("names the Mac password when Touch ID is not enrolled", async () => {
+    vi.mocked(isTouchIdEnabled).mockResolvedValue(true);
+    vi.mocked(getTouchIdSupport).mockResolvedValue({
+      available: true,
+      biometrics: false,
+    });
+    renderGate();
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Unlock with your Mac password",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("explains a Touch ID failure and keeps the password route", async () => {
+    vi.mocked(isTouchIdEnabled).mockResolvedValue(true);
+    vi.mocked(unlockWithTouchId).mockRejectedValue(new Error("other Mac"));
+    const user = userEvent.setup();
+    renderGate();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Unlock with Touch ID" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Touch ID could not open private notes. Use your password.",
+    );
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+  });
+
+  it("resets a forgotten password with Touch ID when there is no recovery key", async () => {
+    vi.mocked(isTouchIdEnabled).mockResolvedValue(true);
+    vi.mocked(hasRecoveryKey).mockResolvedValue(false);
+    vi.mocked(resetPasswordWithTouchId).mockResolvedValue(true);
+    const user = userEvent.setup();
+    renderGate();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Forgot password?" }),
+    );
+    expect(screen.queryByLabelText("Recovery key")).toBeNull();
+    await user.type(
+      screen.getByLabelText("New password", { exact: true }),
+      "new password",
+    );
+    await user.type(
+      screen.getByLabelText("Confirm new password"),
+      "new password",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Reset with Touch ID" }),
+    );
+
+    expect(resetPasswordWithTouchId).toHaveBeenCalledWith("new password");
+    // Without a recovery key, NODI offers one for the new password.
+    expect(await screen.findByText(/no recovery key yet/)).toBeInTheDocument();
+    expect(prepareRecoveryKey).toHaveBeenCalledWith("new password");
   });
 });

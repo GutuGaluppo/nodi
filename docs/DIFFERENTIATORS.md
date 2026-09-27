@@ -260,7 +260,7 @@ Private notes are encrypted with a random note key that the password only wraps 
 | PRIV-REC-001 Recovery key | Generate a 160-bit key, show it once, store it wrapped only after the user confirms its last group | Required at setup; offered at the next unlock for existing notes; status and "make a new key" in Your data |
 | PRIV-REC-002 Reset with the recovery key | "Forgot password?" takes the recovery key and a new password; notes are not re-encrypted | Offers a new recovery key right away |
 | PRIV-REC-003 Start over | With neither secret, delete encrypted private notes after typing DELETE and set a new password | Plaintext private notes are kept and encrypted with the new key |
-| PRIV-REC-004 Touch ID | Optional copy of the note key in the Keychain, behind Touch ID or the Mac password, never synced to iCloud | Opt-in; needs Security and LocalAuthentication through objc2 |
+| PRIV-REC-004 Touch ID | Optional copy of the note key sealed to the Secure Enclave, opened by Touch ID or the Mac password | Opt-in; CryptoKit through a small Swift library (D-011) |
 
 ---
 
@@ -294,6 +294,6 @@ Private notes are encrypted with a random note key that the password only wraps 
 | PRIV-REC-001 Recovery key | Done |
 | PRIV-REC-002 Reset with the recovery key | Done |
 | PRIV-REC-003 Start over | Done |
-| PRIV-REC-004 Touch ID | Not started (optional) |
+| PRIV-REC-004 Touch ID | Done (opt-in) |
 
-Milestones F to L are complete, and milestone M is done except the optional Touch ID unlock. Linking related notes (REL-002) waits for LINK-001, and BACKUP-001 is still open in `IMPLEMENTATION.md`.
+All eight milestones, F to M, are complete. Linking related notes (REL-002) waits for LINK-001, and BACKUP-001 is still open in `IMPLEMENTATION.md`.

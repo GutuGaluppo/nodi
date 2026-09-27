@@ -4,14 +4,18 @@ import Icon from "../../components/ui/Icon";
 import { countEncryptedPrivateNotes } from "../../db/repositories/noteRepository";
 import { notesKeys } from "../notes/useNotes";
 import {
+  getTouchIdSupport,
   hasPrivateNotesPassword,
   hasRecoveryKey,
+  isTouchIdEnabled,
   prepareRecoveryKey,
   type RecoveryKeyDraft,
   recoverPrivateNotes,
+  resetPasswordWithTouchId,
   setPrivateNotesPassword,
   startPrivateNotesOver,
   unlockPrivateNotes,
+  unlockWithTouchId,
 } from "./privateNotePassword";
 import RecoveryKeyPanel from "./RecoveryKeyPanel";
 
@@ -76,6 +80,8 @@ function PrivateNoteGate({ onUnlocked, onStartedOver }: PrivateNoteGateProps) {
   const [keyReason, setKeyReason] = useState<KeyReason>("new");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  /** Touch ID is on for private notes, and what macOS will ask for. */
+  const [touchId, setTouchId] = useState<{ biometrics: boolean } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const startOver = useStartOver();
 
@@ -83,7 +89,14 @@ function PrivateNoteGate({ onUnlocked, onStartedOver }: PrivateNoteGateProps) {
     void hasPrivateNotesPassword().then((exists) =>
       setMode(exists ? "unlock" : "setup"),
     );
+    void (async () => {
+      if (!(await isTouchIdEnabled())) return;
+      const support = await getTouchIdSupport();
+      if (support.available) setTouchId({ biometrics: support.biometrics });
+    })().catch(() => undefined);
   }, []);
+
+  const touchIdName = touchId?.biometrics ? "Touch ID" : "your Mac password";
 
   useEffect(() => {
     if (mode !== "loading" && mode !== "save-key") inputRef.current?.focus();
@@ -95,10 +108,15 @@ function PrivateNoteGate({ onUnlocked, onStartedOver }: PrivateNoteGateProps) {
     setConfirmation("");
     setRecoveryInput("");
     setStartOverWord("");
-    setMode(next);
     if (next === "recover") {
-      void hasRecoveryKey().then(setRecoveryAvailable);
+      // Known before the form appears, so focus lands on its first field.
+      void hasRecoveryKey().then((exists) => {
+        setRecoveryAvailable(exists);
+        setMode(next);
+      });
+      return;
     }
+    setMode(next);
     if (next === "start-over") {
       setLockedCount(null);
       void countEncryptedPrivateNotes().then(setLockedCount);
@@ -132,8 +150,45 @@ function PrivateNoteGate({ onUnlocked, onStartedOver }: PrivateNoteGateProps) {
     setMode("save-key");
   }
 
+  async function openWithTouchId() {
+    setError("");
+    setPending(true);
+    try {
+      if (await unlockWithTouchId()) await onUnlocked();
+    } catch {
+      setError(
+        `${touchId?.biometrics ? "Touch ID" : "Your Mac password"} could not open private notes. Use your password.`,
+      );
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function resetWithTouchId() {
+    setError("");
+    if (!checkNewPassword()) return;
+    setPending(true);
+    try {
+      if (await resetPasswordWithTouchId(password)) {
+        if (await hasRecoveryKey()) {
+          await onUnlocked();
+        } else {
+          await offerRecoveryKey(password, "missing");
+        }
+      }
+    } catch {
+      setError("The password could not be reset. Nothing was changed.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (mode === "recover" && !recoveryAvailable) {
+      await resetWithTouchId();
+      return;
+    }
     setError("");
     if (mode === "unlock" && password.length < MIN_PASSWORD) {
       setError(`Use a password with at least ${MIN_PASSWORD} characters.`);
@@ -192,7 +247,7 @@ function PrivateNoteGate({ onUnlocked, onStartedOver }: PrivateNoteGateProps) {
     <label>
       {mode === "recover" ? "New password" : "Password"}
       <input
-        ref={mode === "recover" ? undefined : inputRef}
+        ref={mode === "recover" && recoveryAvailable ? undefined : inputRef}
         type="password"
         autoComplete={mode === "unlock" ? "current-password" : "new-password"}
         value={password}
@@ -233,10 +288,20 @@ function PrivateNoteGate({ onUnlocked, onStartedOver }: PrivateNoteGateProps) {
         </p>
       ) : mode === "unlock" ? (
         <p>Enter your password to view and edit this note.</p>
+      ) : mode === "recover" && recoveryAvailable && touchId ? (
+        <p>
+          Enter the recovery key you saved, or use {touchIdName} on this Mac,
+          then choose a new password. Your notes stay as they are.
+        </p>
       ) : mode === "recover" && recoveryAvailable ? (
         <p>
           Enter the recovery key you saved when you set up private notes, then
           choose a new password. Your notes stay as they are.
+        </p>
+      ) : mode === "recover" && touchId ? (
+        <p>
+          Choose a new password, then confirm it with {touchIdName} on this Mac.
+          Your notes stay as they are.
         </p>
       ) : mode === "recover" ? (
         <p>
@@ -266,6 +331,17 @@ function PrivateNoteGate({ onUnlocked, onStartedOver }: PrivateNoteGateProps) {
                 ? "Protect private notes"
                 : "Unlock note"}
           </button>
+          {mode === "unlock" && touchId ? (
+            <button
+              className="secondary-button gate-touch-id"
+              type="button"
+              disabled={pending}
+              onClick={() => void openWithTouchId()}
+            >
+              <Icon name={touchId.biometrics ? "fingerprint" : "lock"} />
+              Unlock with {touchIdName}
+            </button>
+          ) : null}
           {mode === "unlock" ? (
             <button
               className="subtle-action gate-link"
@@ -280,30 +356,52 @@ function PrivateNoteGate({ onUnlocked, onStartedOver }: PrivateNoteGateProps) {
 
       {mode === "recover" ? (
         <form onSubmit={(event) => void submit(event)}>
-          {recoveryAvailable ? (
+          {recoveryAvailable || touchId ? (
             <>
-              <label>
-                Recovery key
-                <input
-                  ref={inputRef}
-                  className="recovery-key-input"
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
-                  value={recoveryInput}
-                  onChange={(event) => setRecoveryInput(event.target.value)}
-                />
-              </label>
+              {recoveryAvailable ? (
+                <label>
+                  Recovery key
+                  <input
+                    ref={inputRef}
+                    className="recovery-key-input"
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
+                    value={recoveryInput}
+                    onChange={(event) => setRecoveryInput(event.target.value)}
+                  />
+                </label>
+              ) : null}
               {passwordField}
               {confirmationField}
               {errorMessage}
-              <button
-                className="primary-button"
-                type="submit"
-                disabled={pending}
-              >
-                {pending ? "Checking…" : "Reset password"}
-              </button>
+              <div className="gate-buttons">
+                {recoveryAvailable ? (
+                  <button
+                    className="primary-button"
+                    type="submit"
+                    disabled={pending}
+                  >
+                    {pending ? "Checking…" : "Reset password"}
+                  </button>
+                ) : null}
+                {touchId ? (
+                  <button
+                    className={
+                      recoveryAvailable ? "secondary-button" : "primary-button"
+                    }
+                    type={recoveryAvailable ? "button" : "submit"}
+                    disabled={pending}
+                    onClick={
+                      recoveryAvailable
+                        ? () => void resetWithTouchId()
+                        : undefined
+                    }
+                  >
+                    Reset with {touchIdName}
+                  </button>
+                ) : null}
+              </div>
             </>
           ) : null}
           <div className="gate-links">

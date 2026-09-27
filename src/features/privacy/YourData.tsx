@@ -7,6 +7,7 @@ import MirrorStatus from "../mirror/MirrorStatus";
 import SpotlightStatus from "../spotlight/SpotlightStatus";
 import { describeNetworkPolicy } from "./networkPolicy";
 import RecoveryKeyStatus from "./RecoveryKeyStatus";
+import TouchIdStatus from "./TouchIdStatus";
 
 interface YourDataProps {
   onClose: () => void;
@@ -183,6 +184,8 @@ function YourData({ onClose }: YourDataProps) {
         </div>
 
         <RecoveryKeyStatus />
+
+        <TouchIdStatus />
 
         <div className="data-row">
           <dt>Network</dt>

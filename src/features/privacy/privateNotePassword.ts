@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import {
   clearPrivateNoteKey,
   setPrivateNoteKey,
@@ -14,6 +15,8 @@ import {
 import { base64ToBytes, bytesToBase64 } from "../../lib/crypto/base64";
 import {
   createNoteKey,
+  exportNoteKey,
+  importNoteKey,
   unwrapNoteKey,
   unwrapNoteKeyWithRecoveryKey,
   type WrappedNoteKey,
@@ -29,6 +32,7 @@ import {
 const PASSWORD_SETTING = "private_notes_password";
 const KEY_SETTING = "private_notes_key";
 const RECOVERY_SETTING = "private_notes_recovery_key";
+const TOUCH_ID_SETTING = "private_notes_touch_id";
 const ITERATIONS = 210_000;
 
 interface PasswordVerifier {
@@ -191,14 +195,25 @@ export async function recoverPrivateNotes(
   } catch {
     return false;
   }
+  await replacePassword(key, newPassword);
+  return true;
+}
+
+/**
+ * Wraps the extractable note key with a new password and opens the session.
+ * As in setup, the key goes first: if NODI stops before the verifier is
+ * written, the recovery key or Touch ID still works and can simply be used
+ * again.
+ */
+async function replacePassword(
+  key: CryptoKey,
+  newPassword: string,
+): Promise<void> {
   const wrapped = await wrapNoteKey(key, newPassword);
-  // As in setup, the key goes first: if NODI stops before the verifier is
-  // written, the recovery key still works and can simply be used again.
   await setSetting(KEY_SETTING, JSON.stringify(wrapped));
   await storeVerifier(newPassword);
   setPrivateNoteKey(await unwrapNoteKey(newPassword, wrapped));
   await encryptPendingNotes();
-  return true;
 }
 
 /**
@@ -208,9 +223,92 @@ export async function recoverPrivateNotes(
  */
 export async function startPrivateNotesOver(): Promise<number> {
   const deleted = await deleteEncryptedPrivateNotes();
+  await deleteSetting(TOUCH_ID_SETTING);
   await deleteSetting(RECOVERY_SETTING);
   await deleteSetting(KEY_SETTING);
   await deleteSetting(PASSWORD_SETTING);
   clearPrivateNoteKey();
   return deleted;
+}
+
+export interface TouchIdSupport {
+  /** The Secure Enclave and some way to confirm the Mac's owner exist. */
+  available: boolean;
+  /** Touch ID is enrolled; otherwise macOS asks for the Mac's password. */
+  biometrics: boolean;
+}
+
+type Unsealed = { status: "opened"; value: string } | { status: "cancelled" };
+
+export async function getTouchIdSupport(): Promise<TouchIdSupport> {
+  try {
+    return await invoke<TouchIdSupport>("touch_id_support");
+  } catch {
+    return { available: false, biometrics: false };
+  }
+}
+
+export async function isTouchIdEnabled(): Promise<boolean> {
+  return (await getSetting(TOUCH_ID_SETTING)) !== null;
+}
+
+/**
+ * Seals a copy of the note key to this Mac's Secure Enclave, so Touch ID or
+ * the Mac's password can open private notes. Returns false for a wrong
+ * password.
+ */
+export async function enableTouchId(password: string): Promise<boolean> {
+  if (!(await verifyPrivateNotesPassword(password))) return false;
+  const stored = await getSetting(KEY_SETTING);
+  if (!stored) return false;
+  const key = await unwrapNoteKey(
+    password,
+    JSON.parse(stored) as WrappedNoteKey,
+    true,
+  );
+  const sealed = await invoke<string>("touch_id_seal", {
+    secret: bytesToBase64(await exportNoteKey(key)),
+  });
+  await setSetting(TOUCH_ID_SETTING, sealed);
+  return true;
+}
+
+export async function disableTouchId(): Promise<void> {
+  await deleteSetting(TOUCH_ID_SETTING);
+}
+
+/** Opens the note key with Touch ID. Null when the user cancelled. */
+async function openWithTouchId(
+  extractable: boolean,
+): Promise<CryptoKey | null> {
+  const sealed = await getSetting(TOUCH_ID_SETTING);
+  if (!sealed) throw new Error("Touch ID is not turned on for private notes.");
+  const result = await invoke<Unsealed>("touch_id_unseal", { sealed });
+  if (result.status === "cancelled") return null;
+  return importNoteKey(base64ToBytes(result.value), extractable);
+}
+
+/**
+ * Opens the private-notes session with Touch ID or the Mac's password.
+ * Returns false when the user cancelled the prompt.
+ */
+export async function unlockWithTouchId(): Promise<boolean> {
+  const key = await openWithTouchId(false);
+  if (key === null) return false;
+  setPrivateNoteKey(key);
+  await encryptPendingNotes();
+  return true;
+}
+
+/**
+ * Sets a new password after Touch ID or the Mac's password, like the recovery
+ * key does. Returns false when the user cancelled the prompt.
+ */
+export async function resetPasswordWithTouchId(
+  newPassword: string,
+): Promise<boolean> {
+  const key = await openWithTouchId(true);
+  if (key === null) return false;
+  await replacePassword(key, newPassword);
+  return true;
 }
