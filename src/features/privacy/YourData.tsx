@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { appDataDir, join } from "@tauri-apps/api/path";
 import { useState } from "react";
 import { getStorageReport } from "../../db/repositories/storageRepository";
+import MirrorStatus from "../mirror/MirrorStatus";
 import { describeNetworkPolicy } from "./networkPolicy";
 
 interface YourDataProps {
@@ -189,6 +190,8 @@ function YourData({ onClose }: YourDataProps) {
             <span className="data-note">{network.detail}</span>
           </dd>
         </div>
+
+        <MirrorStatus />
 
         <div className="data-row">
           <dt>Backups</dt>

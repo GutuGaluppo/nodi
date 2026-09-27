@@ -263,4 +263,7 @@ One screen shows where the user's data lives and proves its state.
 | VOICE-AUD-001 Keep the recording | Done |
 | VOICE-AUD-002 Timed transcript | Done |
 | VOICE-AUD-003 Playback and one-hour recordings | Done |
+| EXPORT-001 Markdown conversion (prerequisite) | Done |
+| MIRROR-001 One-way mirror | Done |
+| MIRROR-002 Mirror health | Done |
 | All other tasks | Not started |

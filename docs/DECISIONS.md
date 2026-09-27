@@ -179,3 +179,35 @@ for due reminders at launch and every 30 seconds.
   them (for example after a note is deleted from the Trash). A recording block
   removed from a note keeps its file until the note itself is deleted.
 - A word spoken across a five-minute chunk boundary may be split.
+
+## D-006 — The Markdown mirror folder is owned by the Rust side
+
+**Date:** September 27, 2026
+**Tasks:** EXPORT-001, MIRROR-001, MIRROR-002
+**Status:** Accepted
+
+### Decision
+
+The mirror folder is chosen with the native folder picker from Rust
+(`tauri-plugin-dialog`, used only from Rust, with no JavaScript permission) and
+stored in `markdown-mirror.json` in the app config directory. The webview can
+only send `{ path, content }` pairs; Rust accepts plain relative `.md` paths,
+writes only changed files, and records what it wrote in `.nodi-mirror.json` in
+the folder so it only ever deletes its own files. Markdown comes from a pure
+Tiptap-to-Markdown converter shared with future exports.
+
+### Rationale
+
+- A webview that could name any path would be a general file writer. Keeping
+  the folder on the Rust side limits the webview to Markdown files inside the
+  one folder the user picked.
+- A manifest lets people keep their own files in the same folder safely.
+- One converter for export and mirror keeps both outputs identical.
+
+### Consequences
+
+- Private and trashed notes are never mirrored.
+- The mirror is one-way: edits made to the files are overwritten by the next
+  pass, and SQLite stays the source of truth.
+- A pass runs at launch and two seconds after the last change; its outcome is
+  kept in `settings` and shown on the "Your data" page.

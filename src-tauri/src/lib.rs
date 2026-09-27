@@ -1,11 +1,13 @@
 mod attachments;
 mod migrations;
+mod mirror;
 mod voice;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(
             tauri_plugin_sql::Builder::new()
                 .add_migrations(migrations::DATABASE_URL, migrations::all())
@@ -29,6 +31,10 @@ pub fn run() {
             attachments::keep_voice_recording,
             attachments::discard_voice_recording,
             attachments::sweep_attachments,
+            mirror::get_mirror_folder,
+            mirror::choose_mirror_folder,
+            mirror::clear_mirror_folder,
+            mirror::write_mirror,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

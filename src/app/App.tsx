@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import DesktopShell from "../components/layout/DesktopShell";
 import About from "../features/about/About";
 import AttachmentSweeper from "../features/attachments/AttachmentSweeper";
+import MirrorSync from "../features/mirror/MirrorSync";
 import { useCreateNote } from "../features/notes/useCreateNote";
 import YourData from "../features/privacy/YourData";
 import ReminderScheduler from "../features/reminders/ReminderScheduler";
@@ -153,6 +154,7 @@ function App() {
     <AppProviders>
       <ReminderScheduler />
       <AttachmentSweeper />
+      <MirrorSync />
       {page === "about" ? (
         <About onClose={() => setPage("workspace")} />
       ) : page === "data" ? (

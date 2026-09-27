@@ -1426,6 +1426,16 @@ h1 {
   color: var(--color-danger);
 }
 
+.data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.data-actions .subtle-action {
+  margin-top: 0;
+}
+
 .data-problems {
   margin: var(--space-2) 0 0;
   padding-left: var(--space-5);

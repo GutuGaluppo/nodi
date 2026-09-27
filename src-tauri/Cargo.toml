@@ -25,6 +25,7 @@ cpal = "0.15"
 tauri-plugin-notification = "~2.4"
 hound = "3.5"
 sha2 = "0.10"
+tauri-plugin-dialog = "2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 whisper-rs = { version = "0.16", features = ["metal"] }
