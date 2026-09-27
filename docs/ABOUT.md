@@ -406,3 +406,11 @@ A kept recording becomes a block in the note with Whisper's timed sentences. The
 Clicking a sentence plays the recording from the moment it was spoken, and the sentence being heard is highlighted. Recordings can now run for an hour: audio is resampled while recording and transcribed in five-minute parts, with progress shown.
 
 ![NODI after VOICE-AUD-003: playing a recording from a transcript sentence](about/screenshots/voice-aud-003-playback.png)
+
+## 050 — MIRROR-001 and MIRROR-002 Markdown mirror
+
+**Completed:** September 27, 2026
+
+NODI can keep a folder of Markdown files that mirrors the library: one file per note, filed by notebook, with front matter for tags and dates, updated two seconds after every change. Private notes are never mirrored, and files the user adds to the folder are left alone. "Your data" shows the folder, the last update, and any file that could not be written, with actions to rebuild, change folder, or stop. A shared Tiptap-to-Markdown converter (EXPORT-001) produces the files.
+
+![NODI after MIRROR-002: the Markdown mirror on the Your data page](about/screenshots/mirror-001-markdown-mirror.png)

@@ -13,6 +13,7 @@ import fnd004DarkScreenshot from "../../../docs/about/screenshots/fnd-004-dark-m
 import fnd004Screenshot from "../../../docs/about/screenshots/fnd-004-design-tokens.png";
 import fnd005Screenshot from "../../../docs/about/screenshots/fnd-005-desktop-shell.png";
 import land001Screenshot from "../../../docs/about/screenshots/land-001-landing-page.png";
+import mirror001Screenshot from "../../../docs/about/screenshots/mirror-001-markdown-mirror.png";
 import nb001Screenshot from "../../../docs/about/screenshots/nb-001-notebooks.png";
 import nb002Screenshot from "../../../docs/about/screenshots/nb-002-move-note.png";
 import nb003Screenshot from "../../../docs/about/screenshots/nb-003-notebook-stacks.png";
@@ -453,6 +454,14 @@ const evolution = [
     description:
       "Clicking a sentence plays the recording from that moment and highlights it. Recordings can now run for an hour, transcribed in parts with progress shown.",
     screenshot: voiceAud003Screenshot,
+  },
+  {
+    id: "MIRROR-001",
+    title: "Notes that outlive the app",
+    date: "September 27, 2026",
+    description:
+      "A folder of Markdown files mirrors the library, one file per note, updated after every change. Private notes are never mirrored, and Your data shows the mirror's health.",
+    screenshot: mirror001Screenshot,
   },
 ];
 
