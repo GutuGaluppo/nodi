@@ -184,6 +184,11 @@ function SearchDialog({
                 >
                   <strong>{note.title.trim() || "Untitled"}</strong>
                   <span>{note.contentText.trim() || "Empty note"}</span>
+                  {note.matchedInImage ? (
+                    <span className="search-result-source">
+                      Found in an image
+                    </span>
+                  ) : null}
                 </button>
               ))}
             </div>

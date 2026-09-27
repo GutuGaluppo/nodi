@@ -1,6 +1,7 @@
 mod attachments;
 mod migrations;
 mod mirror;
+mod ocr;
 mod voice;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -31,6 +32,10 @@ pub fn run() {
             attachments::keep_voice_recording,
             attachments::discard_voice_recording,
             attachments::sweep_attachments,
+            attachments::import_image_bytes,
+            attachments::import_image_files,
+            attachments::pick_image_files,
+            ocr::recognize_attachment_text,
             mirror::get_mirror_folder,
             mirror::choose_mirror_folder,
             mirror::clear_mirror_folder,

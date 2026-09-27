@@ -211,3 +211,36 @@ Tiptap-to-Markdown converter shared with future exports.
   pass, and SQLite stays the source of truth.
 - A pass runs at launch and two seconds after the last change; its outcome is
   kept in `settings` and shown on the "Your data" page.
+
+## D-007 — Image text is recognized with Vision through objc2
+
+**Date:** September 27, 2026
+**Tasks:** ATT-003, OCR-001, OCR-002
+**Status:** Accepted
+
+### Decision
+
+- Images are inserted from the file picker, the clipboard, or files dropped on
+  the window. Rust identifies each image from its first bytes (PNG, JPEG, GIF,
+  WebP, HEIC), refuses files over 50 MB, and stores it as an attachment; the
+  note keeps only the stored path and the display URL is computed at render.
+- Text is recognized with Apple's Vision framework through `objc2-vision`,
+  which matches the `objc2` and `objc2-foundation` versions Tauri already
+  ships, in the app process and off the main thread.
+- Recognized text lives in `attachment_text` with its own FTS5 index;
+  search appends notes found only through an image, marked "Found in an image".
+
+### Rationale
+
+- Vision is on every Mac, accurate, and free: no model download, no network.
+- A Rust binding avoids shipping and signing a separate Swift helper.
+- A separate FTS table avoids rebuilding the notes index, which would need a
+  migration that recreates a virtual table with existing data.
+
+### Consequences
+
+- Images cannot be added to private notes, because image files are not
+  encrypted, and a note that already has files asks for confirmation before it
+  becomes private; its recognized text is deleted by a trigger.
+- Recognition runs one image at a time, at launch and three seconds after
+  changes; an unreadable image is stored with empty text so it is not retried.

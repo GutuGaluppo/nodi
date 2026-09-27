@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { appDataDir, join } from "@tauri-apps/api/path";
 import { useState } from "react";
 import { getStorageReport } from "../../db/repositories/storageRepository";
+import ImageTextStatus from "../images/ImageTextStatus";
 import MirrorStatus from "../mirror/MirrorStatus";
 import { describeNetworkPolicy } from "./networkPolicy";
 
@@ -190,6 +191,8 @@ function YourData({ onClose }: YourDataProps) {
             <span className="data-note">{network.detail}</span>
           </dd>
         </div>
+
+        <ImageTextStatus />
 
         <MirrorStatus />
 

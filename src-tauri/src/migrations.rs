@@ -12,6 +12,7 @@ const PRIVATE_NOTES: &str = include_str!("../migrations/0007_private_notes.sql")
 const PRIVATE_NOTE_ENCRYPTION: &str =
     include_str!("../migrations/0008_private_note_encryption.sql");
 const REMINDERS: &str = include_str!("../migrations/0009_reminders.sql");
+const ATTACHMENT_TEXT: &str = include_str!("../migrations/0010_attachment_text.sql");
 
 pub fn all() -> Vec<Migration> {
     vec![
@@ -69,6 +70,12 @@ pub fn all() -> Vec<Migration> {
             sql: REMINDERS,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 10,
+            description: "attachment text",
+            sql: ATTACHMENT_TEXT,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -115,6 +122,7 @@ mod tests {
         .expect("schema should be readable");
 
         for expected in [
+            "attachment_text",
             "attachments",
             "note_tags",
             "notebook_stacks",
@@ -136,7 +144,7 @@ mod tests {
                 .await
                 .expect("migration history should be readable");
 
-        assert_eq!(applied_count, 9);
+        assert_eq!(applied_count, 10);
 
         let note_columns =
             sqlx::query_scalar::<_, String>("SELECT name FROM pragma_table_info('notes')")
@@ -236,6 +244,68 @@ mod tests {
             .expect("related table should be readable");
             assert_eq!(count, 0, "{table} should not retain note data");
         }
+    }
+
+    #[tokio::test]
+    async fn recognized_image_text_is_searchable_and_follows_its_note() {
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .expect("in-memory database should open");
+        sqlx::query("PRAGMA foreign_keys = ON")
+            .execute(&pool)
+            .await
+            .expect("foreign keys should be enabled");
+        migration_runner()
+            .await
+            .run(&pool)
+            .await
+            .expect("migrations should succeed");
+
+        for statement in [
+            "INSERT INTO notes (id, content_json, created_at, updated_at, device_id) VALUES ('n1', '{}', 'now', 'now', 'd1')",
+            "INSERT INTO notes (id, content_json, created_at, updated_at, device_id) VALUES ('n2', '{}', 'now', 'now', 'd1')",
+            "INSERT INTO attachments (id, note_id, filename, relative_path, sha256, size, created_at) VALUES ('a1', 'n1', 'image.png', 'attachments/aa/a/image.png', 'a', 1, 'now')",
+            "INSERT INTO attachments (id, note_id, filename, relative_path, sha256, size, created_at) VALUES ('a2', 'n2', 'image.png', 'attachments/bb/b/image.png', 'b', 1, 'now')",
+            "INSERT INTO attachment_text (attachment_id, text, recognized_at) VALUES ('a1', 'Lisbon bakery receipt', 'now')",
+            "INSERT INTO attachment_text (attachment_id, text, recognized_at) VALUES ('a2', 'Lisbon tram ticket', 'now')",
+        ] {
+            sqlx::query(statement)
+                .execute(&pool)
+                .await
+                .expect("fixture should be inserted");
+        }
+
+        let search = "SELECT attachment_id FROM attachment_text_fts WHERE attachment_text_fts MATCH 'lisbon' ORDER BY attachment_id";
+        let found = sqlx::query_scalar::<_, String>(search)
+            .fetch_all(&pool)
+            .await
+            .expect("image text should be searchable");
+        assert_eq!(found, vec!["a1", "a2"]);
+
+        sqlx::query("UPDATE notes SET is_private = 1 WHERE id = 'n1'")
+            .execute(&pool)
+            .await
+            .expect("note should become private");
+        sqlx::query("DELETE FROM notes WHERE id = 'n2'")
+            .execute(&pool)
+            .await
+            .expect("note should be deleted");
+
+        let remaining = sqlx::query_scalar::<_, String>(search)
+            .fetch_all(&pool)
+            .await
+            .expect("image text should still be queryable");
+        assert!(
+            remaining.is_empty(),
+            "private and deleted notes keep no image text"
+        );
+        let rows = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM attachment_text")
+            .fetch_one(&pool)
+            .await
+            .expect("attachment text should be readable");
+        assert_eq!(rows, 0);
     }
 
     #[tokio::test]

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import DesktopShell from "../components/layout/DesktopShell";
 import About from "../features/about/About";
 import AttachmentSweeper from "../features/attachments/AttachmentSweeper";
+import ImageTextIndexer from "../features/images/ImageTextIndexer";
 import MirrorSync from "../features/mirror/MirrorSync";
 import { useCreateNote } from "../features/notes/useCreateNote";
 import YourData from "../features/privacy/YourData";
@@ -155,6 +156,7 @@ function App() {
       <ReminderScheduler />
       <AttachmentSweeper />
       <MirrorSync />
+      <ImageTextIndexer />
       {page === "about" ? (
         <About onClose={() => setPage("workspace")} />
       ) : page === "data" ? (

@@ -391,6 +391,43 @@ describe("noteRepository", () => {
     await expect(createNote()).rejects.toBeInstanceOf(DatabaseError);
   });
 
+  describe("image text search", () => {
+    function summaryRow(id: string, title: string) {
+      const { content_json, revision, device_id, encrypted_payload, ...rest } =
+        noteRow({ id, title });
+      return rest;
+    }
+
+    it("adds notes found only through image text after the text matches", async () => {
+      db.select
+        .mockResolvedValueOnce([summaryRow("n1", "Lisbon weekend")])
+        .mockResolvedValueOnce([
+          summaryRow("n1", "Lisbon weekend"),
+          summaryRow("n2", "Receipts"),
+        ]);
+      const { searchNotes } = await importRepository();
+
+      const results = await searchNotes("lisbon");
+
+      expect(results.map((note) => [note.id, note.matchedInImage])).toEqual([
+        ["n1", undefined],
+        ["n2", true],
+      ]);
+      const [imageSql] = db.select.mock.calls[1];
+      expect(imageSql).toContain("attachment_text_fts MATCH $1");
+      expect(imageSql).toContain("notes.is_private = 0");
+    });
+
+    it("does not search images when only filters are given", async () => {
+      db.select.mockResolvedValueOnce([]);
+      const { searchNotes } = await importRepository();
+
+      await searchNotes("", { tag: "travel" });
+
+      expect(db.select).toHaveBeenCalledOnce();
+    });
+  });
+
   describe("private note encryption", () => {
     const secret = {
       title: "Journal",

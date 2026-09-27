@@ -266,4 +266,7 @@ One screen shows where the user's data lives and proves its state.
 | EXPORT-001 Markdown conversion (prerequisite) | Done |
 | MIRROR-001 One-way mirror | Done |
 | MIRROR-002 Mirror health | Done |
+| ATT-003 Image insertion (prerequisite) | Done |
+| OCR-001 Vision bridge | Done |
+| OCR-002 Searchable image text | Done |
 | All other tasks | Not started |

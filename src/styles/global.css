@@ -1477,3 +1477,13 @@ h1 {
     transition: none;
   }
 }
+
+.search-result-source {
+  justify-self: start;
+  padding: 0 var(--space-2);
+  color: var(--color-accent);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-sm);
+}

@@ -58,6 +58,8 @@ export interface NoteSummary {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  /** Set by search when the note matched only through text in an image. */
+  matchedInImage?: boolean;
 }
 
 export interface CreateNoteInput {
@@ -347,6 +349,58 @@ export interface SearchFilters {
   updated?: string;
 }
 
+/** WHERE clauses shared by note-text and image-text search. */
+function searchClauses(
+  matchTable: "notes_fts" | "attachment_text_fts",
+  normalized: string,
+  filters: SearchFilters,
+): { clauses: string[]; values: unknown[]; position: number } {
+  const clauses = ["notes.deleted_at IS NULL", "notes.is_private = 0"];
+  const values: unknown[] = [];
+  let position = 1;
+
+  if (normalized) {
+    clauses.push(`${matchTable} MATCH $${position}`);
+    values.push(normalized);
+    position += 1;
+  }
+  if (filters.tag) {
+    clauses.push(
+      `EXISTS (
+        SELECT 1 FROM note_tags
+        INNER JOIN tags ON tags.id = note_tags.tag_id
+        WHERE note_tags.note_id = notes.id AND tags.name = $${position} COLLATE NOCASE
+      )`,
+    );
+    values.push(filters.tag);
+    position += 1;
+  }
+  if (filters.notebook) {
+    clauses.push(`notebooks.name = $${position} COLLATE NOCASE`);
+    values.push(filters.notebook);
+    position += 1;
+  }
+  if (filters.created) {
+    clauses.push(`date(notes.created_at) = date($${position})`);
+    values.push(filters.created);
+    position += 1;
+  }
+  if (filters.updated) {
+    clauses.push(`date(notes.updated_at) = date($${position})`);
+    values.push(filters.updated);
+    position += 1;
+  }
+  return { clauses, values, position };
+}
+
+const SUMMARY_COLUMNS = `notes.id, notes.title, notes.content_text, notes.notebook_id, notes.is_pinned, notes.is_private,
+              notes.created_at, notes.updated_at, notes.deleted_at`;
+
+/**
+ * Searches note text, tags, and notebooks, then text recognized in images
+ * (OCR-002). Notes found only through an image come after the others and are
+ * marked `matchedInImage`.
+ */
 export async function searchNotes(
   query: string,
   filters: SearchFilters = {},
@@ -358,55 +412,43 @@ export async function searchNotes(
       return [];
     }
     const database = await initializeDatabase();
-    const clauses = ["notes.deleted_at IS NULL", "notes.is_private = 0"];
-    const values: unknown[] = [];
-    let position = 1;
-
-    if (normalized) {
-      clauses.push(`notes_fts MATCH $${position}`);
-      values.push(normalized);
-      position += 1;
-    }
-    if (filters.tag) {
-      clauses.push(
-        `EXISTS (
-          SELECT 1 FROM note_tags
-          INNER JOIN tags ON tags.id = note_tags.tag_id
-          WHERE note_tags.note_id = notes.id AND tags.name = $${position} COLLATE NOCASE
-        )`,
-      );
-      values.push(filters.tag);
-      position += 1;
-    }
-    if (filters.notebook) {
-      clauses.push(`notebooks.name = $${position} COLLATE NOCASE`);
-      values.push(filters.notebook);
-      position += 1;
-    }
-    if (filters.created) {
-      clauses.push(`date(notes.created_at) = date($${position})`);
-      values.push(filters.created);
-      position += 1;
-    }
-    if (filters.updated) {
-      clauses.push(`date(notes.updated_at) = date($${position})`);
-      values.push(filters.updated);
-      position += 1;
-    }
-    values.push(limit);
-
+    const main = searchClauses("notes_fts", normalized, filters);
     const rows = await database.select<NoteSummaryRow[]>(
-      `SELECT notes.id, notes.title, notes.content_text, notes.notebook_id, notes.is_pinned, notes.is_private,
-              notes.created_at, notes.updated_at, notes.deleted_at
+      `SELECT ${SUMMARY_COLUMNS}
        FROM notes_fts
        INNER JOIN notes ON notes.id = notes_fts.note_id
        LEFT JOIN notebooks ON notebooks.id = notes.notebook_id
-       WHERE ${clauses.join(" AND ")}
+       WHERE ${main.clauses.join(" AND ")}
        ORDER BY ${normalized ? "bm25(notes_fts, 0.0, 5.0, 2.0, 1.5, 1.5)," : ""} notes.updated_at DESC
-       LIMIT $${position}`,
-      values,
+       LIMIT $${main.position}`,
+      [...main.values, limit],
     );
-    return rows.map(mapNoteSummary);
+    const results: NoteSummary[] = rows.map(mapNoteSummary);
+    if (!normalized || results.length >= limit) {
+      return results;
+    }
+
+    const image = searchClauses("attachment_text_fts", normalized, filters);
+    // One note can hold several matching images.
+    const imageRows = await database.select<NoteSummaryRow[]>(
+      `SELECT DISTINCT ${SUMMARY_COLUMNS}
+       FROM attachment_text_fts
+       INNER JOIN attachments ON attachments.id = attachment_text_fts.attachment_id
+       INNER JOIN notes ON notes.id = attachments.note_id
+       LEFT JOIN notebooks ON notebooks.id = notes.notebook_id
+       WHERE ${image.clauses.join(" AND ")}
+       ORDER BY notes.updated_at DESC
+       LIMIT $${image.position}`,
+      [...image.values, limit],
+    );
+    const found = new Set(results.map((note) => note.id));
+    for (const row of imageRows) {
+      if (results.length >= limit) break;
+      if (found.has(row.id)) continue;
+      found.add(row.id);
+      results.push({ ...mapNoteSummary(row), matchedInImage: true });
+    }
+    return results;
   } catch (cause) {
     rethrowAsDatabaseError(cause, "Could not search notes.");
   }
