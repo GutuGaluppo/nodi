@@ -350,3 +350,19 @@ NODI now ships a restrictive Content Security Policy that only allows connection
 Settings → Your data shows where the database lives, its size and integrity, how many private notes are encrypted, and the enforced network policy. Every value is read locally each time the page opens.
 
 ![NODI's Your data page after PRIVACY-004](about/screenshots/privacy-004-your-data.png)
+
+## 043 — VOICE-CMD-001 Organizing voice commands
+
+**Completed:** September 27, 2026
+
+A dictation can now organize its note. "Title: …", "in notebook …", "no caderno …", "with tags …", and "com a tag …" are recognized in English and Portuguese before the first colon. Spoken names match existing notebooks and tags regardless of case and accents.
+
+![NODI after VOICE-CMD-001: a dictated list filed with its title, notebook, and tags](about/screenshots/voice-cmd-001-organizing-commands.png)
+
+## 044 — VOICE-CMD-002 Command preview
+
+**Completed:** September 27, 2026
+
+Before inserting, the voice panel lists every change a dictation will make, marks notebooks and tags that do not exist yet as new, and lets the user remove any of them. Nothing is created until the user inserts.
+
+![NODI after VOICE-CMD-002: the voice panel previewing a title, notebook, and tags](about/screenshots/voice-cmd-002-command-preview.png)

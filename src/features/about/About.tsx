@@ -41,6 +41,8 @@ import ui005Screenshot from "../../../docs/about/screenshots/ui-005-reference-si
 import ui006Screenshot from "../../../docs/about/screenshots/ui-006-system-section.png";
 import ui007Screenshot from "../../../docs/about/screenshots/ui-007-settings-relocated.png";
 import ui008Screenshot from "../../../docs/about/screenshots/ui-008-compact-lists.png";
+import voiceCmd001Screenshot from "../../../docs/about/screenshots/voice-cmd-001-organizing-commands.png";
+import voiceCmd002Screenshot from "../../../docs/about/screenshots/voice-cmd-002-command-preview.png";
 
 interface AboutProps {
   onClose: () => void;
@@ -390,6 +392,22 @@ const evolution = [
     description:
       "Settings → Your data shows the database location, size, integrity, encrypted private notes, and the enforced network policy, all read locally.",
     screenshot: privacy004Screenshot,
+  },
+  {
+    id: "VOICE-CMD-001",
+    title: "Speak where a note belongs",
+    date: "September 27, 2026",
+    description:
+      "Dictations can set a note's title, notebook, and tags in English or Portuguese, matching existing names regardless of case and accents.",
+    screenshot: voiceCmd001Screenshot,
+  },
+  {
+    id: "VOICE-CMD-002",
+    title: "See it before it happens",
+    date: "September 27, 2026",
+    description:
+      "The voice panel previews every change a dictation will make, marks new notebooks and tags, and lets the user remove any of them before inserting.",
+    screenshot: voiceCmd002Screenshot,
   },
 ];
 
