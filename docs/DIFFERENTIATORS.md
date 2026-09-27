@@ -255,4 +255,8 @@ One screen shows where the user's data lives and proves its state.
 | PRIVACY-002 Encrypt private notes at rest | Done |
 | PRIVACY-003 Network lockdown | Done |
 | PRIVACY-004 "Your data" panel | Done |
+| VOICE-CMD-001 Organizing commands | Done |
+| VOICE-CMD-002 Command preview | Done |
+| REM-001 Reminders (prerequisite from `IMPLEMENTATION.md`) | Done |
+| VOICE-CMD-003 Spoken reminders | Done |
 | All other tasks | Not started |
