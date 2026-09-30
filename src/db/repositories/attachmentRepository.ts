@@ -19,6 +19,8 @@ export interface Attachment {
 }
 
 export interface CreateAttachmentInput {
+  /** Chosen by the caller when the note body must reference it up front. */
+  id?: string;
   noteId: string;
   filename: string;
   mimeType: string | null;
@@ -75,10 +77,11 @@ export async function createAttachment(
   try {
     assertSafePath(input.relativePath);
     const database = await initializeDatabase();
+    const { id, ...fields } = input;
     const attachment: Attachment = {
-      id: createId(),
+      id: id ?? createId(),
       createdAt: new Date().toISOString(),
-      ...input,
+      ...fields,
     };
     await database.execute(
       `INSERT INTO attachments (${COLUMNS}) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,

@@ -396,3 +396,38 @@ only notes of the same language.
   already a requirement for the Share extension.
 - The prompt itself cannot be automated: sealing, bad input and support
   detection are tested natively, and the prompt was checked by hand.
+
+## D-012 — Image-to-note reuses Vision OCR and attachment storage
+
+**Date:** September 30, 2026
+**Task:** OCR-003 Notes from images (`IMAGE_TO_TEXT_SPEC.md`)
+**Status:** Accepted
+
+### Decision
+
+- Text is read by the existing Apple Vision recognizer through a new
+  `read_image_text` command that also returns the mean line confidence.
+  The spec's tesseract.js, sharp and uuid are not added.
+- The image is stored by the existing attachment import (type sniffing, 50 MB
+  limit) before reading. It becomes an attachment of the new note only when
+  the text is approved; an abandoned image is removed by the launch sweep.
+- Provenance lives in the existing tables: the `attachments` row links the
+  source image to the note, and `attachment_text` keeps what Vision read (so
+  the background indexer does not read it again). No `notes.metadata` column
+  or migration is added.
+- A read that takes over 30 seconds is retried once, then reported.
+
+### Rationale
+
+- tesseract.js downloads its language data from a CDN by default, which would
+  be a cloud dependency, and adds ~14 MB; Vision is already on every Mac and
+  already tested in NODI. sharp is a Node library and cannot run in the
+  webview; Vision reads large images directly.
+- A metadata column would duplicate what the attachment tables already record.
+
+### Consequences
+
+- Image-to-note works only on macOS, like the rest of OCR.
+- There is no in-app camera capture yet; photos come from the file picker or
+  the clipboard (including Continuity Camera images pasted from an iPhone).
+- Whether the person edited the text is not stored.

@@ -17,6 +17,7 @@ interface DesktopShellProps {
   onOpenAbout: () => void;
   onOpenYourData: () => void;
   onCreateNote: () => void;
+  onCreateImageNote: () => void;
   selectedNoteId: string | null;
   onSelectNote: (id: string) => void;
   editorPaneRef: Ref<HTMLElement>;
@@ -38,6 +39,7 @@ function DesktopShell({
   onOpenAbout,
   onOpenYourData,
   onCreateNote,
+  onCreateImageNote,
   selectedNoteId,
   onSelectNote,
   editorPaneRef,
@@ -83,6 +85,16 @@ function DesktopShell({
             <Icon name="plus" />
           </span>
           New note
+        </button>
+
+        <button
+          className="image-note-button"
+          type="button"
+          aria-keyshortcuts="Meta+Shift+P"
+          onClick={onCreateImageNote}
+        >
+          <Icon name="image" />
+          Nota de imagem
         </button>
 
         <div className="sidebar-scroll-area">

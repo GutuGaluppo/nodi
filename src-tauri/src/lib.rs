@@ -46,6 +46,7 @@ pub fn run() {
             attachments::import_image_files,
             attachments::pick_image_files,
             ocr::recognize_attachment_text,
+            ocr::read_image_text,
             embeddings::embed_notes,
             quick_capture::take_pending_captures,
             spotlight::spotlight_replace_notes,

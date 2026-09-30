@@ -3,13 +3,30 @@
 
 use std::path::{Component, Path, PathBuf};
 
+use serde::Serialize;
 use tauri::{AppHandle, Manager};
 
 use crate::attachments::ATTACHMENTS_DIR;
 
+/// The text read from an image, with Vision's confidence in it.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageText {
+    /// One line per recognized line.
+    pub text: String,
+    /// The mean confidence of the recognized lines, from 0 to 1; 0 when the
+    /// image holds no text.
+    pub confidence: f32,
+}
+
 /// Recognizes the text in an image file, one line per recognized line.
-#[cfg(target_os = "macos")]
 pub fn recognize_text(path: &Path) -> Result<String, String> {
+    recognize(path).map(|result| result.text)
+}
+
+/// Recognizes the text in an image file, with its confidence.
+#[cfg(target_os = "macos")]
+pub fn recognize(path: &Path) -> Result<ImageText, String> {
     use objc2::rc::autoreleasepool;
     use objc2::runtime::AnyObject;
     use objc2::AllocAnyThread;
@@ -44,23 +61,35 @@ pub fn recognize_text(path: &Path) -> Result<String, String> {
             .map_err(|error| error.localizedDescription().to_string())?;
 
         let mut lines = Vec::new();
+        let mut confidences = Vec::new();
         if let Some(results) = request.results() {
             for observation in results.iter() {
                 if let Some(best) = observation.topCandidates(1).firstObject() {
                     let line = best.string().to_string();
                     if !line.trim().is_empty() {
                         lines.push(line);
+                        confidences.push(best.confidence());
                     }
                 }
             }
         }
-        Ok(lines.join("\n"))
+        Ok(ImageText {
+            text: lines.join("\n"),
+            confidence: mean(&confidences),
+        })
     })
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn recognize_text(_path: &Path) -> Result<String, String> {
+pub fn recognize(_path: &Path) -> Result<ImageText, String> {
     Err("text recognition is only available on macOS".into())
+}
+
+fn mean(values: &[f32]) -> f32 {
+    if values.is_empty() {
+        return 0.0;
+    }
+    values.iter().sum::<f32>() / values.len() as f32
 }
 
 /// Resolves a stored attachment path, refusing anything outside the
@@ -86,6 +115,17 @@ pub async fn recognize_attachment_text(
     let app_data = app.path().app_data_dir().map_err(|err| err.to_string())?;
     let path = resolve_attachment(&app_data, &relative_path)?;
     tauri::async_runtime::spawn_blocking(move || recognize_text(&path))
+        .await
+        .map_err(|err| err.to_string())?
+}
+
+/// Recognizes the text in a stored image, with its confidence, for review
+/// before it becomes a note (OCR-003).
+#[tauri::command]
+pub async fn read_image_text(app: AppHandle, relative_path: String) -> Result<ImageText, String> {
+    let app_data = app.path().app_data_dir().map_err(|err| err.to_string())?;
+    let path = resolve_attachment(&app_data, &relative_path)?;
+    tauri::async_runtime::spawn_blocking(move || recognize(&path))
         .await
         .map_err(|err| err.to_string())?
 }
@@ -126,6 +166,27 @@ mod tests {
         assert!(lowered.contains("lisbon bakery"), "recognized: {text}");
         assert!(lowered.contains("pastel de nata"), "recognized: {text}");
         assert!(text.contains("12.40"), "recognized: {text}");
+    }
+
+    #[test]
+    fn averages_line_confidence() {
+        assert_eq!(mean(&[]), 0.0);
+        assert!((mean(&[1.0, 0.5]) - 0.75).abs() < f32::EPSILON);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn reports_confidence_for_the_receipt() {
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/ocr-receipt.png");
+
+        let result = recognize(&fixture).expect("Vision should read the fixture");
+
+        assert!(result.text.to_lowercase().contains("lisbon bakery"));
+        assert!(
+            result.confidence > 0.5 && result.confidence <= 1.0,
+            "confidence: {}",
+            result.confidence
+        );
     }
 
     #[cfg(target_os = "macos")]
