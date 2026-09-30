@@ -31,6 +31,7 @@ import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note
 import ocr001Screenshot from "../../../docs/about/screenshots/ocr-001-image-text.png";
 import ocr002Screenshot from "../../../docs/about/screenshots/ocr-002-searchable-images.png";
 import ocr003Screenshot from "../../../docs/about/screenshots/ocr-003-image-to-note.png";
+import ocr004Screenshot from "../../../docs/about/screenshots/ocr-004-doubtful-words.png";
 import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
 import privRec004Screenshot from "../../../docs/about/screenshots/priv-rec-004-touch-id.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
@@ -597,6 +598,14 @@ const evolution = [
     description:
       '"Nota de imagem" (⌘⇧P) turns a photo into a note: the text is read on this Mac with Apple\'s Vision framework, shown next to the image with its confidence for review, and becomes a note only when approved, with the image kept in it.',
     screenshot: ocr003Screenshot,
+  },
+  {
+    id: "OCR-004",
+    title: "Better image reading",
+    date: "September 30, 2026",
+    description:
+      "Images are read with the macOS 26 document reader when available and laid out by position: prices stay beside their items, side notes join their line, and bullets become lists. Instead of a misleading score, the review lists doubtful words with the spell checker's guesses.",
+    screenshot: ocr004Screenshot,
   },
 ];
 
