@@ -10,14 +10,20 @@ import {
 import type { StoredAttachment } from "../../lib/attachments/storedAttachment";
 import { createId } from "../../lib/ids/id";
 
-/** The text Vision read in an image, with its mean confidence from 0 to 1. */
-export interface ImageText {
-  text: string;
-  confidence: number;
+/** A word the Mac's spell checker does not know, with its guesses. */
+export interface DoubtfulWord {
+  word: string;
+  suggestions: string[];
 }
 
-/** Below this, the review warns that the text probably needs fixing. */
-export const LOW_CONFIDENCE = 0.5;
+/**
+ * The text Vision read in an image: blocks separated by a blank line, list
+ * items starting with `- `, and the words that were probably misread.
+ */
+export interface ImageText {
+  text: string;
+  doubtfulWords: DoubtfulWord[];
+}
 
 /** Reading an image normally takes a few seconds; this is the ceiling. */
 export const READ_TIMEOUT_MS = 30_000;
@@ -62,6 +68,9 @@ export async function readImageText(
   }
 }
 
+const LIST_ITEM = /^[-•*]\s+/;
+const MAX_SUGGESTIONS = 4;
+
 function lines(text: string): string[] {
   return text
     .split(/\r?\n/)
@@ -69,12 +78,64 @@ function lines(text: string): string[] {
     .filter((line) => line !== "");
 }
 
-/** One paragraph per non-empty line of the reviewed text. */
-export function textToParagraphs(text: string): JSONContent[] {
-  return lines(text).map((line) => ({
-    type: "paragraph",
-    content: [{ type: "text", text: line }],
-  }));
+function withBreaks(rows: string[]): JSONContent[] {
+  return rows.flatMap((row, index) =>
+    index === 0
+      ? [{ type: "text", text: row }]
+      : [{ type: "hardBreak" }, { type: "text", text: row }],
+  );
+}
+
+/**
+ * Tiptap content for the reviewed text. A blank line separates blocks; in a
+ * block, rows starting with `- ` (or `•`, `*`) are bullet items, a row after
+ * an item continues it, and other rows form a paragraph with line breaks.
+ */
+export function textToContent(text: string): JSONContent[] {
+  const content: JSONContent[] = [];
+  for (const block of text.split(/\r?\n\s*\r?\n/)) {
+    let paragraph: string[] = [];
+    let items: string[][] = [];
+    const flushParagraph = () => {
+      if (paragraph.length > 0) {
+        content.push({ type: "paragraph", content: withBreaks(paragraph) });
+      }
+      paragraph = [];
+    };
+    const flushList = () => {
+      if (items.length > 0) {
+        content.push({
+          type: "bulletList",
+          content: items.map((rows) => ({
+            type: "listItem",
+            content: [{ type: "paragraph", content: withBreaks(rows) }],
+          })),
+        });
+      }
+      items = [];
+    };
+    for (const row of lines(block)) {
+      if (LIST_ITEM.test(row)) {
+        flushParagraph();
+        const item = row.replace(LIST_ITEM, "");
+        if (item !== "") items.push([item]);
+      } else if (items.length > 0) {
+        items[items.length - 1].push(row);
+      } else {
+        paragraph.push(row);
+      }
+    }
+    flushParagraph();
+    flushList();
+  }
+  return content;
+}
+
+/** The text without list markers, for previews and search. */
+export function plainText(text: string): string {
+  return lines(text)
+    .map((line) => line.replace(LIST_ITEM, ""))
+    .join("\n");
 }
 
 /**
@@ -85,7 +146,7 @@ export function imageNoteDocument(
   text: string,
   image?: { path: string; attachmentId: string },
 ): JSONContent {
-  const content = textToParagraphs(text);
+  const content = textToContent(text);
   if (image) {
     content.push({
       type: "image",
@@ -100,9 +161,53 @@ export function imageNoteDocument(
 
 /** The first line of the text, shortened to fit a note title. */
 export function titleFromText(text: string): string {
-  const [first = ""] = lines(text);
+  const [first = ""] = lines(plainText(text));
   if (first.length <= TITLE_MAX_LENGTH) return first;
   return `${first.slice(0, TITLE_MAX_LENGTH - 1).trimEnd()}…`;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Matches `word` as a whole word, letters with accents included. */
+function wholeWord(word: string, flags = "gu"): RegExp {
+  return new RegExp(
+    `(?<![\\p{L}\\p{N}])${escapeRegExp(word)}(?![\\p{L}\\p{N}])`,
+    flags,
+  );
+}
+
+/** Whether `word` still appears in the text, after the person's edits. */
+export function containsWord(text: string, word: string): boolean {
+  return wholeWord(word, "u").test(text);
+}
+
+/**
+ * The spell checker's guesses, best first: a guess already written
+ * elsewhere in the text ("menus" for "manus") comes before the others.
+ */
+export function rankSuggestions(
+  doubtful: DoubtfulWord,
+  text: string,
+): string[] {
+  const unique = [...new Set(doubtful.suggestions)].filter(
+    (suggestion) => suggestion !== doubtful.word,
+  );
+  const inText = unique.filter((suggestion) =>
+    wholeWord(suggestion, "iu").test(text),
+  );
+  const others = unique.filter((suggestion) => !inText.includes(suggestion));
+  return [...inText, ...others].slice(0, MAX_SUGGESTIONS);
+}
+
+/** Replaces every whole-word occurrence of `word`. */
+export function replaceWord(
+  text: string,
+  word: string,
+  replacement: string,
+): string {
+  return text.replace(wholeWord(word), () => replacement);
 }
 
 export interface ImageTextNoteInput {
@@ -132,7 +237,7 @@ export async function createImageTextNote(
         attachmentId,
       }),
     ),
-    contentText: lines(input.text).join("\n"),
+    contentText: plainText(input.text),
     notebookId: input.notebookId,
   });
   try {

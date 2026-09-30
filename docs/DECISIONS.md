@@ -431,3 +431,46 @@ only notes of the same language.
 - There is no in-app camera capture yet; photos come from the file picker or
   the clipboard (including Continuity Camera images pasted from an iPhone).
 - Whether the person edited the text is not stored.
+
+## D-013 — Image text is laid out from line geometry and checked for spelling
+
+**Date:** September 30, 2026
+**Task:** OCR-004 Better image reading
+**Status:** Accepted (supersedes the confidence score of D-012)
+
+### Decision
+
+- Recognition moves to `src-tauri/native/TextReader.swift`, compiled with
+  Keyguard.swift into one static library. On macOS 26 and later it uses
+  Vision's `RecognizeDocumentsRequest`, which groups lines into paragraphs;
+  earlier systems keep `VNRecognizeTextRequest`. The `objc2-vision` crate is
+  removed.
+- Both return lines with their positions; `text_layout.rs` joins lines at
+  the same height that do not overlap sideways into one row (a price and its
+  item, a word written to the side), makes blocks from the reader's
+  paragraphs or from vertical gaps, and turns rows starting with a bullet or
+  an arrow into `- ` list items. The background indexer uses the same text.
+- The review no longer shows a confidence score. Vision reports 100% on
+  handwriting it misreads. Instead, the Mac's spell checker (pt_BR, offline)
+  lists doubtful words with its guesses; a guess written elsewhere in the text
+  comes first. Nothing is replaced unless the person picks a guess.
+- In the reviewed text, a blank line separates paragraphs and `- ` starts a
+  bullet item; the note gets real paragraphs, line breaks and bullet lists.
+
+### Rationale
+
+- Measured on a photo of two handwritten sticky notes
+  (`tests/fixtures/ocr-handwritten-notes.jpg`): fixing the recognition
+  language changed nothing, and image scaling changed results erratically. The
+  document reader fixed about a quarter of the misread words and all of the
+  script confusion ("o tempo" had come back in Cyrillic). The spell checker
+  flagged exactly the remaining misreadings, often with the right guess.
+- Geometry fixes what both readers get wrong about receipts: the document
+  reader returns the price column after the item column.
+
+### Consequences
+
+- Words that are valid English are not flagged, unless a guess appears in the
+  text ("manus" beside "menus").
+- Handwriting is still imperfect; the doubtful-word list points the person to
+  what to check rather than claiming a score.

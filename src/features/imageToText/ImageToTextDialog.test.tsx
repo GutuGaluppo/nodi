@@ -45,7 +45,7 @@ describe("ImageToTextDialog", () => {
     const onCreated = vi.fn();
     const read = vi
       .fn()
-      .mockResolvedValue({ text: "Recibo\nTotal 12.40", confidence: 0.92 });
+      .mockResolvedValue({ text: "Recibo\nTotal 12.40", doubtfulWords: [] });
     render(
       <ImageToTextDialog
         notebookId="nb-1"
@@ -65,7 +65,9 @@ describe("ImageToTextDialog", () => {
       await screen.findByRole("heading", { name: "Revisar texto extraído" }),
     ).toBeInTheDocument();
     expect(read).toHaveBeenCalledWith(stored.relativePath);
-    expect(screen.getByText("Confiança da leitura: 92%")).toBeInTheDocument();
+    expect(
+      screen.getByText("Nenhuma palavra duvidosa encontrada."),
+    ).toBeInTheDocument();
     expect(
       screen.getByAltText("A imagem de onde o texto foi lido"),
     ).toHaveAttribute("src", `asset://${stored.relativePath}`);
@@ -85,9 +87,16 @@ describe("ImageToTextDialog", () => {
     });
   });
 
-  it("warns about low confidence but still allows saving", async () => {
+  it("fixes doubtful words with a suggestion, or keeps them", async () => {
     const user = userEvent.setup();
-    const read = vi.fn().mockResolvedValue({ text: "R3c1b0", confidence: 0.3 });
+    const read = vi.fn().mockResolvedValue({
+      text: "Logo barra de manus\nse estier ativo\nCadence",
+      doubtfulWords: [
+        { word: "manus", suggestions: ["Manaus", "manos", "menus"] },
+        { word: "estier", suggestions: ["estiver", "Ester"] },
+        { word: "Cadence", suggestions: ["Cadente"] },
+      ],
+    });
     render(
       <ImageToTextDialog
         notebookId={null}
@@ -99,8 +108,35 @@ describe("ImageToTextDialog", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Escolher imagem" }));
+    expect(
+      await screen.findByRole("heading", { name: "Palavras duvidosas (3)" }),
+    ).toBeInTheDocument();
+    const textarea = screen.getByLabelText(/Texto extraído/);
 
-    expect(await screen.findByText(/Confiança baixa \(30%\)/)).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Trocar estier por estiver" }),
+    );
+    expect(textarea).toHaveValue(
+      "Logo barra de manus\nse estiver ativo\nCadence",
+    );
+    // Focus moves on to the next word.
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Trocar manus por Manaus" }),
+      ).toHaveFocus(),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Manter Cadence" }));
+    expect(
+      screen.getByRole("heading", { name: "Palavras duvidosas (1)" }),
+    ).toBeInTheDocument();
+
+    // Fixing a word by hand also takes it off the list.
+    await user.clear(textarea);
+    await user.type(textarea, "Logo barra de menus");
+    expect(
+      screen.getByText("Todas as palavras duvidosas foram revistas."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Gerar nota" })).toBeEnabled();
   });
 
@@ -109,7 +145,7 @@ describe("ImageToTextDialog", () => {
     const read = vi
       .fn()
       .mockRejectedValueOnce(new Error("Vision failed"))
-      .mockResolvedValueOnce({ text: "Recibo", confidence: 0.9 });
+      .mockResolvedValueOnce({ text: "Recibo", doubtfulWords: [] });
     render(
       <ImageToTextDialog
         notebookId={null}
@@ -134,7 +170,9 @@ describe("ImageToTextDialog", () => {
     vi.mocked(createImageTextNote).mockRejectedValueOnce(
       new Error("disk full"),
     );
-    const read = vi.fn().mockResolvedValue({ text: "Recibo", confidence: 0.9 });
+    const read = vi
+      .fn()
+      .mockResolvedValue({ text: "Recibo", doubtfulWords: [] });
     render(
       <ImageToTextDialog
         notebookId={null}

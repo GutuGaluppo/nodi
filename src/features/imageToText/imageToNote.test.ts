@@ -7,11 +7,15 @@ import {
   permanentlyDeleteNote,
 } from "../../db/repositories/noteRepository";
 import {
+  containsWord,
   createImageTextNote,
   imageNoteDocument,
+  plainText,
   ReadTimeoutError,
+  rankSuggestions,
   readImageText,
-  textToParagraphs,
+  replaceWord,
+  textToContent,
   titleFromText,
 } from "./imageToNote";
 
@@ -35,12 +39,77 @@ const image = {
   mimeType: "image/png",
 };
 
-describe("textToParagraphs", () => {
-  it("turns each line into a paragraph and skips blank lines", () => {
-    expect(textToParagraphs("Linha 1\n\n  Linha 2  \r\n")).toEqual([
-      { type: "paragraph", content: [{ type: "text", text: "Linha 1" }] },
-      { type: "paragraph", content: [{ type: "text", text: "Linha 2" }] },
+const text = (value: string) => ({ type: "text", text: value });
+const paragraph = (...rows: string[]) => ({
+  type: "paragraph",
+  content: rows.flatMap((row, index) =>
+    index === 0 ? [text(row)] : [{ type: "hardBreak" }, text(row)],
+  ),
+});
+
+describe("textToContent", () => {
+  it("makes one paragraph per block, keeping its line breaks", () => {
+    expect(textToContent("Linha 1\nLinha 2\n\n  Linha 3  \r\n")).toEqual([
+      paragraph("Linha 1", "Linha 2"),
+      paragraph("Linha 3"),
     ]);
+  });
+
+  it("turns marked rows into a bullet list; later rows continue the item", () => {
+    expect(
+      textToContent("Cadence\n- fechar app\ncom Quit\n• logo\n\nFim"),
+    ).toEqual([
+      paragraph("Cadence"),
+      {
+        type: "bulletList",
+        content: [
+          {
+            type: "listItem",
+            content: [paragraph("fechar app", "com Quit")],
+          },
+          { type: "listItem", content: [paragraph("logo")] },
+        ],
+      },
+      paragraph("Fim"),
+    ]);
+  });
+
+  it("keeps a minus sign that is not a marker", () => {
+    expect(textToContent("-5 graus")).toEqual([paragraph("-5 graus")]);
+  });
+});
+
+describe("plainText", () => {
+  it("drops list markers and blank lines", () => {
+    expect(plainText("Título\n\n- um\n- dois")).toBe("Título\num\ndois");
+  });
+});
+
+describe("doubtful words", () => {
+  const sample = "Logo barra de manus\nde menus.\nsomanus";
+
+  it("ranks guesses written elsewhere in the text first", () => {
+    expect(
+      rankSuggestions(
+        { word: "manus", suggestions: ["Manaus", "manos", "menus", "manus"] },
+        sample,
+      ),
+    ).toEqual(["menus", "Manaus", "manos"]);
+  });
+
+  it("replaces whole words only, accents included", () => {
+    expect(replaceWord(sample, "manus", "menus")).toBe(
+      "Logo barra de menus\nde menus.\nsomanus",
+    );
+    expect(replaceWord("améis e améis.", "améis", "anéis")).toBe(
+      "anéis e anéis.",
+    );
+  });
+
+  it("knows when a word is gone after an edit", () => {
+    expect(containsWord(sample, "manus")).toBe(true);
+    expect(containsWord("somanus", "manus")).toBe(false);
+    expect(containsWord("estiver", "estier")).toBe(false);
   });
 });
 
@@ -53,7 +122,7 @@ describe("imageNoteDocument", () => {
 
     expect(doc.type).toBe("doc");
     expect(doc.content).toEqual([
-      { type: "paragraph", content: [{ type: "text", text: "Olá mundo" }] },
+      paragraph("Olá mundo"),
       {
         type: "image",
         attrs: { path: image.relativePath, attachmentId: "att-1", alt: "" },
@@ -76,6 +145,10 @@ describe("titleFromText", () => {
     );
   });
 
+  it("leaves out a list marker", () => {
+    expect(titleFromText("- comprar pão")).toBe("comprar pão");
+  });
+
   it("shortens long lines", () => {
     const title = titleFromText("a".repeat(200));
     expect(title).toHaveLength(80);
@@ -89,12 +162,12 @@ describe("readImageText", () => {
     const read = vi
       .fn()
       .mockReturnValueOnce(new Promise(() => {}))
-      .mockResolvedValueOnce({ text: "ok", confidence: 0.9 });
+      .mockResolvedValueOnce({ text: "ok", doubtfulWords: [] });
 
     const pending = readImageText("attachments/x/y.png", read, 1_000);
     await vi.advanceTimersByTimeAsync(1_000);
 
-    await expect(pending).resolves.toEqual({ text: "ok", confidence: 0.9 });
+    await expect(pending).resolves.toEqual({ text: "ok", doubtfulWords: [] });
     expect(read).toHaveBeenCalledTimes(2);
     vi.useRealTimers();
   });
@@ -151,6 +224,9 @@ describe("createImageTextNote", () => {
     const input = vi.mocked(createNote).mock.calls[0][0];
     expect(input?.title).toBe("Recibo");
     expect(input?.contentText).toBe("Recibo\nTotal 12.40");
+    expect(JSON.parse(input?.contentJson ?? "{}").content[0]).toEqual(
+      paragraph("Recibo", "Total 12.40"),
+    );
     expect(input?.notebookId).toBe("nb-1");
 
     const attachment = vi.mocked(createAttachment).mock.calls[0][0];

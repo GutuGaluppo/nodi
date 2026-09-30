@@ -7,7 +7,8 @@ import {
 } from "react";
 import Icon from "../../components/ui/Icon";
 import { attachmentUrl } from "../../lib/attachments/attachmentUrl";
-import { LOW_CONFIDENCE, type ReadImage } from "./imageToNote";
+import DoubtfulWords from "./DoubtfulWords";
+import { type ReadImage, replaceWord } from "./imageToNote";
 import { useImageToNote } from "./useImageToNote";
 
 interface ImageToTextDialogProps {
@@ -35,13 +36,17 @@ function ImageToTextDialog({
   const flow = useImageToNote({ notebookId, onCreated, read });
   const { phase, image, result, error } = flow.state;
   const [text, setText] = useState("");
+  const [kept, setKept] = useState<string[]>([]);
   const dialogRef = useRef<HTMLDivElement>(null);
   const firstActionRef = useRef<HTMLButtonElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   // Seeded once per reading, so edits survive a failed save.
   useEffect(() => {
-    if (result) setText(result.text);
+    if (result) {
+      setText(result.text);
+      setKept([]);
+    }
   }, [result]);
 
   useEffect(() => {
@@ -96,9 +101,6 @@ function ImageToTextDialog({
     }
   }
 
-  const confidence = result ? Math.round(result.confidence * 100) : 0;
-  const lowConfidence =
-    result !== null && result.text !== "" && result.confidence < LOW_CONFIDENCE;
   const busy = phase === "reading" || phase === "saving";
 
   return (
@@ -135,7 +137,7 @@ function ImageToTextDialog({
 
         <p id="image-to-text-help" className="image-to-text-help">
           {phase === "review" || phase === "saving"
-            ? "Corrija o que for preciso. Cada linha vira um parágrafo, e a imagem fica guardada na nota."
+            ? 'Corrija o que for preciso. Uma linha em branco separa parágrafos, "- " começa um item de lista, e a imagem fica guardada na nota.'
             : "Escolha ou cole (⌘V) uma foto com texto. O texto é lido neste Mac, sem enviar nada."}
         </p>
 
@@ -176,19 +178,33 @@ function ImageToTextDialog({
                 ref={textRef}
                 value={text}
                 disabled={phase === "saving"}
-                aria-describedby="image-to-text-confidence"
+                aria-describedby="image-to-text-doubtful"
                 onChange={(event) => setText(event.target.value)}
               />
-              <p
-                id="image-to-text-confidence"
-                className={`image-to-text-confidence${lowConfidence ? " is-low" : ""}`}
-              >
-                {result.text === ""
-                  ? "Nenhum texto encontrado. Você pode escrever o texto, ou tentar outra imagem."
-                  : lowConfidence
-                    ? `Confiança baixa (${confidence}%): confira o texto com atenção.`
-                    : `Confiança da leitura: ${confidence}%`}
-              </p>
+              {result.text === "" ? (
+                <p
+                  id="image-to-text-doubtful"
+                  className="image-to-text-doubtful-empty"
+                >
+                  Nenhum texto encontrado. Você pode escrever o texto, ou tentar
+                  outra imagem.
+                </p>
+              ) : (
+                <DoubtfulWords
+                  words={result.doubtfulWords.filter(
+                    (doubtful) => !kept.includes(doubtful.word),
+                  )}
+                  text={text}
+                  disabled={phase === "saving"}
+                  onReplace={(word, replacement) =>
+                    setText((current) =>
+                      replaceWord(current, word, replacement),
+                    )
+                  }
+                  onKeep={(word) => setKept((current) => [...current, word])}
+                  onDone={() => textRef.current?.focus()}
+                />
+              )}
             </div>
           </div>
         ) : null}

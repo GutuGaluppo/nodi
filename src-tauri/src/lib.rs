@@ -5,6 +5,7 @@ mod mirror;
 mod ocr;
 mod quick_capture;
 mod spotlight;
+mod text_layout;
 mod touch_id;
 mod voice;
 
