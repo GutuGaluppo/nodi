@@ -30,6 +30,7 @@ import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-li
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import ocr001Screenshot from "../../../docs/about/screenshots/ocr-001-image-text.png";
 import ocr002Screenshot from "../../../docs/about/screenshots/ocr-002-searchable-images.png";
+import ocr003Screenshot from "../../../docs/about/screenshots/ocr-003-image-to-note.png";
 import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
 import privRec004Screenshot from "../../../docs/about/screenshots/priv-rec-004-touch-id.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
@@ -588,6 +589,14 @@ const evolution = [
     description:
       "Private notes can open with Touch ID, or the Mac's password, through a key sealed by this Mac's Secure Enclave. It also resets a forgotten password, and it is off until you turn it on.",
     screenshot: privRec004Screenshot,
+  },
+  {
+    id: "OCR-003",
+    title: "Notes from images",
+    date: "September 30, 2026",
+    description:
+      '"Nota de imagem" (⌘⇧P) turns a photo into a note: the text is read on this Mac with Apple\'s Vision framework, shown next to the image with its confidence for review, and becomes a note only when approved, with the image kept in it.',
+    screenshot: ocr003Screenshot,
   },
 ];
 
