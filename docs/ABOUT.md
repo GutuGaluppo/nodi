@@ -526,3 +526,19 @@ The Spotlight row on the "Your data" page read its on/off setting through a quer
 Private notes can now open with Touch ID. Turned on in "Your data" with the private-notes password, it seals a copy of the notes' key with this Mac's Secure Enclave; macOS then asks for Touch ID, or the Mac's password when Touch ID is not set up. The sealed copy works on no other Mac. Touch ID can also reset a forgotten password, next to the recovery key. It is off by default, because anyone who can pass Touch ID on the Mac can then open private notes.
 
 ![NODI during PRIV-REC-004: a private note offering Touch ID](about/screenshots/priv-rec-004-touch-id.png)
+
+## 065 — OCR-003 Notes from images
+
+**Completed:** September 30, 2026
+
+A new "Nota de imagem" entry in the sidebar, also on ⌘⇧P, turns a photo of a receipt, a whiteboard or a page into a note. Choose or paste an image and NODI reads its text on this Mac with Apple's Vision framework, with nothing sent anywhere. The text appears next to the image with a confidence score, and a warning when it is low, so it can be corrected, read again or dropped. Nothing is saved until "Gerar nota": the note gets one paragraph per line, keeps the image as an attachment, and the image's words are already searchable.
+
+![NODI after OCR-003: the "Nota de imagem" entry in the sidebar](about/screenshots/ocr-003-image-to-note.png)
+
+## 066 — OCR-004 Better image reading
+
+**Completed:** September 30, 2026
+
+A photo of handwritten sticky notes showed where reading went wrong: every line became its own paragraph, a word written to the side landed alone, "o tempo" came back in Cyrillic, and the confidence score said 100% throughout. On macOS 26, NODI now uses Vision's document reader, which reads handwriting better and knows paragraphs. Lines are then laid out by position, so a price stays beside its item and a side note joins its line, and bullets and arrows become list items. The score is gone; instead, the review lists the words the Mac's spell checker doubts, with its guesses, and a guess already written elsewhere in the note comes first. Nothing changes until you pick one. The photo is now a test case.
+
+![NODI after OCR-004: reviewing handwritten notes with doubtful words listed](about/screenshots/ocr-004-doubtful-words.png)

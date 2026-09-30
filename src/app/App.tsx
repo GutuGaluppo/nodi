@@ -5,6 +5,7 @@ import AttachmentSweeper from "../features/attachments/AttachmentSweeper";
 import { captureToNote } from "../features/capture/captureNote";
 import { useCaptureEvents } from "../features/capture/useCaptureEvents";
 import ImageTextIndexer from "../features/images/ImageTextIndexer";
+import ImageToTextDialog from "../features/imageToText/ImageToTextDialog";
 import MirrorSync from "../features/mirror/MirrorSync";
 import { useCreateNote } from "../features/notes/useCreateNote";
 import YourData from "../features/privacy/YourData";
@@ -39,6 +40,7 @@ function Workspace({
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchInitialQuery, setSearchInitialQuery] = useState("");
+  const [imageNoteOpen, setImageNoteOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editorFocusRequest, setEditorFocusRequest] = useState<string | null>(
     null,
@@ -107,6 +109,12 @@ function Workspace({
         setSearchOpen(true);
       },
     },
+    {
+      id: "image-note",
+      keys: ["mod", "shift", "p"],
+      label: "Nota de imagem",
+      action: () => setImageNoteOpen(true),
+    },
   ]);
 
   return (
@@ -119,6 +127,7 @@ function Workspace({
         onCreateNote={() => {
           void handleCreateNote();
         }}
+        onCreateImageNote={() => setImageNoteOpen(true)}
         selectedNoteId={selectedNoteId}
         onSelectNote={handleSelectNote}
         editorPaneRef={editorPaneRef}
@@ -158,6 +167,18 @@ function Workspace({
             setSelectedTagId(null);
             setSelectedNoteId(id);
             setSearchOpen(false);
+          }}
+        />
+      ) : null}
+      {imageNoteOpen ? (
+        <ImageToTextDialog
+          notebookId={activeView === "notes" ? selectedNotebookId : null}
+          onClose={() => setImageNoteOpen(false)}
+          onCreated={(noteId) => {
+            setImageNoteOpen(false);
+            if (activeView === "trash") handleNavigate("notes");
+            setSelectedTagId(null);
+            setSelectedNoteId(noteId);
           }}
         />
       ) : null}
