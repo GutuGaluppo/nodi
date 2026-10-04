@@ -55,6 +55,17 @@ button {
   color: inherit;
 }
 
+/* A link to another page of NODI, inside a sentence. */
+.inline-link-button {
+  display: inline;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;
@@ -1023,8 +1034,15 @@ h1 {
   font-weight: 650;
 }
 
-.primary-button:hover {
+.primary-button:hover:not(:disabled) {
   background: var(--color-accent-hover);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .dialog-backdrop {
@@ -1710,5 +1728,75 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   .image-to-text-spinner {
     animation-duration: 3s;
+  }
+}
+
+.handwriting-notice {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-muted);
+}
+
+.handwriting-choice {
+  display: grid;
+  gap: 12px;
+}
+
+.handwriting-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.handwriting-consent input {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.handwriting-plans {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 24px;
+}
+
+.handwriting-plan {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.handwriting-plan.featured {
+  border-color: var(--color-accent);
+}
+
+.handwriting-price {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.handwriting-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 1000px) {
+  .handwriting-plans {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .handwriting-plans {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .image-to-text-dialog {
+    width: calc(100vw - 24px);
+    padding: 16px;
+  }
+  .image-to-text-dialog .dialog-actions {
+    flex-wrap: wrap;
   }
 }

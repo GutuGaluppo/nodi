@@ -2,6 +2,7 @@
 //! Vision framework through `native/TextReader.swift`. Nothing leaves the
 //! Mac; recognition runs in this process.
 
+use std::collections::HashMap;
 use std::path::{Component, Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -17,6 +18,9 @@ pub struct DoubtfulWord {
     pub suggestions: Vec<String>,
 }
 
+/// Other readings Vision had for the words it read, by word.
+pub type Variants = HashMap<String, Vec<String>>;
+
 /// The text read from an image, for review before it becomes a note.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,9 +35,9 @@ pub struct ImageText {
 mod native {
     use std::ffi::{c_char, CStr, CString};
 
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
 
-    use super::DoubtfulWord;
+    use super::{DoubtfulWord, Variants};
     use crate::text_layout::Line;
 
     extern "C" {
@@ -43,8 +47,22 @@ mod native {
     }
 
     #[derive(Deserialize)]
+    struct ReadLine {
+        #[serde(flatten)]
+        line: Line,
+        #[serde(default)]
+        variants: Variants,
+    }
+
+    #[derive(Deserialize)]
     struct Reading {
-        lines: Vec<Line>,
+        lines: Vec<ReadLine>,
+    }
+
+    #[derive(Serialize)]
+    struct SpellingInput<'a> {
+        text: &'a str,
+        variants: &'a Variants,
     }
 
     /// Takes ownership of a string the Swift side allocated with `strdup`.
@@ -75,16 +93,34 @@ mod native {
         }
     }
 
-    pub fn read(path: &str) -> Result<Vec<Line>, String> {
+    /// The lines read, and the other readings of their words.
+    pub fn read(path: &str) -> Result<(Vec<Line>, Variants), String> {
         let json = call(path, nodi_text_read)?;
-        serde_json::from_str::<Reading>(&json)
-            .map(|reading| reading.lines)
-            .map_err(|err| err.to_string())
+        let reading = serde_json::from_str::<Reading>(&json).map_err(|err| err.to_string())?;
+        let mut variants = Variants::new();
+        let lines = reading
+            .lines
+            .into_iter()
+            .map(|read| {
+                for (word, others) in read.variants {
+                    let known = variants.entry(word).or_default();
+                    for other in others {
+                        if !known.contains(&other) {
+                            known.push(other);
+                        }
+                    }
+                }
+                read.line
+            })
+            .collect();
+        Ok((lines, variants))
     }
 
     /// Uses AppKit's spell checker: call it on the main thread in the app.
-    pub fn check_spelling(text: &str) -> Result<Vec<DoubtfulWord>, String> {
-        let json = call(text, nodi_text_check_spelling)?;
+    pub fn check_spelling(text: &str, variants: &Variants) -> Result<Vec<DoubtfulWord>, String> {
+        let input = serde_json::to_string(&SpellingInput { text, variants })
+            .map_err(|err| err.to_string())?;
+        let json = call(&input, nodi_text_check_spelling)?;
         serde_json::from_str(&json).map_err(|err| err.to_string())
     }
 }
@@ -92,8 +128,7 @@ mod native {
 /// Recognizes the text in an image file, laid out in rows and blocks.
 #[cfg(target_os = "macos")]
 pub fn recognize_text(path: &Path) -> Result<String, String> {
-    let lines: Vec<Line> = native::read(&path.to_string_lossy())?;
-    Ok(layout(&lines))
+    read_text(path).map(|(text, _)| text)
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -101,11 +136,23 @@ pub fn recognize_text(_path: &Path) -> Result<String, String> {
     Err("text recognition is only available on macOS".into())
 }
 
+/// The laid-out text, and the other readings of its words.
 #[cfg(target_os = "macos")]
-fn doubtful_words(app: &AppHandle, text: String) -> Vec<DoubtfulWord> {
+fn read_text(path: &Path) -> Result<(String, Variants), String> {
+    let (lines, variants): (Vec<Line>, Variants) = native::read(&path.to_string_lossy())?;
+    Ok((layout(&lines), variants))
+}
+
+#[cfg(not(target_os = "macos"))]
+fn read_text(path: &Path) -> Result<(String, Variants), String> {
+    recognize_text(path).map(|text| (text, Variants::new()))
+}
+
+#[cfg(target_os = "macos")]
+fn doubtful_words(app: &AppHandle, text: String, variants: Variants) -> Vec<DoubtfulWord> {
     let (sender, receiver) = std::sync::mpsc::channel();
     let scheduled = app.run_on_main_thread(move || {
-        let _ = sender.send(native::check_spelling(&text));
+        let _ = sender.send(native::check_spelling(&text, &variants));
     });
     match scheduled.map(|()| receiver.recv()) {
         Ok(Ok(Ok(words))) => words,
@@ -114,7 +161,7 @@ fn doubtful_words(app: &AppHandle, text: String) -> Vec<DoubtfulWord> {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn doubtful_words(_app: &AppHandle, _text: String) -> Vec<DoubtfulWord> {
+fn doubtful_words(_app: &AppHandle, _text: String, _variants: Variants) -> Vec<DoubtfulWord> {
     Vec::new()
 }
 
@@ -151,13 +198,13 @@ pub async fn recognize_attachment_text(
 pub async fn read_image_text(app: AppHandle, relative_path: String) -> Result<ImageText, String> {
     let app_data = app.path().app_data_dir().map_err(|err| err.to_string())?;
     let path = resolve_attachment(&app_data, &relative_path)?;
-    let text = tauri::async_runtime::spawn_blocking(move || recognize_text(&path))
+    let (text, variants) = tauri::async_runtime::spawn_blocking(move || read_text(&path))
         .await
         .map_err(|err| err.to_string())??;
     let checker = app.clone();
     let spelling = text.clone();
     let doubtful_words =
-        tauri::async_runtime::spawn_blocking(move || doubtful_words(&checker, spelling))
+        tauri::async_runtime::spawn_blocking(move || doubtful_words(&checker, spelling, variants))
             .await
             .unwrap_or_default();
     Ok(ImageText {
@@ -244,6 +291,7 @@ mod tests {
     fn points_out_misread_words_with_suggestions() {
         let words = native::check_spelling(
             "Logo pulsando se estier ativo, click com Quit. Barra de manus, barra de menus",
+            &Variants::new(),
         )
         .expect("the spell checker should run");
 
@@ -258,6 +306,51 @@ mod tests {
             .all(|word| word.word != "click" && word.word != "Quit"));
         // ...unless a suggestion is written elsewhere in the text.
         assert!(words.iter().any(|word| word.word == "manus"), "{words:?}");
+    }
+
+    /// A handwritten list in English, photographed on a desk (OCR-005).
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn suggests_what_a_handwritten_list_says() {
+        let (text, variants) =
+            read_text(&fixture("ocr-handwritten-list.jpg")).expect("Vision should read it");
+        let words = native::check_spelling(&text, &variants).expect("the spell checker should run");
+        let first = |misread: &str| {
+            words
+                .iter()
+                .find(|word| word.word == misread)
+                .and_then(|word| word.suggestions.first().cloned())
+                .unwrap_or_else(|| panic!("{misread} not doubtful in {words:#?}\n{text}"))
+        };
+
+        // Guesses in the line's language, not Portuguese ("Lata")...
+        assert_eq!(first("Layat"), "Layout");
+        assert_eq!(first("doubful"), "doubtful");
+        // ...and what the other readings saw in the word's place.
+        assert_eq!(first("Grap"), "Group");
+        assert_eq!(first("lamework"), "framework");
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn suggests_other_readings_of_a_word_first() {
+        let variants = Variants::from([(
+            "conpilence".to_string(),
+            vec!["confidence".to_string(), "conpidence".to_string()],
+        )]);
+        let words = native::check_spelling("Show conpilence score in review", &variants)
+            .expect("the spell checker should run");
+
+        assert_eq!(words.len(), 1, "{words:?}");
+        assert_eq!(words[0].suggestions.first().unwrap(), "confidence");
+        // An English line gets no Portuguese guesses ("compelindo").
+        assert!(
+            !words[0]
+                .suggestions
+                .iter()
+                .any(|guess| guess.starts_with("compel")),
+            "{words:?}"
+        );
     }
 
     #[cfg(target_os = "macos")]

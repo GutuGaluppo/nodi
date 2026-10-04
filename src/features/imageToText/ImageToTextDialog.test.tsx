@@ -1,239 +1,268 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Note } from "../../db/repositories/noteRepository";
+import {
+  type HandwritingClient,
+  HandwritingError,
+} from "../handwriting/client";
 import ImageToTextDialog from "./ImageToTextDialog";
 import { createImageTextNote } from "./imageToNote";
 
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
-vi.mock("../../lib/attachments/attachmentUrl", () => ({
-  attachmentUrl: (path: string) => `asset://${path}`,
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn(),
+  isTauri: () => true,
 }));
 vi.mock("./imageToNote", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./imageToNote")>()),
   createImageTextNote: vi.fn(),
 }));
-
 const stored = {
   relativePath: "attachments/ab/abcdef/image.png",
   sha256: "abcdef",
-  size: 1234,
+  size: 12,
   filename: "image.png",
   mimeType: "image/png",
 };
-
 function wrapper({ children }: { children: ReactNode }) {
-  const client = new QueryClient();
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      {children}
+    </QueryClientProvider>
+  );
+}
+function service(): HandwritingClient {
+  return {
+    available: true,
+    usage: vi.fn().mockResolvedValue({
+      plan: "free",
+      monthlyRemaining: 0,
+      trialRemaining: 1,
+      additional: [],
+      renewalAt: null,
+      deleteAfterSeconds: 3600,
+      paymentsAvailable: false,
+      restoreAvailable: false,
+    }),
+    quote: vi.fn().mockResolvedValue({
+      id: "quote1",
+      pages: 1,
+      credits: 1,
+      expiresAt: "2026-10-02T12:00:00Z",
+    }),
+    submit: vi.fn().mockResolvedValue({ id: "job1" }),
+    status: vi.fn().mockResolvedValue({
+      id: "job1",
+      pages: 1,
+      status: "processed",
+      text: "Grap conpilence\nExact text",
+    }),
+    jobs: vi.fn().mockResolvedValue([]),
+    lookup: vi.fn().mockResolvedValue({ id: "job1" }),
+    checkout: vi.fn(),
+    restore: vi.fn(),
+  };
+}
+async function chooseAndConfirm(
+  client: HandwritingClient,
+  onCreated = vi.fn(),
+  onOpenPlanUsage?: () => void,
+) {
+  const user = userEvent.setup();
+  render(
+    <ImageToTextDialog
+      notebookId="nb-1"
+      onClose={vi.fn()}
+      onCreated={onCreated}
+      onOpenPlanUsage={onOpenPlanUsage}
+      client={client}
+    />,
+    { wrapper },
+  );
+  await user.upload(
+    screen.getByLabelText("Escolher imagem ou PDF"),
+    new File(["image bytes"], "source.png", { type: "image/png" }),
+  );
+  const validate = screen.getByRole("button", { name: "Validar páginas" });
+  expect(validate).toBeDisabled();
+  expect(client.quote).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("checkbox"));
+  await user.click(validate);
+  await screen.findByText("1 página(s) · 1 crédito(s)");
+  expect(client.submit).not.toHaveBeenCalled();
+  return user;
 }
 
-describe("ImageToTextDialog", () => {
+describe("Handwriting image-to-text", () => {
   beforeEach(() => {
-    vi.mocked(invoke)
-      .mockReset()
-      .mockResolvedValue({ stored: [stored], rejected: [] });
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, {
+        createObjectURL: vi.fn(() => "blob:preview"),
+        revokeObjectURL: vi.fn(),
+      }),
+    );
+    vi.mocked(invoke).mockReset().mockResolvedValue(stored);
     vi.mocked(createImageTextNote)
       .mockReset()
       .mockResolvedValue({ id: "note-9" } as Note);
   });
-
-  it("completes the flow: choose → read → review → create", async () => {
-    const user = userEvent.setup();
+  it("requires consent and cost confirmation, preserves exact provider text, saves after review", async () => {
+    const client = service();
     const onCreated = vi.fn();
-    const read = vi
-      .fn()
-      .mockResolvedValue({ text: "Recibo\nTotal 12.40", doubtfulWords: [] });
-    render(
-      <ImageToTextDialog
-        notebookId="nb-1"
-        onClose={vi.fn()}
-        onCreated={onCreated}
-        read={read}
-      />,
-      { wrapper },
+    const user = await chooseAndConfirm(client, onCreated);
+    await user.click(
+      screen.getByRole("button", { name: "Transcrever · 1 crédito(s)" }),
     );
-
-    expect(screen.getByRole("dialog")).toHaveAccessibleName(
-      "Nota a partir de imagem",
+    await user.click(
+      await screen.findByRole("button", { name: "Consultar processamento" }),
     );
-    await user.click(screen.getByRole("button", { name: "Escolher imagem" }));
-
-    expect(
-      await screen.findByRole("heading", { name: "Revisar texto extraído" }),
-    ).toBeInTheDocument();
-    expect(read).toHaveBeenCalledWith(stored.relativePath);
-    expect(
-      screen.getByText("Nenhuma palavra duvidosa encontrada."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByAltText("A imagem de onde o texto foi lido"),
-    ).toHaveAttribute("src", `asset://${stored.relativePath}`);
-
-    const textarea = screen.getByLabelText(/Texto extraído/);
-    expect(textarea).toHaveFocus();
-    await user.clear(textarea);
-    await user.type(textarea, "Texto editado");
+    const text = await screen.findByLabelText(
+      "Texto extraído — edite conforme necessário",
+    );
+    expect(text).toHaveValue("Grap conpilence\nExact text");
+    expect(text).toHaveFocus();
+    await user.clear(text);
+    await user.type(text, "Reviewed note");
     await user.click(screen.getByRole("button", { name: "Gerar nota" }));
-
-    await waitFor(() => expect(onCreated).toHaveBeenCalledWith("note-9"));
+    expect(onCreated).toHaveBeenCalledWith("note-9");
     expect(createImageTextNote).toHaveBeenCalledWith({
       image: stored,
-      text: "Texto editado",
-      recognizedText: "Recibo\nTotal 12.40",
+      text: "Reviewed note",
+      recognizedText: "Grap conpilence\nExact text",
       notebookId: "nb-1",
     });
-  });
-
-  it("fixes doubtful words with a suggestion, or keeps them", async () => {
-    const user = userEvent.setup();
-    const read = vi.fn().mockResolvedValue({
-      text: "Logo barra de manus\nse estier ativo\nCadence",
-      doubtfulWords: [
-        { word: "manus", suggestions: ["Manaus", "manos", "menus"] },
-        { word: "estier", suggestions: ["estiver", "Ester"] },
-        { word: "Cadence", suggestions: ["Cadente"] },
-      ],
-    });
-    render(
-      <ImageToTextDialog
-        notebookId={null}
-        onClose={vi.fn()}
-        onCreated={vi.fn()}
-        read={read}
-      />,
-      { wrapper },
+    expect(invoke).toHaveBeenCalledWith(
+      "import_handwriting_bytes",
+      expect.any(Uint8Array),
     );
-
-    await user.click(screen.getByRole("button", { name: "Escolher imagem" }));
-    expect(
-      await screen.findByRole("heading", { name: "Palavras duvidosas (3)" }),
-    ).toBeInTheDocument();
-    const textarea = screen.getByLabelText(/Texto extraído/);
-
+    expect(client.submit).toHaveBeenCalledTimes(1);
+  });
+  it("copies and exports the reviewed text without another transcription", async () => {
+    const client = service();
+    const user = await chooseAndConfirm(client);
     await user.click(
-      screen.getByRole("button", { name: "Trocar estier por estiver" }),
+      screen.getByRole("button", { name: "Transcrever · 1 crédito(s)" }),
     );
-    expect(textarea).toHaveValue(
-      "Logo barra de manus\nse estiver ativo\nCadence",
+    await user.click(
+      await screen.findByRole("button", { name: "Consultar processamento" }),
     );
-    // Focus moves on to the next word.
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: "Trocar manus por Manaus" }),
-      ).toHaveFocus(),
+    await screen.findByLabelText("Texto extraído — edite conforme necessário");
+    await user.click(screen.getByRole("button", { name: "Copiar" }));
+    expect(await navigator.clipboard.readText()).toBe(
+      "Grap conpilence\nExact text",
     );
-
-    await user.click(screen.getByRole("button", { name: "Manter Cadence" }));
-    expect(
-      screen.getByRole("heading", { name: "Palavras duvidosas (1)" }),
-    ).toBeInTheDocument();
-
-    // Fixing a word by hand also takes it off the list.
-    await user.clear(textarea);
-    await user.type(textarea, "Logo barra de menus");
-    expect(
-      screen.getByText("Todas as palavras duvidosas foram revistas."),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Gerar nota" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "Exportar TXT" }));
+    expect(invoke).toHaveBeenCalledWith("export_handwriting_text", {
+      text: "Grap conpilence\nExact text",
+    });
+    expect(client.submit).toHaveBeenCalledTimes(1);
   });
 
-  it("offers another try when reading fails", async () => {
-    const user = userEvent.setup();
-    const read = vi
-      .fn()
-      .mockRejectedValueOnce(new Error("Vision failed"))
-      .mockResolvedValueOnce({ text: "Recibo", doubtfulWords: [] });
-    render(
-      <ImageToTextDialog
-        notebookId={null}
-        onClose={vi.fn()}
-        onCreated={vi.fn()}
-        read={read}
-      />,
-      { wrapper },
+  it("keeps timeout pending and consults the same job without submitting again", async () => {
+    const client = service();
+    vi.mocked(client.submit).mockRejectedValueOnce(
+      new HandwritingError("provider_timeout"),
     );
-
-    await user.click(screen.getByRole("button", { name: "Escolher imagem" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Vision failed");
-
-    await user.click(screen.getByRole("button", { name: "Tentar novamente" }));
-    expect(
-      await screen.findByRole("heading", { name: "Revisar texto extraído" }),
-    ).toBeInTheDocument();
+    const user = await chooseAndConfirm(client);
+    await user.click(
+      screen.getByRole("button", { name: "Transcrever · 1 crédito(s)" }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "Consultar processamento" }),
+    );
+    expect(client.lookup).toHaveBeenCalledWith("quote1");
+    await user.click(
+      await screen.findByRole("button", { name: "Consultar processamento" }),
+    );
+    await screen.findByLabelText("Texto extraído — edite conforme necessário");
+    expect(client.submit).toHaveBeenCalledTimes(1);
   });
-
-  it("keeps the reviewed text when saving fails", async () => {
-    const user = userEvent.setup();
+  it("never offers a charge when credits are insufficient", async () => {
+    const client = service();
+    vi.mocked(client.usage).mockResolvedValue({
+      plan: "free",
+      monthlyRemaining: 0,
+      trialRemaining: 0,
+      additional: [],
+      renewalAt: null,
+      deleteAfterSeconds: 3600,
+      paymentsAvailable: false,
+      restoreAvailable: false,
+    });
+    const openPlanUsage = vi.fn();
+    const user = await chooseAndConfirm(client, vi.fn(), openPlanUsage);
+    const transcribe = screen.getByRole("button", {
+      name: "Transcrever · 1 crédito(s)",
+    });
+    expect(transcribe).toBeDisabled();
+    expect(transcribe).toHaveAccessibleDescription(
+      "Saldo insuficiente: este arquivo usa 1 crédito(s) e você tem 0. Compre páginas ou mude de plano em Settings › Plan and usage",
+    );
+    expect(client.submit).not.toHaveBeenCalled();
+    await user.click(
+      screen.getByRole("button", { name: "Settings › Plan and usage" }),
+    );
+    expect(openPlanUsage).toHaveBeenCalledTimes(1);
+  });
+  it("preserves edited text after a save failure and retries without another charge", async () => {
+    const client = service();
+    const user = await chooseAndConfirm(client);
     vi.mocked(createImageTextNote).mockRejectedValueOnce(
       new Error("disk full"),
     );
-    const read = vi
-      .fn()
-      .mockResolvedValue({ text: "Recibo", doubtfulWords: [] });
-    render(
-      <ImageToTextDialog
-        notebookId={null}
-        onClose={vi.fn()}
-        onCreated={vi.fn()}
-        read={read}
-      />,
-      { wrapper },
+    await user.click(
+      screen.getByRole("button", { name: "Transcrever · 1 crédito(s)" }),
     );
-
-    await user.click(screen.getByRole("button", { name: "Escolher imagem" }));
-    await user.type(await screen.findByLabelText(/Texto extraído/), " editado");
+    await user.click(
+      await screen.findByRole("button", { name: "Consultar processamento" }),
+    );
+    const text = await screen.findByLabelText(
+      "Texto extraído — edite conforme necessário",
+    );
+    await user.clear(text);
+    await user.type(text, "Keep edits");
     await user.click(screen.getByRole("button", { name: "Gerar nota" }));
-
     expect(await screen.findByRole("alert")).toHaveTextContent("disk full");
-    await user.click(screen.getByRole("button", { name: "Voltar à revisão" }));
-    expect(screen.getByLabelText(/Texto extraído/)).toHaveValue(
-      "Recibo editado",
-    );
+    expect(text).toHaveValue("Keep edits");
+    await user.click(screen.getByRole("button", { name: "Gerar nota" }));
+    expect(client.submit).toHaveBeenCalledTimes(1);
+    expect(invoke).toHaveBeenCalledTimes(1);
   });
-
-  it("reports a rejected file", async () => {
+  it("fails closed without a backend, traps focus and restores opener", async () => {
     const user = userEvent.setup();
-    vi.mocked(invoke).mockResolvedValue({
-      stored: [],
-      rejected: [{ name: "notes.pdf", reason: "not an image" }],
-    });
-    render(
+    const client = service();
+    client.available = false;
+    const opener = document.createElement("button");
+    document.body.append(opener);
+    opener.focus();
+    const close = vi.fn();
+    const view = render(
       <ImageToTextDialog
         notebookId={null}
-        onClose={vi.fn()}
+        onClose={close}
         onCreated={vi.fn()}
-        read={vi.fn()}
+        client={client}
       />,
       { wrapper },
     );
-
-    await user.click(screen.getByRole("button", { name: "Escolher imagem" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "notes.pdf não pôde ser usada: not an image.",
-    );
-  });
-
-  it("closes with Escape", async () => {
-    const user = userEvent.setup();
-    const onClose = vi.fn();
-    render(
-      <ImageToTextDialog
-        notebookId={null}
-        onClose={onClose}
-        onCreated={vi.fn()}
-        read={vi.fn()}
-      />,
-      { wrapper },
-    );
-
+    expect(screen.getByRole("dialog")).toHaveFocus();
     expect(
-      screen.getByRole("button", { name: "Escolher imagem" }),
-    ).toHaveFocus();
+      screen.getByRole("button", { name: "Validar páginas" }),
+    ).toBeDisabled();
+    await user.tab({ shift: true });
     await user.keyboard("{Escape}");
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(close).toHaveBeenCalled();
+    view.unmount();
+    expect(opener).toHaveFocus();
+    opener.remove();
+    expect(client.usage).not.toHaveBeenCalled();
   });
 });

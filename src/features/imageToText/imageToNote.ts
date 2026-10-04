@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import type { JSONContent } from "@tiptap/react";
 import { createAttachment } from "../../db/repositories/attachmentRepository";
 import { saveAttachmentText } from "../../db/repositories/attachmentTextRepository";
@@ -16,59 +15,17 @@ export interface DoubtfulWord {
   suggestions: string[];
 }
 
-/**
- * The text Vision read in an image: blocks separated by a blank line, list
- * items starting with `- `, and the words that were probably misread.
- */
-export interface ImageText {
-  text: string;
-  doubtfulWords: DoubtfulWord[];
-}
-
-/** Reading an image normally takes a few seconds; this is the ceiling. */
-export const READ_TIMEOUT_MS = 30_000;
-
 const TITLE_MAX_LENGTH = 80;
 
-export class ReadTimeoutError extends Error {
-  constructor() {
-    super("A leitura da imagem demorou mais de 30 segundos.");
-    this.name = "ReadTimeoutError";
-  }
-}
-
-export type ReadImage = (relativePath: string) => Promise<ImageText>;
-
-/** Reads a stored image's text with Apple's Vision framework, on this Mac. */
-export const readWithVision: ReadImage = (relativePath) =>
-  invoke<ImageText>("read_image_text", { relativePath });
-
-function withTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new ReadTimeoutError()), timeoutMs);
-  });
-  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
-}
-
-/**
- * Reads an image's text, trying once more when the first read times out.
- * Other failures are reported at once.
- */
-export async function readImageText(
-  relativePath: string,
-  read: ReadImage = readWithVision,
-  timeoutMs = READ_TIMEOUT_MS,
-): Promise<ImageText> {
-  try {
-    return await withTimeout(read(relativePath), timeoutMs);
-  } catch (error) {
-    if (!(error instanceof ReadTimeoutError)) throw error;
-    return withTimeout(read(relativePath), timeoutMs);
-  }
-}
-
 const LIST_ITEM = /^[-•*]\s+/;
+/** A Markdown heading, as Handwriting OCR returns it: `# Title`. */
+const HEADING = /^(#{1,6})\s+(.+?)(?:\s+#+)?$/;
+/**
+ * `**bold**`, or `*italic*` when the asterisks hug a word, so that
+ * "5 * 3" and "a*b*c" stay as written.
+ */
+const EMPHASIS =
+  /\*\*(?=\S)(.+?)(?<=\S)\*\*|(?<![\p{L}\p{N}*])\*(?=[^\s*])(.+?)(?<=[^\s*])\*(?![\p{L}\p{N}*])/gu;
 const MAX_SUGGESTIONS = 4;
 
 function lines(text: string): string[] {
@@ -78,18 +35,36 @@ function lines(text: string): string[] {
     .filter((line) => line !== "");
 }
 
+/** Text nodes for a row, its emphasis as marks. Words are never changed. */
+function inline(row: string): JSONContent[] {
+  const nodes: JSONContent[] = [];
+  let last = 0;
+  for (const match of row.matchAll(EMPHASIS)) {
+    if (match.index > last)
+      nodes.push({ type: "text", text: row.slice(last, match.index) });
+    nodes.push({
+      type: "text",
+      text: match[1] ?? match[2],
+      marks: [{ type: match[1] ? "bold" : "italic" }],
+    });
+    last = match.index + match[0].length;
+  }
+  if (last < row.length) nodes.push({ type: "text", text: row.slice(last) });
+  return nodes;
+}
+
 function withBreaks(rows: string[]): JSONContent[] {
   return rows.flatMap((row, index) =>
-    index === 0
-      ? [{ type: "text", text: row }]
-      : [{ type: "hardBreak" }, { type: "text", text: row }],
+    index === 0 ? inline(row) : [{ type: "hardBreak" }, ...inline(row)],
   );
 }
 
 /**
  * Tiptap content for the reviewed text. A blank line separates blocks; in a
- * block, rows starting with `- ` (or `•`, `*`) are bullet items, a row after
- * an item continues it, and other rows form a paragraph with line breaks.
+ * block, rows starting with `#` are headings, rows starting with `- ` (or
+ * `•`, `*`) are bullet items, a row after an item continues it, and other
+ * rows form a paragraph with line breaks. `**bold**` and `*italic*` become
+ * marks.
  */
 export function textToContent(text: string): JSONContent[] {
   const content: JSONContent[] = [];
@@ -115,7 +90,16 @@ export function textToContent(text: string): JSONContent[] {
       items = [];
     };
     for (const row of lines(block)) {
-      if (LIST_ITEM.test(row)) {
+      const heading = HEADING.exec(row);
+      if (heading) {
+        flushParagraph();
+        flushList();
+        content.push({
+          type: "heading",
+          attrs: { level: heading[1].length },
+          content: inline(heading[2]),
+        });
+      } else if (LIST_ITEM.test(row)) {
         flushParagraph();
         const item = row.replace(LIST_ITEM, "");
         if (item !== "") items.push([item]);
@@ -131,10 +115,15 @@ export function textToContent(text: string): JSONContent[] {
   return content;
 }
 
-/** The text without list markers, for previews and search. */
+/** The text without list, heading or emphasis markers, for previews and search. */
 export function plainText(text: string): string {
   return lines(text)
-    .map((line) => line.replace(LIST_ITEM, ""))
+    .map((line) =>
+      line
+        .replace(HEADING, "$2")
+        .replace(LIST_ITEM, "")
+        .replace(EMPHASIS, (_, bold, italic) => bold ?? italic),
+    )
     .join("\n");
 }
 
@@ -214,7 +203,7 @@ export interface ImageTextNoteInput {
   image: StoredAttachment;
   /** The text as the person approved it. */
   text: string;
-  /** What Vision read, kept so search finds the image's own words. */
+  /** Provider text, kept without automatic word replacement. */
   recognizedText: string;
   notebookId: string | null;
 }
@@ -232,10 +221,15 @@ export async function createImageTextNote(
   const note = await createNote({
     title: titleFromText(input.text),
     contentJson: JSON.stringify(
-      imageNoteDocument(input.text, {
-        path: input.image.relativePath,
-        attachmentId,
-      }),
+      imageNoteDocument(
+        input.text,
+        input.image.mimeType.startsWith("image/")
+          ? {
+              path: input.image.relativePath,
+              attachmentId,
+            }
+          : undefined,
+      ),
     ),
     contentText: plainText(input.text),
     notebookId: input.notebookId,
@@ -256,9 +250,9 @@ export async function createImageTextNote(
   }
   try {
     await saveAttachmentText(attachmentId, input.recognizedText);
-  } catch (error) {
+  } catch {
     // The note is complete; the background indexer reads the image later.
-    console.error("NODI could not keep the image's text for search", error);
+    console.error("NODI could not keep the attachment text for search");
   }
   return note;
 }

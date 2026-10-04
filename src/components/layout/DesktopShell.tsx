@@ -16,6 +16,7 @@ interface DesktopShellProps {
   onThemeChange: (theme: ThemePreference) => void;
   onOpenAbout: () => void;
   onOpenYourData: () => void;
+  onOpenPlanUsage: () => void;
   onCreateNote: () => void;
   onCreateImageNote: () => void;
   selectedNoteId: string | null;
@@ -38,6 +39,7 @@ function DesktopShell({
   onThemeChange,
   onOpenAbout,
   onOpenYourData,
+  onOpenPlanUsage,
   onCreateNote,
   onCreateImageNote,
   selectedNoteId,
@@ -165,6 +167,9 @@ function DesktopShell({
               <span>Settings</span>
             </summary>
             <div className="settings-popover">
+              <button type="button" onClick={onOpenPlanUsage}>
+                Plan and usage
+              </button>
               <button type="button" onClick={onOpenYourData}>
                 Your data
               </button>

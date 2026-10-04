@@ -11,9 +11,7 @@ import {
   createImageTextNote,
   imageNoteDocument,
   plainText,
-  ReadTimeoutError,
   rankSuggestions,
-  readImageText,
   replaceWord,
   textToContent,
   titleFromText,
@@ -77,11 +75,83 @@ describe("textToContent", () => {
   it("keeps a minus sign that is not a marker", () => {
     expect(textToContent("-5 graus")).toEqual([paragraph("-5 graus")]);
   });
+
+  it("turns Handwriting OCR's Markdown into a heading and a list", () => {
+    // Returned by Handwriting OCR for tests/fixtures/ocr-handwritten-list.jpg.
+    const transcript =
+      "# Image Reader\n\n* Use macOS Vision framework for OCR ✓  \n* Layout text by position (Left-to-right, top-to-bottom) ✓  \n* Flag doubtful words from spell checker  \n";
+    expect(textToContent(transcript)).toEqual([
+      { type: "heading", attrs: { level: 1 }, content: [text("Image Reader")] },
+      {
+        type: "bulletList",
+        content: [
+          "Use macOS Vision framework for OCR ✓",
+          "Layout text by position (Left-to-right, top-to-bottom) ✓",
+          "Flag doubtful words from spell checker",
+        ].map((item) => ({ type: "listItem", content: [paragraph(item)] })),
+      },
+    ]);
+  });
+
+  it("ends a paragraph or list at a heading and keeps its level", () => {
+    expect(textToContent("Intro\n## Lista ##\n- um\n###### Fim")).toEqual([
+      paragraph("Intro"),
+      { type: "heading", attrs: { level: 2 }, content: [text("Lista")] },
+      {
+        type: "bulletList",
+        content: [{ type: "listItem", content: [paragraph("um")] }],
+      },
+      { type: "heading", attrs: { level: 6 }, content: [text("Fim")] },
+    ]);
+  });
+
+  it("leaves hashes that are not headings as written", () => {
+    expect(textToContent("#hashtag\n# \n####### sete\nC# e F#")).toEqual([
+      paragraph("#hashtag", "#", "####### sete", "C# e F#"),
+    ]);
+    expect(textToContent("# Notas de C#")).toEqual([
+      { type: "heading", attrs: { level: 1 }, content: [text("Notas de C#")] },
+    ]);
+  });
+
+  it("marks bold and italic without changing the words", () => {
+    expect(textToContent("Comprar **pão** e *leite* hoje")).toEqual([
+      {
+        type: "paragraph",
+        content: [
+          text("Comprar "),
+          { type: "text", text: "pão", marks: [{ type: "bold" }] },
+          text(" e "),
+          { type: "text", text: "leite", marks: [{ type: "italic" }] },
+          text(" hoje"),
+        ],
+      },
+    ]);
+    expect(textToContent("# **Recibo**")).toEqual([
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: "Recibo", marks: [{ type: "bold" }] }],
+      },
+    ]);
+  });
+
+  it("leaves asterisks that are not emphasis as written", () => {
+    expect(textToContent("5 * 3 * 2\na*b*c\n** solto **\n*")).toEqual([
+      paragraph("5 * 3 * 2", "a*b*c", "** solto **", "*"),
+    ]);
+  });
 });
 
 describe("plainText", () => {
   it("drops list markers and blank lines", () => {
     expect(plainText("Título\n\n- um\n- dois")).toBe("Título\num\ndois");
+  });
+
+  it("drops heading and emphasis markers but keeps other symbols", () => {
+    expect(plainText("## Image Reader\n* **pão** e *leite*\n5 * 3")).toBe(
+      "Image Reader\npão e leite\n5 * 3",
+    );
   });
 });
 
@@ -149,50 +219,14 @@ describe("titleFromText", () => {
     expect(titleFromText("- comprar pão")).toBe("comprar pão");
   });
 
+  it("leaves out heading and emphasis markers", () => {
+    expect(titleFromText("# **Image** Reader\n* item")).toBe("Image Reader");
+  });
+
   it("shortens long lines", () => {
     const title = titleFromText("a".repeat(200));
     expect(title).toHaveLength(80);
     expect(title.endsWith("…")).toBe(true);
-  });
-});
-
-describe("readImageText", () => {
-  it("tries once more after a timeout", async () => {
-    vi.useFakeTimers();
-    const read = vi
-      .fn()
-      .mockReturnValueOnce(new Promise(() => {}))
-      .mockResolvedValueOnce({ text: "ok", doubtfulWords: [] });
-
-    const pending = readImageText("attachments/x/y.png", read, 1_000);
-    await vi.advanceTimersByTimeAsync(1_000);
-
-    await expect(pending).resolves.toEqual({ text: "ok", doubtfulWords: [] });
-    expect(read).toHaveBeenCalledTimes(2);
-    vi.useRealTimers();
-  });
-
-  it("gives up after the second timeout", async () => {
-    vi.useFakeTimers();
-    const read = vi.fn(() => new Promise<never>(() => {}));
-
-    const pending = readImageText("attachments/x/y.png", read, 1_000);
-    const outcome = expect(pending).rejects.toBeInstanceOf(ReadTimeoutError);
-    await vi.advanceTimersByTimeAsync(2_000);
-
-    await outcome;
-    vi.useRealTimers();
-  });
-
-  it("does not retry other failures", async () => {
-    const read = vi
-      .fn()
-      .mockRejectedValue(new Error("the image file is missing"));
-
-    await expect(readImageText("attachments/x/y.png", read)).rejects.toThrow(
-      "missing",
-    );
-    expect(read).toHaveBeenCalledOnce();
   });
 });
 
@@ -241,6 +275,29 @@ describe("createImageTextNote", () => {
     expect(saveAttachmentText).toHaveBeenCalledWith(
       attachment.id,
       "Recib0\nTotal 12.40",
+    );
+  });
+
+  it("keeps a PDF attachment outside canonical Tiptap text without rendering it as an image", async () => {
+    await createImageTextNote({
+      image: {
+        ...image,
+        mimeType: "application/pdf",
+        relativePath: "attachments/ab/abcdef/document.pdf",
+        filename: "document.pdf",
+      },
+      text: "PDF text",
+      recognizedText: "PDF text",
+      notebookId: null,
+    });
+    const content = JSON.parse(
+      vi.mocked(createNote).mock.calls[0][0]?.contentJson ?? "{}",
+    );
+    expect(
+      content.content.every((node: { type: string }) => node.type !== "image"),
+    ).toBe(true);
+    expect(createAttachment).toHaveBeenCalledWith(
+      expect.objectContaining({ mimeType: "application/pdf" }),
     );
   });
 

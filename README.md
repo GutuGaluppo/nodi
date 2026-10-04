@@ -20,3 +20,7 @@ See the Portuguese guide for [installing and updating NODI](docs/INSTALACAO_E_AT
 - [VS Code](https://code.visualstudio.com/)
 - [Tauri extension](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
 - [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+
+## Handwriting OCR
+
+The image-to-note workflow is prepared for Handwriting OCR with explicit consent and server-managed page credits. It remains unavailable until the authenticated service, provider secrets, payments and commercial agreement are configured. See [setup and implementation status](docs/HANDWRITING_SETUP.md).

@@ -542,3 +542,19 @@ A new "Nota de imagem" entry in the sidebar, also on ⌘⇧P, turns a photo of a
 A photo of handwritten sticky notes showed where reading went wrong: every line became its own paragraph, a word written to the side landed alone, "o tempo" came back in Cyrillic, and the confidence score said 100% throughout. On macOS 26, NODI now uses Vision's document reader, which reads handwriting better and knows paragraphs. Lines are then laid out by position, so a price stays beside its item and a side note joins its line, and bullets and arrows become list items. The score is gone; instead, the review lists the words the Mac's spell checker doubts, with its guesses, and a guess already written elsewhere in the note comes first. Nothing changes until you pick one. The photo is now a test case.
 
 ![NODI after OCR-004: reviewing handwritten notes with doubtful words listed](about/screenshots/ocr-004-doubtful-words.png)
+
+## 067 — OCR-005 Suggestions that match the image
+
+**Completed:** September 30, 2026
+
+A handwritten list in English came back with Portuguese suggestions ("compelindo" for "conpilence", "Lata" for "Layat"), because the spell checker only guessed in Portuguese. Guesses now follow the language of each line. NODI also keeps what Vision read in each word's place on its other attempts, from two more readers, and offers those first: "Grap" suggests "Group", "lamework" suggests "framework". A suggestion that both the spell checker and another reading agree on comes first. The photo is now a test case. Handwriting is still read imperfectly; words that are real but wrong, like "sell" for "spell", are not flagged.
+
+![NODI after OCR-005](about/screenshots/ocr-005-better-suggestions.png)
+
+## 068 — OCR-006 Handwriting and plans
+
+**Completed:** October 2, 2026
+
+"Nota de imagem" now prepares an image or PDF for Handwriting OCR instead of reading it on the Mac. After you agree to send the file, a separate NODI service counts its pages and shows the credits it will use; only a second confirmation transcribes it. The text comes back unchanged, to copy, edit, export as TXT or save as a note, with the original kept outside the database. Handwriting OCR answers in Markdown, so in the note `# Title` becomes a heading, `* item` a list and `**word**` bold; the words themselves are left alone. Settings has a new "Plan and usage" page with the Free, Essential, Plus and Pro plans and the 10-page pack, and the landing page lists the same prices. Search inside images still uses Apple Vision on the Mac. None of it works yet: there is no deployed service, no sign-in, no payments and no written permission from Handwriting OCR, so the buttons say so and nothing can be bought.
+
+![NODI after OCR-006](about/screenshots/ocr-006-handwriting.png)

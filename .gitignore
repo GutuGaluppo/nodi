@@ -35,3 +35,10 @@ coverage
 ignore
 # Share extension build output (scripts/build-share-extension.sh)
 src-tauri/share-extension/build
+
+# Optional Handwriting server: private usage records, sources, and parser binary.
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+handwriting-files
+server/handwriting/.build

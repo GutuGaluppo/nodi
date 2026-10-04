@@ -7,6 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
   use: {
+    channel: process.env.PLAYWRIGHT_CHANNEL,
     baseURL: "http://localhost:1422",
     trace: "on-first-retry",
   },

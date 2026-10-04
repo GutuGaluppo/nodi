@@ -474,3 +474,52 @@ only notes of the same language.
   text ("manus" beside "menus").
 - Handwriting is still imperfect; the doubtful-word list points the person to
   what to check rather than claiming a score.
+
+## D-014 — Doubtful words are suggested from other readings, in the line's language
+
+**Date:** September 30, 2026
+**Task:** OCR-005 Suggestions that match the image
+**Status:** Accepted (refines D-013)
+
+### Decision
+
+- The spell checker guesses in the language of each doubtful word's line
+  (`NLLanguageRecognizer`, Portuguese or English); only when that is unclear
+  does it guess in both. A word is doubtful when neither language knows it,
+  as before.
+- Vision's other readings of each line are kept per word. The document
+  reader gives one reading per line, so on macOS 26 `RecognizeTextRequest`
+  and `VNRecognizeTextRequest` also read the image (about half a second
+  more), and their readings are matched to lines by position. Readings with
+  as many words are paired word by word; otherwise a single differing word is.
+- Suggestions are ranked by how many sources agree: the word's own guesses,
+  and each other reading, as itself when it is a word and by its guesses.
+- The text itself is still the document reader's first reading.
+
+### Rationale
+
+- Measured on a handwritten English list (`tests/fixtures/ocr-handwritten-list.jpg`):
+  Portuguese guesses were wrong for every English word. With these changes
+  the first suggestion is right for "Layat", "Grap", "doubful", "lamework"
+  and "ty".
+- Choosing, per line, the reading with the fewest unknown words was tried and
+  rejected: it traded misreadings for real words that are wrong ("spell"
+  became "sell", "img" became "im").
+
+### Consequences
+
+- Real words that are misread ("sell" for "spell") are still not flagged.
+- Words Vision gets badly wrong in every reading ("compidance" for
+  "confidence") may have no good suggestion.
+
+## D-015 — Handwriting uses an optional authenticated service
+
+**Date:** October 2, 2026
+**Task:** OCR-006 Handwriting and plans
+**Status:** Prepared; live/commercial availability depends on external configuration
+
+The image-to-note command now prepares an image or PDF for Handwriting OCR, with consent, a server-validated page quote and separate credit confirmation. Apple Vision still performs local image search indexing. This is an explicit exception to V1's offline-only feature scope requested through `HANDWRITING_IMPLEMENTATION_EN.md`; no cloud service has been provisioned or deployed.
+
+The shared provider key belongs only on a separately deployed authenticated server. Its SQLite ledger atomically reserves credits, deduplicates submissions and verified purchases, preserves pending reservations through uncertain timeouts, and consumes earliest-expiring pages first. Notes remain local Tiptap JSON, and attachment bytes stay outside the desktop database. No shared key is shipped, no fake purchases grant benefits, and no accounts are required for local notes.
+
+The optional backend and frontend integration ports are prepared. The shipped CSP remains closed until a specific authenticated backend is configured and reviewed. Paid launch also requires verified checkout product/tax settings and written provider permission for resale. See `HANDWRITING_SETUP.md` for the applied retention/failure policies, integration contracts and remaining launch dependencies.

@@ -32,6 +32,8 @@ import ocr001Screenshot from "../../../docs/about/screenshots/ocr-001-image-text
 import ocr002Screenshot from "../../../docs/about/screenshots/ocr-002-searchable-images.png";
 import ocr003Screenshot from "../../../docs/about/screenshots/ocr-003-image-to-note.png";
 import ocr004Screenshot from "../../../docs/about/screenshots/ocr-004-doubtful-words.png";
+import ocr005Screenshot from "../../../docs/about/screenshots/ocr-005-better-suggestions.png";
+import ocr006Screenshot from "../../../docs/about/screenshots/ocr-006-handwriting.png";
 import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
 import privRec004Screenshot from "../../../docs/about/screenshots/priv-rec-004-touch-id.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
@@ -606,6 +608,22 @@ const evolution = [
     description:
       "Images are read with the macOS 26 document reader when available and laid out by position: prices stay beside their items, side notes join their line, and bullets become lists. Instead of a misleading score, the review lists doubtful words with the spell checker's guesses.",
     screenshot: ocr004Screenshot,
+  },
+  {
+    id: "OCR-005",
+    title: "Suggestions that match the image",
+    date: "September 30, 2026",
+    description:
+      'Doubtful words are guessed in the language of their line, not always Portuguese, and suggestions start with what Vision read in the word\'s place on its other attempts: "Grap" suggests "Group".',
+    screenshot: ocr005Screenshot,
+  },
+  {
+    id: "OCR-006",
+    title: "Handwriting and plans",
+    date: "October 2, 2026",
+    description:
+      'Image notes are prepared for Handwriting OCR: the pages and credits are shown before a separate confirmation, and the text comes back unchanged to copy, edit, export or save, its Markdown headings, lists and bold kept as formatting. Settings gains "Plan and usage". It stays unavailable until the service, payments and the provider\'s permission exist.',
+    screenshot: ocr006Screenshot,
   },
 ];
 

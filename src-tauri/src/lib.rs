@@ -1,5 +1,6 @@
 mod attachments;
 mod embeddings;
+mod handwriting;
 mod migrations;
 mod mirror;
 mod ocr;
@@ -44,6 +45,9 @@ pub fn run() {
             attachments::discard_voice_recording,
             attachments::sweep_attachments,
             attachments::import_image_bytes,
+            attachments::import_handwriting_bytes,
+            handwriting::export_handwriting_text,
+            handwriting::open_handwriting_checkout,
             attachments::import_image_files,
             attachments::pick_image_files,
             ocr::recognize_attachment_text,

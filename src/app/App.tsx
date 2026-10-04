@@ -4,6 +4,7 @@ import About from "../features/about/About";
 import AttachmentSweeper from "../features/attachments/AttachmentSweeper";
 import { captureToNote } from "../features/capture/captureNote";
 import { useCaptureEvents } from "../features/capture/useCaptureEvents";
+import PlanUsage from "../features/handwriting/PlanUsage";
 import ImageTextIndexer from "../features/images/ImageTextIndexer";
 import ImageToTextDialog from "../features/imageToText/ImageToTextDialog";
 import MirrorSync from "../features/mirror/MirrorSync";
@@ -25,11 +26,13 @@ import {
 function Workspace({
   onOpenAbout,
   onOpenYourData,
+  onOpenPlanUsage,
   theme,
   onThemeChange,
 }: {
   onOpenAbout: () => void;
   onOpenYourData: () => void;
+  onOpenPlanUsage: () => void;
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
 }) {
@@ -124,6 +127,7 @@ function Workspace({
         onThemeChange={onThemeChange}
         onOpenAbout={onOpenAbout}
         onOpenYourData={onOpenYourData}
+        onOpenPlanUsage={onOpenPlanUsage}
         onCreateNote={() => {
           void handleCreateNote();
         }}
@@ -174,6 +178,10 @@ function Workspace({
         <ImageToTextDialog
           notebookId={activeView === "notes" ? selectedNotebookId : null}
           onClose={() => setImageNoteOpen(false)}
+          onOpenPlanUsage={() => {
+            setImageNoteOpen(false);
+            onOpenPlanUsage();
+          }}
           onCreated={(noteId) => {
             setImageNoteOpen(false);
             if (activeView === "trash") handleNavigate("notes");
@@ -187,7 +195,9 @@ function Workspace({
 }
 
 function App() {
-  const [page, setPage] = useState<"workspace" | "about" | "data">("workspace");
+  const [page, setPage] = useState<"workspace" | "about" | "data" | "plan">(
+    "workspace",
+  );
   const [theme, setTheme] = useState<ThemePreference>(getStoredThemePreference);
 
   useEffect(() => {
@@ -205,6 +215,8 @@ function App() {
       <SpotlightSync />
       {page === "about" ? (
         <About onClose={() => setPage("workspace")} />
+      ) : page === "plan" ? (
+        <PlanUsage onClose={() => setPage("workspace")} />
       ) : page === "data" ? (
         <YourData onClose={() => setPage("workspace")} />
       ) : (
@@ -213,6 +225,7 @@ function App() {
           onThemeChange={setTheme}
           onOpenAbout={() => setPage("about")}
           onOpenYourData={() => setPage("data")}
+          onOpenPlanUsage={() => setPage("plan")}
         />
       )}
     </AppProviders>

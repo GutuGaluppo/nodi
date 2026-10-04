@@ -1,0 +1,50 @@
+{
+  "plans": [
+    {
+      "id": "free",
+      "name": "Free",
+      "priceCents": 0,
+      "pages": 1,
+      "monthly": false
+    },
+    {
+      "id": "essential",
+      "name": "Essential",
+      "priceCents": 499,
+      "pages": 10,
+      "monthly": true
+    },
+    {
+      "id": "plus",
+      "name": "Plus",
+      "priceCents": 999,
+      "pages": 30,
+      "monthly": true
+    },
+    {
+      "id": "pro",
+      "name": "Pro",
+      "priceCents": 1999,
+      "pages": 70,
+      "monthly": true
+    }
+  ],
+  "pack": {
+    "id": "pack",
+    "name": "One-time pack",
+    "priceCents": 499,
+    "pages": 10,
+    "validMonths": 12
+  },
+  "maxBytes": 20000000,
+  "maxPages": 70,
+  "deleteAfterSeconds": 3600,
+  "mimeTypes": [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/tiff",
+    "image/heic",
+    "image/gif"
+  ]
+}
