@@ -10,6 +10,10 @@ import ShortcutSection from "../../features/shortcuts/ShortcutSection";
 import TagSection from "../../features/tags/TagSection";
 import { useTags } from "../../features/tags/tagQueries";
 import Icon from "../ui/Icon";
+import {
+  SidebarSectionToggle,
+  useSidebarSectionCollapsed,
+} from "./SidebarSection";
 
 interface DesktopShellProps {
   theme: ThemePreference;
@@ -57,6 +61,8 @@ function DesktopShell({
   onOpenSavedSearch,
 }: DesktopShellProps) {
   const [libraryCollapsed, setLibraryCollapsed] = useState(false);
+  const [mainMenuCollapsed, toggleMainMenu] =
+    useSidebarSectionCollapsed("mainMenu");
   const notebooks = useNotebooks();
   const selectedNotebookName = notebooks.data?.find(
     (notebook) => notebook.id === selectedNotebookId,
@@ -111,40 +117,48 @@ function DesktopShell({
           <SavedSearchSection onOpen={onOpenSavedSearch} />
 
           <nav className="primary-navigation" aria-label="Primary navigation">
-            <p className="section-label">Main menu</p>
-            <button
-              className="nav-item"
-              type="button"
-              aria-current={
-                activeView === "notes" &&
-                selectedNotebookId === null &&
-                selectedTagId === null
-                  ? "page"
-                  : undefined
-              }
-              onClick={() => onNavigate("notes")}
-            >
-              <Icon name="note" />
-              <span>Notes</span>
-            </button>
-            <button
-              className="nav-item"
-              type="button"
-              aria-current={activeView === "private" ? "page" : undefined}
-              onClick={() => onNavigate("private")}
-            >
-              <Icon name="lock" />
-              <span>Private notes</span>
-            </button>
-            <button
-              className="nav-item"
-              type="button"
-              aria-current={activeView === "trash" ? "page" : undefined}
-              onClick={() => onNavigate("trash")}
-            >
-              <Icon name="trash" />
-              <span>Trash</span>
-            </button>
+            <SidebarSectionToggle
+              id="main-menu-toggle"
+              controlsId="main-menu-items"
+              label="Main menu"
+              collapsed={mainMenuCollapsed}
+              onToggle={toggleMainMenu}
+            />
+            <div id="main-menu-items" hidden={mainMenuCollapsed}>
+              <button
+                className="nav-item"
+                type="button"
+                aria-current={
+                  activeView === "notes" &&
+                  selectedNotebookId === null &&
+                  selectedTagId === null
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => onNavigate("notes")}
+              >
+                <Icon name="note" />
+                <span>Notes</span>
+              </button>
+              <button
+                className="nav-item"
+                type="button"
+                aria-current={activeView === "private" ? "page" : undefined}
+                onClick={() => onNavigate("private")}
+              >
+                <Icon name="lock" />
+                <span>Private notes</span>
+              </button>
+              <button
+                className="nav-item"
+                type="button"
+                aria-current={activeView === "trash" ? "page" : undefined}
+                onClick={() => onNavigate("trash")}
+              >
+                <Icon name="trash" />
+                <span>Trash</span>
+              </button>
+            </div>
           </nav>
 
           <NotebookSection

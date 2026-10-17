@@ -313,6 +313,32 @@ h1 {
   margin: 0;
 }
 
+.sidebar-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  background: none;
+  cursor: pointer;
+}
+
+.sidebar-section-toggle .section-label {
+  margin: 0;
+}
+
+.sidebar-section-toggle .icon {
+  width: 0.8rem;
+  height: 0.8rem;
+  transition: transform var(--transition-fast);
+}
+
+.sidebar-section-toggle[aria-expanded="false"] .icon {
+  transform: rotate(-90deg);
+}
+
 .sidebar-icon-button {
   display: grid;
   width: var(--space-6);
