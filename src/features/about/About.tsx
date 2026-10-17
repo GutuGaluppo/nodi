@@ -37,6 +37,8 @@ import ocr006Screenshot from "../../../docs/about/screenshots/ocr-006-handwritin
 // import ocr007Screenshot from "../../../docs/about/screenshots/ocr-007-gpt-transcription.png";
 import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
 import privRec004Screenshot from "../../../docs/about/screenshots/priv-rec-004-touch-id.png";
+import privRec005Screenshot from "../../../docs/about/screenshots/priv-rec-005-private-notes-view.png";
+import privRec006Screenshot from "../../../docs/about/screenshots/priv-rec-006-collapsible-sidebar.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
 import privacy002Screenshot from "../../../docs/about/screenshots/privacy-002-encrypted-private-notes.png";
 import privacy003Screenshot from "../../../docs/about/screenshots/privacy-003-network-lockdown.png";
@@ -61,6 +63,7 @@ import ui005Screenshot from "../../../docs/about/screenshots/ui-005-reference-si
 import ui006Screenshot from "../../../docs/about/screenshots/ui-006-system-section.png";
 import ui007Screenshot from "../../../docs/about/screenshots/ui-007-settings-relocated.png";
 import ui008Screenshot from "../../../docs/about/screenshots/ui-008-compact-lists.png";
+import ui009Screenshot from "../../../docs/about/screenshots/ui-009-tooltips-unclipped.png";
 import voiceAud001Screenshot from "../../../docs/about/screenshots/voice-aud-001-keep-recording.png";
 import voiceAud002Screenshot from "../../../docs/about/screenshots/voice-aud-002-timed-transcript.png";
 import voiceAud003Screenshot from "../../../docs/about/screenshots/voice-aud-003-playback.png";
@@ -649,6 +652,30 @@ const evolution = [
     description:
       "gpt-5.4 now joins an item that only wraps onto the next line, writes check marks as ✓ and crosses as ✗, and ignores text showing through from the back of the page, matching Handwriting OCR's layout without a higher effort.",
     // screenshot: ocr009Screenshot,
+  },
+  {
+    id: "PRIV-REC-005",
+    title: "A sidebar view for private notes",
+    date: "October 17, 2026",
+    description:
+      "Private notes have their own item in the main menu, listing only the locked notes, and each one shows a lock beside its title. Opening a private note still asks for the password or Touch ID.",
+    screenshot: privRec005Screenshot,
+  },
+  {
+    id: "PRIV-REC-006",
+    title: "Collapsible sidebar sections",
+    date: "October 17, 2026",
+    description:
+      "Shortcuts, Main menu and Tags collapse from their titles, and the choice is remembered. Sidebar tooltips open inward so their full text stays visible.",
+    screenshot: privRec006Screenshot,
+  },
+  {
+    id: "UI-009",
+    title: "Tooltips that are never cut off",
+    date: "October 17, 2026",
+    description:
+      "Tooltips now appear above the whole window and stay inside the screen edges, so labels in the sidebar, the note list and the editor are never clipped.",
+    screenshot: ui009Screenshot,
   },
 ];
 

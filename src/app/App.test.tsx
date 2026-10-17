@@ -241,7 +241,7 @@ describe("NODI app", () => {
       screen.getByRole("list", { name: "NODI implementation history" }),
     ).toBeInTheDocument();
     // OCR-007 to OCR-009 still await their screenshots.
-    expect(screen.getAllByRole("img")).toHaveLength(69);
+    expect(screen.getAllByRole("img")).toHaveLength(72);
 
     await user.click(screen.getByRole("button", { name: "Back to NODI" }));
 

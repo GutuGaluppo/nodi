@@ -580,3 +580,27 @@ Tests with gpt-5.4 failed above "medium" reasoning effort: the model's thinking 
 The same handwritten list read by gpt-5.4 and by Handwriting OCR differed in layout, not in words: gpt-5.4 kept "top-to-bottom)" on its own line because it was told to keep every line break, and left out the ticks because it was told to copy words. It is now told to join an item that only wraps onto the next line, to write a check mark as ✓ and a cross as ✗ at the end of the item they mark, and to ignore text showing through from the back of the page. This should close the gap at the cheaper efforts, without paying for more reasoning.
 
 <!-- screenshot: about/screenshots/ocr-009-wrapped-lines.png -->
+
+## 072 — PRIV-REC-005 A sidebar view for private notes
+
+**Completed:** October 17, 2026
+
+Private notes now have their own item in the main menu, between Notes and Trash, that lists only the locked notes. Each private note also shows a small lock next to its title in every list, so it is easy to spot before opening it. Opening a private note still asks for the password or Touch ID.
+
+![NODI after PRIV-REC-005: the Private notes item in the sidebar and a lock beside a private note title](about/screenshots/priv-rec-005-private-notes-view.png)
+
+## 073 — PRIV-REC-006 Collapsible sidebar sections
+
+**Completed:** October 17, 2026
+
+Shortcuts, Main menu and Tags now have a chevron in their titles that hides or shows each section, so a long sidebar can be trimmed to what you need. NODI remembers which sections are collapsed on this Mac. The tooltip on the sidebar's "New stack" button, and on the other buttons near the edge, now opens inward, so its full text is always visible.
+
+![NODI after PRIV-REC-006: sidebar sections with collapse chevrons](about/screenshots/priv-rec-006-collapsible-sidebar.png)
+
+## 074 — UI-009 Tooltips that are never cut off
+
+**Completed:** October 17, 2026
+
+Tooltips used to open inside their own button, so the sidebar, the note list and the editor cut off labels at their edges, like "New stack" or "Collapse Library". They now appear in a layer above the whole window and stay inside the screen edges, whichever pane the button is in.
+
+![NODI after UI-009: tooltips drawn above the panes](about/screenshots/ui-009-tooltips-unclipped.png)
