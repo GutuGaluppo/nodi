@@ -20,7 +20,7 @@ function service(): HandwritingClient {
       trialRemaining: 0,
       additional: [{ remaining: 10, expiresAt: "2027-10-02T10:00:00Z" }],
       renewalAt: "2026-11-02T10:00:00Z",
-      deleteAfterSeconds: 3600,
+      model: "gpt-5.4",
       paymentsAvailable: true,
       restoreAvailable: true,
     }),

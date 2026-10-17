@@ -4,7 +4,13 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { createInspector } from "./inspect.mjs";
+import { createConverter, createInspector } from "./inspect.mjs";
+
+// An 8×8 WEBP image.
+const webp = Buffer.from(
+  "UklGRjAAAABXRUJQVlA4ICQAAAAwAQCdASoIAAgAAsBMJaQAA3AA/vdTn5yWtFljTfNgugiEAAA=",
+  "base64",
+);
 
 function pdf(pages) {
   const objects = [
@@ -31,7 +37,7 @@ function pdf(pages) {
   return Buffer.from(text);
 }
 
-test("native preflight validates real image and PDF page count, refuses malformed documents", {
+test("native preflight validates real images and PDF page count, converts HEIC/TIFF, refuses malformed documents", {
   skip: process.platform !== "darwin",
 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), "nodi-inspector-"));
@@ -50,17 +56,42 @@ test("native preflight validates real image and PDF page count, refuses malforme
       extension: "pdf",
       pages: 3,
     });
-    const png = await readFile(
-      new URL(
-        "../../src-tauri/tests/fixtures/ocr-receipt.png",
-        import.meta.url,
-      ),
-    );
+    const receiptPath = new URL(
+      "../../src-tauri/tests/fixtures/ocr-receipt.png",
+      import.meta.url,
+    ).pathname;
+    const png = await readFile(receiptPath);
     assert.deepEqual(await inspect(png), {
       mime: "image/png",
       extension: "png",
       pages: 1,
     });
+    assert.deepEqual(await inspect(webp), {
+      mime: "image/webp",
+      extension: "webp",
+      pages: 1,
+    });
+    // HEIC and TIFF are accepted, then re-encoded as JPEG for the model.
+    const convert = createConverter(binary);
+    for (const format of ["heic", "tiff"]) {
+      const file = join(directory, `receipt.${format}`);
+      execFileSync("sips", [
+        "-s",
+        "format",
+        format,
+        receiptPath,
+        "--out",
+        file,
+      ]);
+      const original = await readFile(file);
+      assert.equal((await inspect(original)).mime, `image/${format}`);
+      assert.deepEqual(await inspect(await convert(original)), {
+        mime: "image/jpeg",
+        extension: "jpg",
+        pages: 1,
+      });
+    }
+    await assert.rejects(() => convert(png), /invalid_file/);
     await assert.rejects(
       () => inspect(Buffer.from("%PDF-invalid")),
       /invalid_file/,

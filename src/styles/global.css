@@ -1552,10 +1552,38 @@ h1 {
   font-size: var(--font-size-lg);
 }
 
-.image-to-text-help {
-  margin: var(--space-2) 0 0;
+.image-to-text-header .image-to-text-help-toggle {
+  margin-right: auto;
   color: var(--color-text-muted);
+}
+
+.image-to-text-header .image-to-text-help-toggle[aria-expanded="true"] {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.image-to-text-about {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  background: var(--color-surface-muted);
+  font-size: var(--font-size-sm);
   line-height: 1.55;
+}
+
+.image-to-text-about[hidden] {
+  display: none;
+}
+
+.image-to-text-about p {
+  margin: 0;
+}
+
+.image-to-text-notice:empty {
+  display: none;
 }
 
 .image-to-text-progress {
@@ -1738,9 +1766,212 @@ h1 {
   background: var(--color-surface-muted);
 }
 
-.handwriting-choice {
+.handwriting-setup {
   display: grid;
-  gap: 12px;
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+/* The file input covers the zone: click or drop anywhere on it. */
+.file-drop {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  min-height: 180px;
+  align-content: center;
+  padding: var(--space-6);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+  text-align: center;
+  transition:
+    border-color var(--transition-normal),
+    background-color var(--transition-normal);
+}
+
+.file-drop input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-drop input:disabled {
+  cursor: not-allowed;
+}
+
+.file-drop:hover,
+.file-drop[data-dragging] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.file-drop:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.file-drop[data-selected] {
+  border-style: solid;
+}
+
+.file-drop-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.file-drop-icon .icon {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.file-drop-title {
+  font-size: var(--font-size-lg);
+  font-weight: 650;
+}
+
+.file-drop-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 650;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.file-drop-hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.file-drop-preview {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 14%);
+}
+
+.effort-picker {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.effort-picker legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-weight: 650;
+}
+
+.effort-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.effort-option {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.effort-option input {
+  position: absolute;
+  opacity: 0;
+}
+
+.effort-option:hover {
+  border-color: var(--color-accent);
+}
+
+.effort-option:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.effort-option:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.effort-picker:disabled .effort-option {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.effort-name {
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.effort-credits {
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.effort-hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+}
+
+.effort-cost {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.handwriting-summary {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.handwriting-summary p {
+  margin: 0;
+}
+
+.handwriting-summary p + p {
+  margin-top: var(--space-1);
+}
+
+.handwriting-summary p:nth-child(2) {
+  color: var(--color-text-muted);
+}
+
+.handwriting-recent-summary {
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.handwriting-recent[open] {
+  display: grid;
+  gap: var(--space-2);
+}
+
+@media (max-width: 720px) {
+  .effort-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .handwriting-consent {

@@ -523,3 +523,28 @@ The image-to-note command now prepares an image or PDF for Handwriting OCR, with
 The shared provider key belongs only on a separately deployed authenticated server. Its SQLite ledger atomically reserves credits, deduplicates submissions and verified purchases, preserves pending reservations through uncertain timeouts, and consumes earliest-expiring pages first. Notes remain local Tiptap JSON, and attachment bytes stay outside the desktop database. No shared key is shipped, no fake purchases grant benefits, and no accounts are required for local notes.
 
 The optional backend and frontend integration ports are prepared. The shipped CSP remains closed until a specific authenticated backend is configured and reviewed. Paid launch also requires verified checkout product/tax settings and written provider permission for resale. See `HANDWRITING_SETUP.md` for the applied retention/failure policies, integration contracts and remaining launch dependencies.
+
+## D-016 — Handwriting transcription uses OpenAI's gpt-5.4 (test branch)
+
+**Date:** October 4, 2026
+**Task:** OCR-007 gpt-5.4 transcription (`test/gpt-5.4-transcription`)
+**Status:** Experimental; replaces the Handwriting OCR provider of D-015 on this branch only
+
+### Decision
+
+- The optional server transcribes with `gpt-5.4` through the Responses API, called with `fetch` (no SDK), `store: false` and verbatim-transcription instructions. The key stays on the server.
+- The answer arrives only on its own call, so the job runs inside the server and every failure, including a restart mid-job, refunds the user's pages. The reconciliation of unknown uploads from D-015 is gone.
+- HEIC and TIFF, which the model does not read, are re-encoded as JPEG by the native inspector; WEBP is now accepted.
+- The resale flag becomes `TRANSCRIPTION_LAUNCH_APPROVED`. Page credits, plans, consent, quotes and the ledger are unchanged.
+
+### Rationale
+
+- Requested by the owner, to compare a general model with a dedicated handwriting service.
+- OpenAI's business terms permit building products on the API, so the written resale permission Handwriting OCR required is no longer a blocker.
+
+### Consequences
+
+- OpenAI may keep abuse-monitoring logs for up to 30 days unless Zero Data Retention is approved; the privacy text says so instead of promising deletion after one hour.
+- An AI model can misread or invent words despite the instructions; the review step and the `[?]` marker remain essential.
+- Cost is per token (about US$0.01–0.02 per page, unconfirmed) rather than per page.
+- No live transcription has run yet: there is no OpenAI key. See `HANDWRITING_SETUP.md`, "What depends on you".

@@ -1,9 +1,9 @@
 import { createServer } from "node:http";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { createInspector } from "./inspect.mjs";
+import { createConverter, createInspector } from "./inspect.mjs";
 import { Ledger } from "./ledger.mjs";
-import { HandwritingProvider } from "./provider.mjs";
+import { OpenAITranscriber } from "./provider.mjs";
 import { createService } from "./service.mjs";
 
 // Deployment supplies reviewed integrations; no demo accounts or fake payments.
@@ -17,10 +17,11 @@ const adapters = await import(
 const ledger = new Ledger(
   process.env.NODI_HANDWRITING_DATABASE || "handwriting.sqlite",
 );
-const provider = new HandwritingProvider({
-  key: process.env.HANDWRITING_API_KEY,
+const provider = new OpenAITranscriber({
+  key: process.env.OPENAI_API_KEY,
   ledger,
-  retention: Number(process.env.HANDWRITING_DELETE_AFTER || 3600),
+  model: process.env.OPENAI_MODEL || "gpt-5.4",
+  effort: process.env.OPENAI_REASONING_EFFORT || "none",
 });
 const service = createService({
   ledger,
@@ -32,11 +33,16 @@ const service = createService({
     (process.env.NODI_HANDWRITING_INSPECTOR
       ? createInspector(process.env.NODI_HANDWRITING_INSPECTOR)
       : null),
+  convertDocument:
+    adapters.convertDocument ||
+    (process.env.NODI_HANDWRITING_INSPECTOR
+      ? createConverter(process.env.NODI_HANDWRITING_INSPECTOR)
+      : null),
   allowedOrigins: (process.env.NODI_HANDWRITING_ALLOWED_ORIGINS || "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
-  commercialAgreement: process.env.HANDWRITING_RESALE_APPROVED === "true",
+  commercialAgreement: process.env.TRANSCRIPTION_LAUNCH_APPROVED === "true",
 });
 const cleanup = setInterval(
   () => void service.cleanup().catch(() => {}),

@@ -37,3 +37,31 @@ export function createInspector(binary) {
       child.stdin.end(bytes);
     });
 }
+
+/** Re-encodes a HEIC or TIFF image as JPEG with the same reviewed binary. */
+export function createConverter(binary) {
+  return (bytes) =>
+    new Promise((resolve, reject) => {
+      const child = spawn(binary, ["--jpeg"], {
+        stdio: ["pipe", "pipe", "ignore"],
+        timeout: 20000,
+      });
+      const chunks = [];
+      let size = 0;
+      child.stdout.on("data", (chunk) => {
+        size += chunk.length;
+        if (size > config.maxBytes) child.kill();
+        else chunks.push(chunk);
+      });
+      child.on("error", () =>
+        reject(new ServiceError("inspection_unavailable", 503)),
+      );
+      child.stdin.on("error", () => {});
+      child.on("close", (code) => {
+        if (code !== 0 || size === 0 || size > config.maxBytes)
+          reject(new ServiceError("invalid_file"));
+        else resolve(Buffer.concat(chunks));
+      });
+      child.stdin.end(bytes);
+    });
+}

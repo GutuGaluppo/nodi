@@ -51,7 +51,7 @@ Create a central configuration shared by the landing page, Settings, and backend
 
 Rules:
 
-- One page or image equals one credit, according to the page count accepted by the provider.
+- One page or image costs the credits of the chosen reasoning effort (`efforts` in `landing/plans.json`: none 1, low 1, medium 2, high 3, xhigh 5), according to the page count accepted by the provider. The app sends the effort when the user confirms; the server recomputes the charge.
 - The free page is funded by the application; it does not depend on the provider's trial offer.
 - The monthly allowance resets on the billing cycle date, with no rollover.
 - Purchased additional credits remain separate from the monthly allowance and stay available after subscription cancellation until they expire.

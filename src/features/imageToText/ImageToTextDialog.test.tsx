@@ -47,7 +47,7 @@ function service(): HandwritingClient {
       trialRemaining: 1,
       additional: [],
       renewalAt: null,
-      deleteAfterSeconds: 3600,
+      model: "gpt-5.4",
       paymentsAvailable: false,
       restoreAvailable: false,
     }),
@@ -144,6 +144,82 @@ describe("Handwriting image-to-text", () => {
       expect.any(Uint8Array),
     );
     expect(client.submit).toHaveBeenCalledTimes(1);
+    expect(client.submit).toHaveBeenCalledWith("quote1", "none");
+  });
+  it("compares the credits of each effort and sends the chosen one", async () => {
+    const client = service();
+    vi.mocked(client.quote).mockResolvedValue({
+      id: "quote1",
+      pages: 2,
+      credits: 2,
+      expiresAt: "2026-10-02T12:00:00Z",
+    });
+    vi.mocked(client.usage).mockResolvedValue({
+      plan: "plus",
+      monthlyRemaining: 7,
+      trialRemaining: 0,
+      additional: [],
+      renewalAt: null,
+      model: "gpt-5.4",
+      effort: "medium",
+      paymentsAvailable: false,
+      restoreAvailable: false,
+    });
+    const user = userEvent.setup();
+    render(
+      <ImageToTextDialog
+        notebookId={null}
+        onClose={vi.fn()}
+        onCreated={vi.fn()}
+        client={client}
+      />,
+      { wrapper },
+    );
+    await screen.findByText(/^Equilibrado: 2 crédito\(s\) por página/);
+    expect(screen.getByRole("radio", { name: /Equilibrado/ })).toBeChecked();
+    await user.click(screen.getByRole("radio", { name: /Cuidadoso/ }));
+    expect(
+      screen.getByText(/^Cuidadoso: 3 crédito\(s\) por página/),
+    ).toHaveTextContent("3× o custo do Rápido");
+    await user.upload(
+      screen.getByLabelText("Escolher imagem ou PDF"),
+      new File(["image bytes"], "source.png", { type: "image/png" }),
+    );
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Validar páginas" }));
+    await screen.findByText("2 página(s) · 6 crédito(s)");
+    expect(
+      screen.getByRole("radio", { name: "Máximo, 10 crédito(s)" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/\(\+4 crédito\(s\)\)/)).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: /Máximo/ }));
+    const transcribe = screen.getByRole("button", {
+      name: "Transcrever · 10 crédito(s)",
+    });
+    expect(transcribe).toBeDisabled();
+    await user.click(screen.getByRole("radio", { name: /Rápido/ }));
+    await user.click(
+      screen.getByRole("button", { name: "Transcrever · 2 crédito(s)" }),
+    );
+    expect(client.submit).toHaveBeenCalledWith("quote1", "none");
+  });
+  it("shows explanations only after the help button is pressed", async () => {
+    const user = userEvent.setup();
+    render(
+      <ImageToTextDialog
+        notebookId={null}
+        onClose={vi.fn()}
+        onCreated={vi.fn()}
+        client={service()}
+      />,
+      { wrapper },
+    );
+    const help = screen.getByRole("button", { name: "Como funciona" });
+    expect(help).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText(/registros de segurança/)).not.toBeVisible();
+    await user.click(help);
+    expect(help).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText(/registros de segurança/)).toBeVisible();
   });
   it("copies and exports the reviewed text without another transcription", async () => {
     const client = service();
@@ -193,7 +269,7 @@ describe("Handwriting image-to-text", () => {
       trialRemaining: 0,
       additional: [],
       renewalAt: null,
-      deleteAfterSeconds: 3600,
+      model: "gpt-5.4",
       paymentsAvailable: false,
       restoreAvailable: false,
     });
@@ -204,7 +280,7 @@ describe("Handwriting image-to-text", () => {
     });
     expect(transcribe).toBeDisabled();
     expect(transcribe).toHaveAccessibleDescription(
-      "Saldo insuficiente: este arquivo usa 1 crédito(s) e você tem 0. Compre páginas ou mude de plano em Settings › Plan and usage",
+      "Saldo insuficiente: este arquivo usa 1 crédito(s) e você tem 0. Escolha um esforço menor, compre páginas ou mude de plano em Settings › Plan and usage",
     );
     expect(client.submit).not.toHaveBeenCalled();
     await user.click(

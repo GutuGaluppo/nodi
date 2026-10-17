@@ -1,4 +1,4 @@
-import { handwritingLimits, type PlanId } from "./plans";
+import { type Effort, handwritingLimits, type PlanId } from "./plans";
 
 export interface Usage {
   plan: PlanId;
@@ -6,7 +6,10 @@ export interface Usage {
   trialRemaining: number;
   additional: { remaining: number; expiresAt: string }[];
   renewalAt: string | null;
-  deleteAfterSeconds: number;
+  /** The OpenAI model the server transcribes with. */
+  model: string;
+  /** The effort preselected by the server. */
+  effort?: Effort;
   paymentsAvailable: boolean;
   restoreAvailable: boolean;
 }
@@ -33,7 +36,7 @@ export interface HandwritingClient {
   available: boolean;
   usage(): Promise<Usage>;
   quote(file: File): Promise<Quote>;
-  submit(quoteId: string): Promise<{ id: string }>;
+  submit(quoteId: string, effort: Effort): Promise<{ id: string }>;
   status(id: string): Promise<Job>;
   jobs(): Promise<Job[]>;
   lookup(quoteId: string): Promise<{ id: string } | null>;
@@ -43,20 +46,22 @@ export interface HandwritingClient {
 
 const messages: Record<string, string> = {
   service_unconfigured:
-    "Handwriting ainda não está disponível. A conexão segura está sendo preparada.",
-  unauthenticated: "Entre na sua conta para usar Handwriting.",
+    "A transcrição ainda não está disponível. A conexão segura está sendo preparada.",
+  unauthenticated: "Entre na sua conta para transcrever documentos.",
   insufficient_credits:
     "Páginas insuficientes. Confira seu saldo em Plan and usage.",
-  invalid_file: "Arquivo inválido. Use PDF, JPEG, PNG, TIFF, HEIC ou GIF.",
+  invalid_file:
+    "Arquivo inválido. Use PDF, JPEG, PNG, WEBP, HEIC, TIFF ou GIF.",
   file_too_large: "O arquivo deve ter no máximo 20 MB.",
   quote_expired:
     "A confirmação de páginas expirou. Valide o arquivo novamente.",
   rate_limited: "O serviço está ocupado. Aguarde antes de consultar novamente.",
-  provider_auth: "A conexão com Handwriting precisa ser atualizada pelo NODI.",
+  provider_auth: "A conexão com a OpenAI precisa ser atualizada pelo NODI.",
   provider_credits:
     "O serviço de transcrição está temporariamente indisponível.",
   provider_timeout:
-    "O resultado ainda não foi confirmado. Consulte o processamento sem reenviar o arquivo.",
+    "Não foi possível falar com o servidor. Consulte o processamento novamente.",
+  invalid_effort: "Escolha um esforço de leitura válido.",
   payments_unconfigured: "As compras ainda não estão disponíveis.",
 };
 export class HandwritingError extends Error {
@@ -144,11 +149,11 @@ export const handwritingClient: HandwritingClient = {
       },
     });
   },
-  submit: (quoteId) =>
+  submit: (quoteId, effort) =>
     request("documents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quoteId }),
+      body: JSON.stringify({ quoteId, effort }),
     }),
   jobs: () => request("documents"),
   lookup: (quoteId) =>

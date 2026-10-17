@@ -36,13 +36,20 @@
     "pages": 10,
     "validMonths": 12
   },
+  "efforts": [
+    { "id": "none", "credits": 1 },
+    { "id": "low", "credits": 1 },
+    { "id": "medium", "credits": 2 },
+    { "id": "high", "credits": 3 },
+    { "id": "xhigh", "credits": 5 }
+  ],
   "maxBytes": 20000000,
   "maxPages": 70,
-  "deleteAfterSeconds": 3600,
   "mimeTypes": [
     "application/pdf",
     "image/jpeg",
     "image/png",
+    "image/webp",
     "image/tiff",
     "image/heic",
     "image/gif"

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { handwritingClient, validateFile } from "./client";
-import { handwritingPack, handwritingPlans } from "./plans";
+import { handwritingEfforts, handwritingPack, handwritingPlans } from "./plans";
 
 describe("Handwriting configuration and file validation", () => {
   it("uses the requested plans and no annual or unlimited plans", () => {
@@ -12,18 +12,30 @@ describe("Handwriting configuration and file validation", () => {
       ["plus", 999, 30],
       ["pro", 1999, 70],
     ]);
+    expect(
+      handwritingEfforts.map((effort) => [effort.id, effort.credits]),
+    ).toEqual([
+      ["none", 1],
+      ["low", 1],
+      ["medium", 2],
+      ["high", 3],
+      ["xhigh", 5],
+    ]);
     expect(handwritingPack).toMatchObject({
       priceCents: 499,
       pages: 10,
       validMonths: 12,
     });
   });
-  it("accepts a PDF and refuses unsupported, empty and oversized documents", () => {
+  it("accepts PDF and WEBP, refuses unsupported, empty and oversized documents", () => {
     expect(() =>
       validateFile(new File(["pdf"], "notes.pdf", { type: "application/pdf" })),
     ).not.toThrow();
     expect(() =>
       validateFile(new File(["webp"], "image.webp", { type: "image/webp" })),
+    ).not.toThrow();
+    expect(() =>
+      validateFile(new File(["bmp"], "image.bmp", { type: "image/bmp" })),
     ).toThrow("Arquivo inválido");
     expect(() =>
       validateFile(new File([], "empty.png", { type: "image/png" })),
@@ -58,7 +70,12 @@ describe("local development server", () => {
   });
 
   it("uses a loopback server and the developer's token in development", async () => {
-    const fetcher = vi.fn().mockResolvedValue(Response.json({ plan: "free" }));
+    const fetcher = vi.fn(
+      async (
+        _url: string,
+        _options: { body?: unknown; headers: Record<string, string> },
+      ) => Response.json({ plan: "free" }),
+    );
     vi.stubGlobal("fetch", fetcher);
     const client = await loadClient(true, {
       VITE_HANDWRITING_BACKEND_URL: "http://127.0.0.1:8787",
@@ -69,6 +86,11 @@ describe("local development server", () => {
     const [url, options] = fetcher.mock.calls[0];
     expect(url).toBe("http://127.0.0.1:8787/v1/handwriting/usage");
     expect(options.headers.Authorization).toBe("Bearer local-token");
+    await client.submit("quote-1", "high");
+    expect(JSON.parse(String(fetcher.mock.calls[1][1].body))).toEqual({
+      quoteId: "quote-1",
+      effort: "high",
+    });
   });
 
   it("refuses plain HTTP and the developer's token outside development", async () => {

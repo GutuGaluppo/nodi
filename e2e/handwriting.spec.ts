@@ -7,13 +7,15 @@ test("Handwriting replaces local image-to-note and Settings includes plans", asy
   await page.goto("/");
   await page.getByRole("button", { name: "Nota de imagem" }).click();
   await expect(page.getByRole("dialog")).toHaveAccessibleName(
-    "Handwriting · imagem ou PDF",
+    "Transcrever imagem ou PDF",
   );
   await expect(
     page.getByRole("button", { name: "Validar páginas" }),
   ).toBeDisabled();
   await expect(
-    page.getByText("Handwriting ainda não está disponível.", { exact: false }),
+    page.getByText("A transcrição ainda não está disponível.", {
+      exact: false,
+    }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
   await page.getByLabel("Settings").click();
@@ -59,7 +61,7 @@ test("landing plans use shared prices and adapt to mobile and translated labels"
   ).toBe(true);
   await page.locator('button[data-lang="pt"]').click();
   await expect(page.locator("#plans-title")).toHaveText(
-    "Páginas para Handwriting OCR",
+    "Páginas para transcrição de manuscritos",
   );
   await expect(page.locator(".plan-card.featured")).toContainText(
     "30 páginas por ciclo mensal de cobrança",

@@ -79,7 +79,8 @@ export class Ledger {
           : null,
     };
   }
-  reserve(user, quote) {
+  /** Charges `credits` (pages times the effort's credits) for the quoted pages. */
+  reserve(user, quote, credits = quote.pages) {
     return this.transaction(() => {
       this.ensureUser(user);
       const existing = this.db
@@ -89,18 +90,20 @@ export class Ledger {
       if (
         !Number.isSafeInteger(quote.pages) ||
         quote.pages < 1 ||
-        quote.pages > config.maxPages
+        quote.pages > config.maxPages ||
+        !Number.isSafeInteger(credits) ||
+        credits < quote.pages
       )
         throw new ServiceError("invalid_pages");
       const grants = this.available(user);
-      if (grants.reduce((n, g) => n + g.remaining, 0) < quote.pages)
+      if (grants.reduce((n, g) => n + g.remaining, 0) < credits)
         throw new ServiceError("insufficient_credits", 402);
       const id = randomUUID();
       const now = this.now();
       this.db
         .prepare("INSERT INTO documents VALUES(?,?,?,?,'reserved',NULL,?,?)")
         .run(id, user, quote.id, quote.pages, now, now);
-      let needed = quote.pages;
+      let needed = credits;
       for (const grant of grants) {
         const amount = Math.min(needed, grant.remaining);
         if (amount > 0)

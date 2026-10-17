@@ -73,7 +73,8 @@ export default function PlanUsage({
           <p className="eyebrow">SETTINGS</p>
           <h1>Plan and usage</h1>
           <p className="about-intro">
-            Pages for Handwriting OCR. Your notes stay on your Mac.
+            Pages for handwriting transcription, read by OpenAI. Your notes stay
+            on your Mac.
           </p>
         </div>
         <button type="button" className="text-button" onClick={onClose}>
@@ -82,7 +83,7 @@ export default function PlanUsage({
       </header>
       {!client.available ? (
         <p className="handwriting-notice" role="status">
-          Handwriting and purchases are not available yet. You can keep using
+          Transcription and purchases are not available yet. You can keep using
           your local notes.
         </p>
       ) : usage.isPending ? (
@@ -141,7 +142,8 @@ export default function PlanUsage({
       ) : null}
       <h2>Plans</h2>
       <p>
-        One image or page uses one credit. Monthly pages reset on your billing
+        One image or page uses one credit with the fastest reading effort and up
+        to five with more careful reading. Monthly pages reset on your billing
         date without rollover. Additional pages stay available after
         cancellation until they expire.
       </p>
@@ -220,8 +222,8 @@ export default function PlanUsage({
       </div>
       <p role="status">{status}</p>
       <p>
-        Cancel through the original purchase channel. Commercial availability
-        depends on an agreement with Handwriting OCR.
+        Cancel through the original purchase channel. Transcriptions are read by
+        an AI model and can contain mistakes; always review them.
       </p>
     </main>
   );

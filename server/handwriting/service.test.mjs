@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -7,33 +7,24 @@ import { Ledger } from "./ledger.mjs";
 import { ProviderError } from "./provider.mjs";
 import { createService } from "./service.mjs";
 
-async function fixture(overrides = {}) {
-  const ledger = new Ledger();
-  const storage = await mkdtemp(join(tmpdir(), "nodi-handwriting-"));
-  const uploads = [];
+async function fixture(overrides = {}, shared = {}) {
+  const ledger = shared.ledger ?? new Ledger();
+  const storage =
+    shared.storage ?? (await mkdtemp(join(tmpdir(), "nodi-handwriting-")));
+  const calls = [];
   const provider = {
-    retention: 3600,
-    upload: async (_blob, name) => {
-      uploads.push(name);
-      return { id: "abc123" };
+    model: "gpt-5.4",
+    transcribe: async (bytes, mime, name, pages, effort) => {
+      calls.push({ bytes: bytes.toString(), mime, name, pages, effort });
+      return { text: "Grap conpilence\nExact provider text" };
     },
-    status: async () => ({
-      status: "processed",
-      page_count: 1,
-      results: [
-        { page_number: 1, transcript: "Grap conpilence\nExact provider text" },
-      ],
-    }),
-    request: async () => ({
-      documents: uploads.map((file_name) => ({ id: "abc123", file_name })),
-      last_page: 1,
-    }),
   };
   const service = createService({
     ledger,
     provider,
     storage,
     commercialAgreement: true,
+    wait: async () => {},
     authenticate: async (request) =>
       request.headers.get("Authorization") === "Bearer verified-session"
         ? { id: "u" }
@@ -60,9 +51,11 @@ async function fixture(overrides = {}) {
     );
   return {
     ledger,
+    storage,
     provider,
-    uploads,
+    calls,
     call,
+    settle: () => service.settle(),
     close: async () => {
       ledger.db.close();
       await rm(storage, { recursive: true });
@@ -95,6 +88,9 @@ test("consent, verified auth and commercial agreement are required; no fake purc
   await disabled.close();
 });
 
+const submit = async (f, quote) =>
+  (await f.call("documents", "POST", { quoteId: quote.id })).json();
+
 test("quote/submission is idempotent under concurrent requests, text is exact, reads never charge", async () => {
   const f = await fixture();
   const q = await getQuote(f);
@@ -105,11 +101,22 @@ test("quote/submission is idempotent under concurrent requests, text is exact, r
   ]);
   const jobs = await Promise.all(responses.map((r) => r.json()));
   assert.equal(jobs[0].id, jobs[1].id);
-  assert.equal(f.uploads.length, 1);
+  await f.settle();
+  assert.equal(f.calls.length, 1);
+  assert.deepEqual(f.calls[0], {
+    bytes: "image bytes",
+    mime: "image/png",
+    name: `nodi-${jobs[0].id}.png`,
+    pages: 1,
+    effort: "none",
+  });
   const result = await (await f.call(`documents/${jobs[0].id}`)).json();
+  assert.equal(result.status, "processed");
   assert.equal(result.text, "Grap conpilence\nExact provider text");
   await f.call(`documents/${jobs[0].id}`);
+  assert.equal(f.calls.length, 1);
   assert.equal(f.ledger.usage("u").trialRemaining, 0);
+  assert.deepEqual(await readdir(f.storage), [`${jobs[0].id}.txt`]);
   const another = await getQuote(f);
   assert.equal(
     (await f.call("documents", "POST", { quoteId: another.id })).status,
@@ -118,49 +125,124 @@ test("quote/submission is idempotent under concurrent requests, text is exact, r
   await f.close();
 });
 
-test("unknown upload timeout retains credits and reconciles without resubmission", async () => {
+test("the chosen effort sets the credits charged and reaches the provider", async () => {
   const f = await fixture();
-  f.provider.upload = async (_file, name) => {
-    f.uploads.push(name);
-    throw new ProviderError("provider_timeout", 504, true);
-  };
-  const q = await getQuote(f);
-  const job = await (
-    await f.call("documents", "POST", { quoteId: q.id })
-  ).json();
-  assert.equal(f.ledger.usage("u").trialRemaining, 0);
-  await f.call("documents", "POST", { quoteId: q.id });
-  assert.equal(f.uploads.length, 1);
+  f.ledger.ensureUser("u");
+  f.ledger.db
+    .prepare("INSERT INTO grants VALUES('pack:u','u','pack',10,NULL,0)")
+    .run();
+  const usage = await (await f.call("usage")).json();
+  assert.equal(usage.effort, "none");
+  const invalid = await getQuote(f);
   assert.equal(
-    (await (await f.call(`quotes/${q.id}/document`)).json()).id,
-    job.id,
+    (await f.call("documents", "POST", { quoteId: invalid.id, effort: "max" }))
+      .status,
+    400,
   );
-  const result = await (await f.call(`documents/${job.id}`)).json();
-  assert.equal(result.status, "processed");
-  assert.equal(f.uploads.length, 1);
+  const q = await getQuote(f);
+  await f.call("documents", "POST", { quoteId: q.id, effort: "xhigh" });
+  await f.settle();
+  assert.equal(f.calls.at(-1).effort, "xhigh");
+  const after = f.ledger.usage("u");
+  assert.equal(after.trialRemaining + after.additional[0].remaining, 6);
   await f.close();
 });
 
-test("confirmed failures refund; mismatch stays pending; hostile page claims cannot bypass server parser", async () => {
+test("a failed transcription refunds the page and deletes the source", async () => {
   const f = await fixture();
-  const q = await getQuote(f);
-  const job = await (
-    await f.call("documents", "POST", { quoteId: q.id })
-  ).json();
-  f.provider.status = async () => ({
-    status: "processed",
-    page_count: 2,
-    results: [],
-  });
+  let fail;
+  f.provider.transcribe = () =>
+    new Promise((_, reject) => {
+      fail = () => reject(new ProviderError("transcription_failed", 502));
+    });
+  const job = await submit(f, await getQuote(f));
+  assert.equal(f.ledger.usage("u").trialRemaining, 0);
   assert.equal(
     (await (await f.call(`documents/${job.id}`)).json()).status,
-    "pending",
+    "processing",
+  );
+  fail();
+  await f.settle();
+  assert.equal(
+    (await (await f.call(`documents/${job.id}`)).json()).status,
+    "failed",
+  );
+  assert.equal(f.ledger.usage("u").trialRemaining, 1);
+  assert.deepEqual(await readdir(f.storage), []);
+  await f.close();
+});
+
+test("rate limits are retried without charging twice", async () => {
+  const f = await fixture();
+  let attempts = 0;
+  f.provider.transcribe = async () => {
+    attempts++;
+    if (attempts === 1) throw new ProviderError("rate_limited", 429, true);
+    return { text: "after retry" };
+  };
+  const job = await submit(f, await getQuote(f));
+  await f.settle();
+  assert.equal(attempts, 2);
+  assert.equal(
+    (await (await f.call(`documents/${job.id}`)).json()).text,
+    "after retry",
   );
   assert.equal(f.ledger.usage("u").trialRemaining, 0);
-  f.provider.status = async () => ({ status: "failed" });
-  await f.call(`documents/${job.id}`);
-  assert.equal(f.ledger.usage("u").trialRemaining, 1);
   await f.close();
+});
+
+test("a transcription lost to a restart is a confirmed failure and refunds the page", async () => {
+  const first = await fixture();
+  first.provider.transcribe = () => new Promise(() => {});
+  const job = await submit(first, await getQuote(first));
+  assert.equal(first.ledger.usage("u").trialRemaining, 0);
+  // Same database and files, new process: the answer can never arrive.
+  const restarted = await fixture(
+    {},
+    { ledger: first.ledger, storage: first.storage },
+  );
+  assert.equal(
+    (await (await restarted.call(`documents/${job.id}`)).json()).status,
+    "failed",
+  );
+  assert.equal(restarted.ledger.usage("u").trialRemaining, 1);
+  await restarted.close();
+});
+
+test("HEIC and TIFF are converted to JPEG on the server before transcription", async () => {
+  const f = await fixture({
+    inspectDocument: async () => ({
+      pages: 1,
+      mime: "image/heic",
+      extension: "heic",
+    }),
+    convertDocument: async (bytes) => Buffer.from(`jpeg of ${bytes}`),
+  });
+  const job = await submit(f, await getQuote(f));
+  await f.settle();
+  assert.equal(f.calls[0].mime, "image/jpeg");
+  assert.equal(f.calls[0].bytes, "jpeg of image bytes");
+  assert.equal(f.calls[0].name, `nodi-${job.id}.jpg`);
+  await f.close();
+  const unconverted = await fixture({
+    inspectDocument: async () => ({
+      pages: 1,
+      mime: "image/tiff",
+      extension: "tiff",
+    }),
+  });
+  assert.equal(
+    (
+      await unconverted.call("quote", "POST", "bytes", {
+        "X-Processing-Consent": "handwriting",
+      })
+    ).status,
+    400,
+  );
+  await unconverted.close();
+});
+
+test("hostile page claims cannot bypass the server parser", async () => {
   const invalid = await fixture({
     inspectDocument: async () => ({
       pages: 999,

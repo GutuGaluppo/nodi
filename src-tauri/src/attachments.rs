@@ -287,7 +287,7 @@ pub fn store_handwriting_bytes(root: &Path, bytes: &[u8]) -> Result<StoredAttach
     } else if bytes.starts_with(b"II\x2a\x00") || bytes.starts_with(b"MM\x00\x2a") {
         Some(("image/tiff", "tiff"))
     } else {
-        sniff_image(bytes).filter(|(mime, _)| *mime != "image/webp")
+        sniff_image(bytes)
     };
     let (mime, extension) = format.ok_or("unsupported Handwriting document format")?;
     let staging = root.join(STAGING_DIR);
@@ -416,7 +416,9 @@ mod tests {
         assert_eq!(pdf, again);
         let tiff = store_handwriting_bytes(&root, b"II\x2a\x00original").unwrap();
         assert_eq!(tiff.mime_type, "image/tiff");
-        assert!(store_handwriting_bytes(&root, b"RIFFxxxxWEBP").is_err());
+        let webp = store_handwriting_bytes(&root, b"RIFFxxxxWEBPVP8 original").unwrap();
+        assert_eq!(webp.mime_type, "image/webp");
+        assert!(store_handwriting_bytes(&root, b"not a document").is_err());
         assert!(store_handwriting_bytes(&root, b"").is_err());
         assert!(store_handwriting_bytes(&root, &vec![0; 20_000_001]).is_err());
         fs::remove_dir_all(root).unwrap();

@@ -14,9 +14,11 @@ export function createService({
   storage,
   authenticate,
   inspectDocument,
+  convertDocument,
   payments,
   commercialAgreement = false,
   allowedOrigins = [],
+  wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }) {
   ledger.db.exec(
     "CREATE TABLE IF NOT EXISTS quotes(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, pages INTEGER NOT NULL, mime TEXT NOT NULL, extension TEXT NOT NULL, expires INTEGER NOT NULL)",
@@ -32,6 +34,41 @@ export function createService({
   };
   const resultPath = (id) => join(storage, `${id}.txt`);
   const sourcePath = (id) => join(storage, `${id}.source`);
+
+  // Transcriptions running in this process. The provider's answer arrives
+  // only on its own call, so a job missing from here (after a restart) can
+  // never deliver text: it is a confirmed failure and the user is refunded.
+  const running = new Map();
+
+  async function transcribe(doc, quote, effort) {
+    try {
+      const bytes = await readFile(sourcePath(quote.id));
+      let result;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          result = await provider.transcribe(
+            bytes,
+            quote.mime,
+            `nodi-${doc.id}.${quote.extension}`,
+            doc.pages,
+            effort,
+          );
+          break;
+        } catch (error) {
+          if (!error.retryable || attempt >= 3) throw error;
+          await wait(Math.min(60000, error.retryAfterMs ?? 5000 * attempt));
+        }
+      }
+      await writeFile(resultPath(doc.id), result.text, { mode: 0o600 });
+      ledger.update(doc.id, "processed");
+    } catch {
+      // Refunds the user. Any provider charge for the attempt is NODI's cost.
+      ledger.update(doc.id, "failed");
+    } finally {
+      await unlink(sourcePath(quote.id)).catch(() => {});
+      running.delete(doc.id);
+    }
+  }
 
   async function status(user, id) {
     const doc = ledger.document(user, id);
@@ -49,51 +86,9 @@ export function createService({
       }
     }
     if (doc.status === "failed") return base;
-    let providerId = doc.provider_id;
-    if (!providerId) {
-      // Upload timeouts/crashes are reconciled by the unique server-generated filename.
-      const quote = quoteFor(user, doc.quote_id);
-      const name = `nodi-${doc.id}.${quote.extension}`;
-      for (let page = 1; page <= 20; page++) {
-        const list = await provider.request(
-          `documents?per_page=200&page=${page}&updated_since=${encodeURIComponent(new Date(doc.created - 60000).toISOString())}`,
-        );
-        const match = list.documents?.find((item) => item.file_name === name);
-        if (match) {
-          providerId = match.id;
-          ledger.update(id, "queued", providerId);
-          break;
-        }
-        if (!list.last_page || page >= list.last_page) break;
-      }
-      if (!providerId) return { ...base, status: "pending" };
-    }
-    const response = await provider.status(providerId);
-    if (response.status === "failed") {
-      // Confirmed failure refunds the user. Provider costs stay the application's cost.
-      ledger.update(id, "failed");
-      return { ...base, status: "failed" };
-    }
-    if (response.status !== "processed")
-      return { ...base, status: "processing" };
-    if (response.page_count !== doc.pages) {
-      // Do not silently charge more than the accepted quote or release unknown usage.
-      ledger.update(id, "reconciliation");
-      return { ...base, status: "pending" };
-    }
-    if (
-      !Array.isArray(response.results) ||
-      response.results.some((page) => typeof page.transcript !== "string")
-    )
-      throw new ServiceError("provider_response", 502);
-    const text = [...response.results]
-      .sort((a, b) => a.page_number - b.page_number)
-      .map((page) => page.transcript)
-      .join("\n\n");
-    await writeFile(resultPath(id), text, { mode: 0o600 });
-    ledger.update(id, "processed");
-    await unlink(sourcePath(doc.quote_id)).catch(() => {});
-    return { ...base, status: "processed", text };
+    if (running.has(id)) return { ...base, status: "processing" };
+    ledger.update(id, "failed");
+    return { ...base, status: "failed" };
   }
 
   async function cleanup() {
@@ -145,7 +140,8 @@ export function createService({
       if (path === "/v1/handwriting/usage" && request.method === "GET")
         return json({
           ...ledger.usage(user.id),
-          deleteAfterSeconds: provider.retention,
+          model: provider.model,
+          effort: provider.effort ?? "none",
           paymentsAvailable: Boolean(payments?.checkout),
           restoreAvailable: Boolean(payments?.restore),
         });
@@ -174,7 +170,7 @@ export function createService({
         const bytes = Buffer.concat(chunks);
         // Trusted server parser must validate actual bytes, PDF encryption/page tree,
         // multi-frame images, decompression limits and provider-compatible page counts.
-        const document = await inspectDocument(bytes);
+        let document = await inspectDocument(bytes);
         if (
           !config.mimeTypes.includes(document.mime) ||
           !/^[a-z]{3,4}$/.test(document.extension) ||
@@ -183,8 +179,15 @@ export function createService({
           document.pages > config.maxPages
         )
           throw new ServiceError("invalid_file");
+        // The model reads PNG, JPEG, WEBP, GIF and PDF; HEIC and TIFF become JPEG.
+        let source = bytes;
+        if (document.mime === "image/heic" || document.mime === "image/tiff") {
+          if (!convertDocument) throw new ServiceError("invalid_file");
+          source = await convertDocument(bytes);
+          document = { ...document, mime: "image/jpeg", extension: "jpg" };
+        }
         const id = randomUUID();
-        await writeFile(sourcePath(id), bytes, { mode: 0o600 });
+        await writeFile(sourcePath(id), source, { mode: 0o600 });
         const expires = ledger.now() + 900000;
         ledger.db
           .prepare("INSERT INTO quotes VALUES(?,?,?,?,?,?)")
@@ -204,31 +207,26 @@ export function createService({
         });
       }
       if (path === "/v1/handwriting/documents" && request.method === "POST") {
-        const { quoteId } = await request.json();
+        const { quoteId, effort = provider.effort ?? "none" } =
+          await request.json();
         const quote = quoteFor(user.id, quoteId);
+        // Higher reasoning effort costs NODI more, so it uses more credits per page.
+        const level = config.efforts.find((item) => item.id === effort);
+        if (!level) throw new ServiceError("invalid_effort");
         const existing = ledger.db
           .prepare("SELECT id FROM documents WHERE user_id=? AND quote_id=?")
           .get(user.id, quoteId);
         if (existing) return json({ id: existing.id, status: "pending" }, 202);
         if (quote.expires <= ledger.now())
           throw new ServiceError("quote_expired", 409);
-        const bytes = await readFile(sourcePath(quote.id));
-        const { document: doc, fresh } = ledger.reserve(user.id, quote);
+        const { document: doc, fresh } = ledger.reserve(
+          user.id,
+          quote,
+          quote.pages * level.credits,
+        );
         if (!fresh) return json({ id: doc.id, status: "pending" }, 202);
         ledger.update(doc.id, "pending");
-        try {
-          const result = await provider.upload(
-            new Blob([bytes], { type: quote.mime }),
-            `nodi-${doc.id}.${quote.extension}`,
-          );
-          ledger.update(doc.id, "queued", result.id);
-        } catch (error) {
-          if (error.uncertain === false) {
-            ledger.update(doc.id, "failed");
-            throw error;
-          }
-          // Unknown outcome: reservation is retained and upload is never repeated.
-        }
+        running.set(doc.id, transcribe(doc, quote, effort));
         return json({ id: doc.id, status: "pending" }, 202);
       }
       if (path === "/v1/handwriting/documents" && request.method === "GET") {
@@ -319,5 +317,7 @@ export function createService({
     }
     return response;
   }
-  return { handle: withCors, cleanup };
+  /** Waits for transcriptions in progress (tests and graceful shutdown). */
+  const settle = () => Promise.all(running.values());
+  return { handle: withCors, cleanup, settle };
 }

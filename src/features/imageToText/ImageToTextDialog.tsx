@@ -19,10 +19,12 @@ import {
   type Quote,
   validateFile,
 } from "../handwriting/client";
-import { handwritingLimits } from "../handwriting/plans";
+import type { Effort } from "../handwriting/plans";
 import { imageTextKeys } from "../images/useImageInsertion";
 import { notesKeys } from "../notes/useNotes";
 import { searchKeys } from "../search/searchQueries";
+import EffortPicker, { effortCredits } from "./EffortPicker";
+import FileDrop from "./FileDrop";
 import {
   createImageTextNote,
   imageNoteDocument,
@@ -78,6 +80,8 @@ export default function ImageToTextDialog({
   const [text, setText] = useState("");
   const [recognizedText, setRecognizedText] = useState("");
   const [consent, setConsent] = useState(false);
+  const [chosenEffort, setEffort] = useState<Effort | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const dialog = useRef<HTMLDivElement>(null);
@@ -186,12 +190,20 @@ export default function ImageToTextDialog({
       }
     }
   }
+  function startOver(): void {
+    setQuote(null);
+    setJob(null);
+    setPhase("choosing");
+    setNotice(
+      "Transcrever novamente exige validar as páginas e confirmar um novo consumo.",
+    );
+  }
   async function submit(): Promise<void> {
     if (!quote || phase !== "confirming") return;
     setPhase("submitting");
     setError("");
     try {
-      const result = await client.submit(quote.id);
+      const result = await client.submit(quote.id, effort);
       if (mounted.current) {
         setJob({ id: result.id, pages: quote.pages, status: "pending" });
         setPhase("processing");
@@ -371,17 +383,23 @@ export default function ImageToTextDialog({
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+  // Server default until the user picks one.
+  const effort = chosenEffort ?? usage.data?.effort ?? "none";
+  const credits = quote ? effortCredits(effort, quote.pages) : null;
   const balance = usage.data
     ? usage.data.monthlyRemaining +
       usage.data.trialRemaining +
       usage.data.additional.reduce((sum, pack) => sum + pack.remaining, 0)
     : null;
-  const shortfall =
-    balance !== null && quote !== null && balance < quote.credits;
+  const shortfall = balance !== null && credits !== null && balance < credits;
   const busy = ["quoting", "submitting", "processing", "saving"].includes(
     phase,
   );
+  const setup = ["choosing", "quoting", "confirming"].includes(phase);
   const reviewing = phase === "review" || phase === "saving";
+  const finished =
+    phase === "pending" &&
+    (job?.status === "failed" || job?.status === "expired");
   return (
     <div className="dialog-backdrop">
       <div
@@ -390,7 +408,6 @@ export default function ImageToTextDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="image-to-text-title"
-        aria-describedby="image-to-text-help"
         aria-busy={busy}
         tabIndex={-1}
         onKeyDown={keyDown}
@@ -398,10 +415,18 @@ export default function ImageToTextDialog({
       >
         <header className="image-to-text-header">
           <h2 id="image-to-text-title">
-            {reviewing
-              ? "Revisar texto extraído"
-              : "Handwriting · imagem ou PDF"}
+            {reviewing ? "Revisar texto extraído" : "Transcrever imagem ou PDF"}
           </h2>
+          <button
+            type="button"
+            className="icon-action subtle-action image-to-text-help-toggle"
+            aria-label="Como funciona"
+            aria-expanded={helpOpen}
+            aria-controls="image-to-text-about"
+            onClick={() => setHelpOpen((open) => !open)}
+          >
+            <Icon name="help" />
+          </button>
           <button
             type="button"
             className="icon-action"
@@ -412,62 +437,126 @@ export default function ImageToTextDialog({
             <Icon name="x" />
           </button>
         </header>
-        <p id="image-to-text-help" className="image-to-text-help">
-          {reviewing
-            ? "Revise o texto antes de criar a nota. Nenhuma palavra é corrigida automaticamente."
-            : "Transcreva com Handwriting OCR. Uma imagem ou página usa um crédito. O custo aparece antes da transcrição."}
-        </p>
+        <section
+          id="image-to-text-about"
+          className="image-to-text-about"
+          aria-label="Como funciona"
+          hidden={!helpOpen}
+        >
+          {reviewing ? (
+            <p>
+              Revise o texto antes de criar a nota. Nenhuma palavra é corrigida
+              automaticamente; trechos que o modelo não conseguiu ler aparecem
+              como [?].
+            </p>
+          ) : (
+            <>
+              <p>
+                Transcreva manuscritos e documentos com a OpenAI. O custo
+                aparece antes da transcrição e só é reservado quando você
+                confirma; se a transcrição falhar, os créditos voltam ao saldo.
+              </p>
+              <p>
+                O esforço de leitura define quanto o modelo raciocina antes de
+                escrever. Esforços maiores ajudam com letra difícil, mas usam
+                mais créditos por página e demoram mais. Nenhum esforço garante
+                um texto perfeito.
+              </p>
+              <p>
+                Até 20 MB e 70 páginas. Imagens devem ter um único quadro e até
+                40 megapixels.
+              </p>
+              <p>
+                Arquivos não enviados para transcrição expiram no servidor do
+                NODI em 15 minutos; resultados ficam lá por até 1 hora. A OpenAI
+                lê o arquivo com o modelo {usage.data?.model ?? "gpt-5.4"} sem
+                guardá-lo como resposta e não o usa para treinar modelos, mas
+                pode manter registros de segurança por até 30 dias. A nota
+                aprovada e seu original ficam neste Mac.
+              </p>
+            </>
+          )}
+        </section>
         {!client.available ? (
           <p className="handwriting-notice" role="status">
-            Handwriting ainda não está disponível. A conexão segura está sendo
+            A transcrição ainda não está disponível. A conexão segura está sendo
             preparada.
           </p>
         ) : null}
-        {usage.isError ? <p role="alert">{usage.error.message}</p> : null}
+        {usage.isError ? (
+          <p className="image-to-text-error" role="alert">
+            {usage.error.message}
+          </p>
+        ) : null}
         {error ? (
           <p className="image-to-text-error" role="alert">
             {error}
           </p>
         ) : null}
-        <p role="status">{notice}</p>
-        {phase === "choosing" || phase === "quoting" ? (
-          <div className="handwriting-choice">
-            <label htmlFor="handwriting-file">Escolher imagem ou PDF</label>
-            <input
-              id="handwriting-file"
-              type="file"
-              accept={handwritingLimits.mimeTypes.join(",")}
+        <p className="image-to-text-notice" role="status">
+          {notice}
+        </p>
+        {setup ? (
+          <div className="handwriting-setup">
+            <FileDrop
+              file={file}
+              preview={preview}
               disabled={phase === "quoting"}
-              onChange={(event) => {
-                const selected = event.target.files?.[0];
-                if (selected) select(selected);
-              }}
+              onSelect={select}
             />
-            <p className="image-to-text-help">
-              PDF, JPEG, PNG, TIFF, HEIC ou GIF · até 20 MB e 70 páginas.
-              Imagens devem ter um único quadro e até 40 megapixels. Você também
-              pode colar uma imagem (⌘V).
-            </p>
-            <label className="handwriting-consent">
-              <input
-                type="checkbox"
-                checked={consent}
-                disabled={phase === "quoting"}
-                onChange={(event) => setConsent(event.target.checked)}
-              />
-              Autorizo enviar este arquivo ao NODI para validar as páginas e ao
-              Handwriting OCR após confirmar a transcrição.
-            </label>
-            <p className="image-to-text-help">
-              Arquivos não enviados para transcrição expiram no servidor em 15
-              minutos. Originais enviados e resultados ficam no servidor por até
-              1 hora. A exclusão no Handwriting é solicitada após{" "}
-              {Math.round((usage.data?.deleteAfterSeconds ?? 3600) / 60)}{" "}
-              minutos. A nota aprovada e seu original ficam neste Mac.
-            </p>
-            {jobs.data?.length ? (
-              <details>
-                <summary>
+            <EffortPicker
+              value={effort}
+              pages={quote?.pages ?? null}
+              disabled={phase === "quoting"}
+              onChange={setEffort}
+            />
+            {phase === "confirming" && quote ? (
+              <div className="handwriting-summary">
+                <p>
+                  <strong>
+                    {quote.pages} página(s) · {credits} crédito(s)
+                  </strong>
+                </p>
+                <p>
+                  Saldo:{" "}
+                  {balance === null
+                    ? "aguardando confirmação"
+                    : `${balance} crédito(s)`}
+                </p>
+                {shortfall ? (
+                  <p id="handwriting-shortfall" className="image-to-text-error">
+                    Saldo insuficiente: este arquivo usa {credits} crédito(s) e
+                    você tem {balance}. Escolha um esforço menor, compre páginas
+                    ou mude de plano em{" "}
+                    {onOpenPlanUsage ? (
+                      <button
+                        type="button"
+                        className="inline-link-button"
+                        onClick={onOpenPlanUsage}
+                      >
+                        Settings › Plan and usage
+                      </button>
+                    ) : (
+                      "Settings › Plan and usage"
+                    )}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <label className="handwriting-consent">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  disabled={phase === "quoting"}
+                  onChange={(event) => setConsent(event.target.checked)}
+                />
+                Autorizo enviar este arquivo ao NODI para validar as páginas e à
+                OpenAI após confirmar a transcrição.
+              </label>
+            )}
+            {phase === "choosing" && jobs.data?.length ? (
+              <details className="handwriting-recent">
+                <summary className="handwriting-recent-summary">
                   Processamentos recentes · recuperar sem cobrar novamente
                 </summary>
                 {jobs.data.map((item) => (
@@ -493,39 +582,6 @@ export default function ImageToTextDialog({
             ) : null}
           </div>
         ) : null}
-        {phase === "confirming" && quote ? (
-          <div className="handwriting-notice">
-            <p>
-              <strong>
-                {quote.pages} página(s) · {quote.credits} crédito(s)
-              </strong>
-            </p>
-            <p>
-              Saldo disponível:{" "}
-              {balance === null
-                ? "aguardando confirmação"
-                : `${balance} página(s)`}
-              . O servidor confirma e reserva o saldo ao enviar.
-            </p>
-            {shortfall ? (
-              <p id="handwriting-shortfall" className="image-to-text-error">
-                Saldo insuficiente: este arquivo usa {quote.credits} crédito(s)
-                e você tem {balance}. Compre páginas ou mude de plano em{" "}
-                {onOpenPlanUsage ? (
-                  <button
-                    type="button"
-                    className="inline-link-button"
-                    onClick={onOpenPlanUsage}
-                  >
-                    Settings › Plan and usage
-                  </button>
-                ) : (
-                  "Settings › Plan and usage"
-                )}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
         {busy ? (
           <p className="image-to-text-progress" role="status">
             <span className="image-to-text-spinner" aria-hidden="true" />
@@ -533,7 +589,7 @@ export default function ImageToTextDialog({
               ? "Validando páginas…"
               : phase === "saving"
                 ? "Criando a nota…"
-                : "Aguardando Handwriting OCR…"}
+                : "Aguardando a transcrição…"}
           </p>
         ) : null}
         {phase === "pending" ? (
@@ -572,46 +628,36 @@ export default function ImageToTextDialog({
             disabled={phase === "saving"}
             onClick={onClose}
           >
-            {busy ? "Fechar · manter processamento" : "Fechar"}
+            {busy && phase !== "quoting"
+              ? "Fechar · manter processamento"
+              : "Fechar"}
           </button>
-          {phase === "choosing" ? (
+          {phase === "choosing" || phase === "quoting" ? (
             <button
               type="button"
               className="primary-button"
-              disabled={!client.available || !file || !consent}
+              disabled={
+                !client.available || !file || !consent || phase === "quoting"
+              }
               onClick={() => void validate()}
             >
               Validar páginas
             </button>
           ) : null}
           {phase === "confirming" ? (
-            <>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => {
-                  setQuote(null);
-                  setPhase("choosing");
-                }}
-              >
-                Voltar
-              </button>
-              <button
-                type="button"
-                className="primary-button"
-                disabled={balance === null || shortfall}
-                aria-describedby={
-                  shortfall ? "handwriting-shortfall" : undefined
-                }
-                onClick={() => void submit()}
-              >
-                Transcrever · {quote?.credits} crédito(s)
-              </button>
-            </>
+            <button
+              type="button"
+              className="primary-button"
+              disabled={balance === null || shortfall}
+              aria-describedby={
+                shortfall ? "handwriting-shortfall" : "handwriting-effort-cost"
+              }
+              onClick={() => void submit()}
+            >
+              Transcrever · {credits} crédito(s)
+            </button>
           ) : null}
-          {(phase === "pending" || phase === "processing") &&
-          job?.status !== "failed" &&
-          job?.status !== "expired" ? (
+          {(phase === "pending" || phase === "processing") && !finished ? (
             <button
               type="button"
               className="primary-button"
@@ -648,20 +694,11 @@ export default function ImageToTextDialog({
               </button>
             </>
           ) : null}
-          {phase === "review" ||
-          (phase === "pending" &&
-            (job?.status === "failed" || job?.status === "expired")) ? (
+          {phase === "review" || finished ? (
             <button
               type="button"
               className="secondary-button"
-              onClick={() => {
-                setQuote(null);
-                setJob(null);
-                setPhase("choosing");
-                setNotice(
-                  "Transcrever novamente exige validar as páginas e confirmar um novo consumo.",
-                );
-              }}
+              onClick={startOver}
             >
               Nova transcrição
             </button>

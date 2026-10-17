@@ -21,6 +21,6 @@ See the Portuguese guide for [installing and updating NODI](docs/INSTALACAO_E_AT
 - [Tauri extension](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
 - [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 
-## Handwriting OCR
+## Handwriting transcription
 
-The image-to-note workflow is prepared for Handwriting OCR with explicit consent and server-managed page credits. It remains unavailable until the authenticated service, provider secrets, payments and commercial agreement are configured. See [setup and implementation status](docs/HANDWRITING_SETUP.md).
+The image-to-note workflow transcribes images and PDFs with OpenAI's `gpt-5.4`, with explicit consent and server-managed page credits. It remains unavailable until the authenticated service, OpenAI key, payments and launch review are configured. See [setup, implementation status and what is still needed](docs/HANDWRITING_SETUP.md).

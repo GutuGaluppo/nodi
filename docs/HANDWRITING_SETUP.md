@@ -1,87 +1,89 @@
-# Handwriting implementation and configuration
+# Handwriting transcription — implementation and configuration
 
-Implemented on October 2, 2026, following [the active implementation brief](HANDWRITING_IMPLEMENTATION_EN.md).
+Branch `test/gpt-5.4-transcription`, October 4, 2026. Follows [the implementation brief](HANDWRITING_IMPLEMENTATION_EN.md), with OpenAI's `gpt-5.4` replacing Handwriting OCR as the transcription provider. The Handwriting OCR version is commit `c144ba1`.
 
-The desktop's image-to-note entry now uses the Handwriting workflow. Local image indexing for search still uses Apple Vision. Notes remain canonical Tiptap JSON in the desktop SQLite database; original documents are stored as attachments outside SQLite. The optional server has its own SQLite usage ledger and stores transient files outside that ledger. No deployment, accounts, purchases or provider credentials have been created.
+The desktop's image-to-note entry sends an image or PDF, with consent, to the optional NODI server, which transcribes it with `gpt-5.4` and returns the text for review. Local image indexing for search still uses Apple Vision. Notes remain canonical Tiptap JSON in the desktop SQLite database; original documents are stored as attachments outside SQLite. The optional server has its own SQLite usage ledger and stores transient files outside it. No deployment, accounts, purchases or production credentials have been created.
 
-## Availability
+## What depends on you
 
-The feature deliberately remains unavailable in this checkout. There is no deployed authenticated NODI service, no identity/payment integration, no provider key, and no evidence of written resale permission. The shipped desktop CSP still blocks remote connections. A build variable alone cannot enable transcription. The landing displays the requested prices, explicitly marks the feature unavailable and disables purchases; it does not advertise a registration or checkout flow that does not exist.
+Nothing below can be done from the codebase. Until the first three items exist, the feature stays unavailable, as the app and landing say.
 
-Before launch, supply the real identity provider and checkout integrations, deploy the service behind HTTPS, connect verified sign-in to the desktop session, allow only that backend origin in Tauri's `connect-src`, and update the network-policy tests and privacy copy to describe that precise permission. Keep local note use account-free. Review the actual checkout prices, tax handling and product IDs against `landing/plans.json` before enabling purchases.
+1. **An OpenAI API key** for a NODI project on platform.openai.com, with prepaid credits or billing, added as `OPENAI_API_KEY` in `server/handwriting/.env` (local testing) and in the production secret store. The current `.env` only has the Handwriting OCR key. Set a monthly spend limit on that project: when it is reached, transcriptions fail and pages are refunded, but nothing is charged twice.
+2. **A deployed HTTPS server and real sign-in.** Choose the identity provider (for example Sign in with Apple, Clerk or Auth0) and hosting. The server needs a verified `authenticate(request)` adapter; the desktop needs the sign-in UI and its backend origin in Tauri's `connect-src`.
+3. **A payment platform** (Stripe, Paddle, Mac App Store…) with real product IDs for Essential, Plus, Pro and the pack, its webhook secret, and the actual prices and taxes checked against `landing/plans.json`.
+4. **Data protection decisions.** OpenAI keeps abuse-monitoring logs of API requests for up to 30 days and does not train on API data. If documents must not be retained, or if processing must stay in Europe (data residency), apply to OpenAI for Zero Data Retention or Modified Abuse Monitoring; both require OpenAI's approval. Then review the privacy text in the app and landing, and sign OpenAI's Data Processing Addendum if you serve EU users.
+5. **A launch decision.** `TRANSCRIPTION_LAUNCH_APPROVED` replaces the Handwriting resale flag. OpenAI's business terms allow building products on the API, so no resale permission is needed, but set the flag only after items 1–4 and a review of OpenAI's usage policies.
+6. **Quality acceptance.** Transcribe a set of your real documents (handwritten notes, receipts, multi-page PDFs) and decide whether `gpt-5.4` is good enough, and with which `OPENAI_REASONING_EFFORT`. An AI model can misread, skip or invent words; the review screen and the `[?]` marker help, but cannot guarantee exact text.
+7. **Pricing check against real usage.** OpenAI charges per token, not per page. The estimate below must be confirmed on the OpenAI usage dashboard after the quality test.
+8. **What to do with Handwriting OCR.** Keep, cancel or delete the Handwriting OCR key and account, and decide whether this branch replaces it on `master`.
 
-The provider's [v3 documentation](https://www.handwritingocr.com/api/docs) specifies Bearer authentication and a global account limit of two requests per second. The [upload reference](https://www.handwritingocr.com/api/docs/upload-document) confirms that `delete_after=3600` is valid (allowed range: 300–1,209,600 seconds) and the supported file formats/20 MB limit. The [terms](https://www.handwritingocr.com/terms#acceptable-use) require written consent for resale or redistribution. Approval has not been assumed.
+## Provider behaviour
+
+Verified on October 4, 2026 in OpenAI's documentation:
+
+- [gpt-5.4](https://developers.openai.com/api/docs/models/gpt-5.4): snapshot `gpt-5.4-2026-03-05`, text and image input, 128,000 output tokens, reasoning effort `none` (default) to `xhigh`; US$2.50 per million input tokens and US$15 per million output tokens. Tier 1 allows 500 requests and 500,000 tokens per minute.
+- [Images](https://developers.openai.com/api/docs/guides/images-vision): PNG, JPEG, WEBP and non-animated GIF. TIFF and HEIC are not accepted, so the server re-encodes them as JPEG first. With `detail: "high"`, gpt-5.4 uses up to 2,500 image patches (2,048 px maximum side).
+- [PDF](https://developers.openai.com/api/docs/guides/pdf-files): up to 50 MB; the API sends both the extracted text and an image of each page to the model.
+- [Data controls](https://developers.openai.com/api/docs/guides/your-data): API data is not used for training by default; abuse-monitoring logs are kept for up to 30 days; `store: false` keeps no response for later retrieval.
+- [Errors](https://developers.openai.com/api/docs/guides/error-codes): 401 bad key, 429 rate limit or exhausted credits/spend limits, 503 overload.
+
+The server calls `POST https://api.openai.com/v1/responses` with Bearer authentication, `store: false`, `detail: "high"`, `redirect: "manual"` and a timeout of 60 s plus 5 s per page (at most 10 minutes). Instructions ask for a verbatim transcription in the document's language: no corrections, translations, completions or summaries; line breaks kept; Markdown only for the document's own titles, lists and emphasis; `[?]` for an unreadable word. The output budget is 4,000 tokens per page, up to 128,000.
+
+**Estimated cost per page** (to be confirmed): a high-detail page image is at most about 3,000 input tokens and a handwritten page about 300–600 output tokens, roughly US$0.01–0.02 per page with `none` effort. Higher reasoning effort adds output tokens (reasoning tokens count toward `max_output_tokens`), so the user pays more credits per page for it and the server raises the output budget and timeout per page. On the Essential plan (€4.99, 10 pages) that is about US$0.10–0.20 of provider cost.
 
 ## Server configuration
 
-Run the optional server separately from the distributed app, on Node.js 22.16 or later. Use `server/handwriting/.env.example` as a configuration reference and inject real secrets through the deployment's secret mechanism. There is no new npm dependency. The supplied document inspector uses PDFKit/ImageIO and requires macOS; other server platforms can supply an equivalent validated parser through the adapter port.
-
-Compile the server-only inspector:
+Run the optional server separately from the distributed app, on Node.js 22.16 or later. There is no new npm dependency: the server calls the API with `fetch`. The supplied document inspector uses PDFKit/ImageIO and requires macOS; other platforms can supply `inspectDocument` and `convertDocument` through the adapter.
 
 ```sh
 mkdir -p server/handwriting/.build
 swiftc server/handwriting/InspectDocument.swift -o server/handwriting/.build/nodi-document-inspector
 ```
 
-Set `NODI_HANDWRITING_INSPECTOR` to that binary's absolute path. Set `NODI_HANDWRITING_ADAPTER` to a reviewed ESM module exporting the integration functions described below. The optional server can then run with `pnpm handwriting:server`; it binds to loopback port 8787 by default. Production requires an HTTPS reverse proxy. Set the database/storage variables to private, durable directories. Do not use the desktop database as the server ledger.
-
 | Variable | Purpose |
 | --- | --- |
-| `HANDWRITING_API_KEY` | Provider key, exclusively on the server |
-| `HANDWRITING_DELETE_AFTER` | Provider retention request in seconds; defaults to 3600 |
-| `HANDWRITING_RESALE_APPROVED` | Must remain `false` until written permission is confirmed |
+| `OPENAI_API_KEY` | OpenAI key, exclusively on the server |
+| `OPENAI_MODEL` | Defaults to `gpt-5.4` |
+| `OPENAI_REASONING_EFFORT` | Effort preselected in the app: `none` (default), `low`, `medium`, `high` or `xhigh`. The user chooses per transcription; credits per page come from `efforts` in `landing/plans.json` (1, 1, 2, 3, 5) |
+| `TRANSCRIPTION_LAUNCH_APPROVED` | Must remain `false` until the launch decision above |
 | `NODI_HANDWRITING_ADAPTER` | Absolute path to verified authentication/payment integrations |
-| `NODI_HANDWRITING_INSPECTOR` | Absolute path to the supplied parser binary, when no parser override is exported |
+| `NODI_HANDWRITING_INSPECTOR` | Absolute path to the inspector binary (also converts HEIC/TIFF) |
 | `NODI_HANDWRITING_DATABASE` | Dedicated durable server SQLite database |
 | `NODI_HANDWRITING_STORAGE` | Private transient document/result directory |
-| `NODI_HANDWRITING_ALLOWED_ORIGINS` | Exact comma-separated desktop origins; add the exact development origin only for development |
-| `VITE_HANDWRITING_BACKEND_URL` | Public HTTPS backend origin in the desktop build, never a provider secret |
+| `NODI_HANDWRITING_ALLOWED_ORIGINS` | Exact comma-separated desktop origins |
+| `VITE_HANDWRITING_BACKEND_URL` | Public HTTPS backend origin in the desktop build, never a secret |
 
-CORS denies origins outside that explicit list. Authentication is required for all document, usage and checkout endpoints; payment webhooks instead require their own verified signatures. The server never accepts user IDs, page counts, prices or balances from frontend JSON. Use `setHandwritingSession` only after real sign-in verification, and clear it at sign-out. The session token is kept in memory; an IdP-specific login/refresh UI still needs to be connected once the provider is selected.
+Production requires an HTTPS reverse proxy. CORS denies origins outside the list. Authentication is required for all document, usage and checkout endpoints; payment webhooks require their own verified signatures. The server never accepts user IDs, page counts, prices or balances from frontend JSON.
+
+For local testing only, a development build (`import.meta.env.DEV`) accepts a loopback `http://127.0.0.1` backend and a token from `VITE_HANDWRITING_DEV_TOKEN`; production builds strip that path.
 
 ## Integration ports
 
-The adapter module must export `authenticate(request)`, returning `{ id: stableVerifiedAccountId }` only after verifying the session's signature, issuer, audience and expiry against the actual identity provider. Return `null` for an invalid session. Do not use email strings, device IDs, arbitrary client-supplied IDs or a shared desktop token as proof of identity. Keeping the same stable identity across restoration prevents a fresh trial page on every launch.
+The adapter module must export `authenticate(request)`, returning `{ id: stableVerifiedAccountId }` only after verifying the session's signature, issuer, audience and expiry against the identity provider, or `null`. Do not use emails, device IDs, client-supplied IDs or a shared desktop token as proof of identity.
 
-An optional `inspectDocument(bytes)` export can replace the supplied native inspector. It must validate actual content and determine provider-compatible page counts, independently of file extensions and client values. The supplied parser accepts PDF up to 70 pages and single-frame JPEG, PNG, TIFF, HEIC and GIF up to 20 MB and 40 megapixels. Encrypted, malformed and multi-frame documents are refused. Multi-frame image billing must be verified before expanding support. If the provider reports a different page count, the job remains pending for reconciliation; no additional credits are silently charged.
+Optional `inspectDocument(bytes)` and `convertDocument(bytes)` exports replace the native inspector. The supplied one accepts PDF up to 70 pages and single-frame JPEG, PNG, WEBP, GIF, HEIC and TIFF up to 20 MB and 40 megapixels, and re-encodes HEIC/TIFF as JPEG with their orientation. Encrypted, malformed and multi-frame documents are refused. Page counts come from this inspector, never from the client or the model.
 
-The optional `payments` export has these methods:
-
-- `checkout(userId, product) -> { url }`: use real server-configured product IDs for `essential`, `plus`, `pro`, `pack`, or `manage`. Return only an actual HTTPS checkout/account-management URL in the original purchase channel. Never grant credits here. The desktop opens that address in the default browser through the native `open_handwriting_checkout` command, which refuses anything but a plain HTTPS URL.
-- `verifyWebhook(request) -> event | null`: verify the raw body/signature using the selected payment platform, query authoritative payment/subscription details where required, and normalize only confirmed events. Return `null` for an invalid signature.
-- `restore(userId) -> events`: query the original purchase channel and return only verified purchases belonging to this authenticated user. Include this method only for platforms that need restoration.
-
-Normalized events contain `id` (the provider's unique event ID), `userId`, and `type`. A `renewal` event also contains `plan`, `entitlementId` (stable billing-cycle entitlement ID), `cycleStart` and `cycleEnd` in epoch milliseconds. Supply events only for the currently effective paid cycle; scheduled plan changes take effect through the next confirmed cycle. A `pack` contains a stable purchase `entitlementId` and authoritative `purchasedAt`. A `refund` contains the affected `entitlementId`. `cancel` stops automatic renewal while keeping paid pages until their original expiry; `expired` revokes monthly access, leaving packs alone. The adapter must resolve out-of-order cancellation/expiry events against the payment platform's current subscription state before normalizing them. The ledger itself ignores older renewal events and duplicate event/entitlement IDs.
-
-The plans are Free (€0, one trial page once), Essential (€4.99/10 monthly pages), Plus (€9.99/30), Pro (€19.99/70), and a €4.99/10-page pack valid for 12 months. The free page is funded by NODI's provider account. It does not call the provider's trial or credit-purchase endpoint. Taxes are determined by the real checkout, not an assumed percentage. There are no annual or unlimited plans.
+The optional `payments` export (`checkout`, `verifyWebhook`, `restore`) and its normalized events are unchanged from the Handwriting OCR version: see commit `c144ba1`'s guide. The plans are Free (€0, one trial page once), Essential (€4.99/10 monthly pages), Plus (€9.99/30), Pro (€19.99/70) and a €4.99/10-page pack valid for 12 months, from `landing/plans.json`. There are no annual or unlimited plans.
 
 ## Document, credit and privacy policy
 
-Consent precedes the preflight upload to NODI. The server returns a quote valid for 15 minutes. A separate confirmation submits that quote for transcription and atomically reserves credits in SQLite, earliest expiry first. Each quote can create only one document: retries with the same quote resolve to the same job. A new transcription requires a new quote and explicit confirmation.
+Consent precedes the preflight upload to NODI. The server returns a quote valid for 15 minutes. A separate confirmation atomically reserves credits, earliest expiry first; each quote can create only one document, so retries resolve to the same job.
 
-Provider calls use v3, `action=transcribe`, Bearer authentication, requested deletion after one hour, manual redirects, timeouts, serialized requests and shared SQLite rate-limit slots. Run one provider dispatcher per account; horizontal replicas must use a single dispatcher, not independent SQLite copies. Polling starts after five seconds, backs off to 30 seconds and honors `Retry-After`. No provider webhook is enabled because there is no webhook infrastructure; therefore no unsigned provider callbacks are accepted.
+The transcription then runs inside the server. The model's answer arrives only on its own call and nothing is stored at OpenAI for retrieval, so there are no unknown outcomes to reconcile: a document either gets its text or fails. Rate limits and overloads are retried up to three times, honouring `Retry-After`. Any other failure — invalid key, exhausted OpenAI credits, timeout, refusal, an answer cut short by the output limit, or a server restart while the job was running — is a confirmed failure: the user's pages are returned, and any OpenAI charge for the attempt is NODI's cost. Run one server process per ledger.
 
-If the upload response is lost, its reservation remains pending. A status consultation locates the uniquely named provider document and never repeats the upload. If it cannot be found, the reservation remains pending until a provider-confirmed outcome is available. Confirmed failures return user credits; any provider charge for the attempt is NODI's cost. Page-count mismatches and unknown outcomes require operator reconciliation with provider evidence. Absence from a list after automatic deletion is not proof that an upload failed. Do not release or resubmit based on that absence.
-
-Unsubmitted files are deleted after the 15-minute quote expiry. Submitted sources are deleted when their text is retrieved, or after one hour from submission. Cached result text is deleted one hour after retrieval. The cleanup timer runs every minute, also on each request and after restart; it must remain running in deployment. Ledger metadata is retained for idempotency, audit and the once-only trial. Configure provider retention within the documented range; the dialogue reads the effective provider value from the server. Approved notes and originals stay locally until the user deletes them. The provider returns Markdown; when a note is created, `#`–`######` headings, `* `/`- ` items, `**bold**` and `*italic*` become Tiptap formatting, and words are never replaced. The review field, the TXT export and the stored search text keep the provider's text exactly. Recovering a job after closing the dialogue can save its text without the original file. No documents, text or credentials are logged.
+Unsubmitted files are deleted after 15 minutes. Submitted sources are deleted as soon as the transcription ends. Result text is deleted one hour after it was produced. Ledger metadata is kept for idempotency, audit and the once-only trial. At OpenAI, requests are not stored as responses but may stay in abuse-monitoring logs for up to 30 days unless Zero Data Retention is approved. Approved notes and originals stay on the Mac. When a note is created, Markdown headings, lists and emphasis become Tiptap formatting; the review field, TXT export and stored search text keep the model's text exactly. No documents, text or credentials are logged.
 
 ## Validation
 
-- `pnpm check`: TypeScript, Biome, frontend tests, server tests and landing/config consistency.
-- `pnpm build`: production desktop frontend build.
-- `PLAYWRIGHT_CHANNEL=chrome pnpm test:e2e`: use the installed Chrome if the Playwright-managed Chromium binary is absent. Includes desktop, 390 px dialog, and translated/responsive landing plans.
-- `cargo test --lib`: native storage/migration/OCR checks, including the attachment, TXT export and purchase-address tests. All 65 passed on this Mac.
+- `pnpm check`: TypeScript, Biome, 391 frontend tests, 19 server tests, landing/config consistency.
+- `PLAYWRIGHT_CHANNEL=chrome pnpm test:e2e`: 7 passed, including the 390 px dialog and translated landing.
+- `cargo test --lib`: 65 passed. `ocr::tests::points_out_misread_words_with_suggestions` (Apple's spell checker, unchanged here) failed once and then passed in three full runs.
 
-Server tests cover real PNG/PDF inspection, rejected malformed documents, concurrent reservations/concurrent duplicate uploads, one lifetime trial, monthly resets, pack validity, cancellation, refunds, restart persistence, insufficient credits, uncertain timeouts and reconciliation, redirect refusal, provider throttling, origin restrictions and disabled unconfigured payment flows. Provider calls and payment adapters are mocked in automated tests. Live transcription, real payment confirmations and purchase restoration still require the external integrations listed above.
+Server tests cover the exact Responses API request (model, `store: false`, verbatim instructions, image/PDF inputs, output budget), error mapping without leaking content, retried rate limits, refunds on failure and after a restart, HEIC/TIFF conversion, concurrent duplicate submissions, one lifetime trial and origin restrictions. The native inspector test converts real HEIC and TIFF files. OpenAI calls are mocked: **no live gpt-5.4 transcription has been run yet**, because no OpenAI key is configured (item 1).
 
 ## Changed files
 
-- Desktop flow: `src/features/imageToText/ImageToTextDialog.tsx`, its tests, `imageToNote.ts`, its tests; removed the old `useImageToNote.ts` local-reading hook.
-- Settings/configuration: new `src/features/handwriting/{client,plans,PlanUsage}` modules and tests; `src/app/App.tsx`, `src/components/layout/DesktopShell.tsx`, `src/styles/global.css`.
-- Native attachment storage: `src-tauri/src/attachments.rs`, `src-tauri/src/handwriting.rs` (native TXT save dialog, opening the purchase page in the browser), `src-tauri/src/lib.rs`.
-- Optional server: `server/handwriting/{ledger,provider,service,start,inspect}.mjs`, `InspectDocument.swift`, tests and `.env.example`.
-- Landing/config sync: `landing/index.html`, `landing/plans.json`, `scripts/sync-handwriting-plans.mjs`.
-- Validation/setup: `package.json`, `playwright.config.ts`, `e2e/handwriting.spec.ts`, `e2e/baseline.spec.ts` (stopped overwriting a historical screenshot), `.env.example`, `.gitignore`, `README.md`, this guide.
-- Permanent history: `docs/ABOUT.md`, `docs/DECISIONS.md`, `src/features/about/About.tsx`, and a new `docs/about/screenshots/ocr-006-handwriting.png`.
-
-Pre-existing changes to Apple OCR, its handwritten fixture, and the OCR-005 history entry were preserved.
+- Server: `server/handwriting/provider.mjs` (OpenAI transcriber), `service.mjs` (in-process jobs, refunds, conversion), `inspect.mjs` and `InspectDocument.swift` (WEBP, HEIC/TIFF → JPEG), `start.mjs`, `.env.example`, tests.
+- Desktop: `src/features/handwriting/client.ts`, `PlanUsage.tsx`, `src/features/imageToText/ImageToTextDialog.tsx`, their tests; `src-tauri/src/attachments.rs` (WEBP originals).
+- Landing/config: `landing/index.html` (four languages), `landing/plans.json`.
+- Setup and history: `.env.example`, `README.md`, `e2e/handwriting.spec.ts`, this guide, `docs/DECISIONS.md`, `docs/ABOUT.md`, `src/features/about/About.tsx`, `src/app/App.test.tsx`, a new `docs/about/screenshots/ocr-007-gpt-transcription.png`.

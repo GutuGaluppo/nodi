@@ -137,3 +137,26 @@ test("pending reservations survive restart; shared rate limiter spaces account-w
   ledger.db.close();
   rmSync(directory, { recursive: true });
 });
+
+test("reserves the effort's credits for the quoted pages and refunds them all", () => {
+  const ledger = new Ledger(":memory:", () => 0);
+  ledger.ensureUser("u");
+  ledger.db
+    .prepare("INSERT INTO grants VALUES('pack:u','u','pack',10,1,0)")
+    .run();
+  const { document } = ledger.reserve("u", { id: "q", pages: 2 }, 6);
+  assert.equal(document.pages, 2);
+  assert.equal(
+    ledger.usage("u").trialRemaining +
+      ledger.usage("u").additional[0].remaining,
+    5,
+  );
+  ledger.update(document.id, "failed");
+  assert.equal(ledger.usage("u").additional[0].remaining, 10);
+  assert.throws(() => ledger.reserve("u", { id: "q2", pages: 2 }, 1), {
+    code: "invalid_pages",
+  });
+  assert.throws(() => ledger.reserve("u", { id: "q3", pages: 2 }, 20), {
+    code: "insufficient_credits",
+  });
+});
