@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import DesktopShell from "../components/layout/DesktopShell";
+import TooltipLayer from "../components/ui/TooltipLayer";
 import About from "../features/about/About";
 import AttachmentSweeper from "../features/attachments/AttachmentSweeper";
 import { captureToNote } from "../features/capture/captureNote";
@@ -215,6 +216,7 @@ function App() {
       <ImageTextIndexer />
       <RelatedNotesIndexer />
       <SpotlightSync />
+      <TooltipLayer />
       {page === "about" ? (
         <About onClose={() => setPage("workspace")} />
       ) : page === "plan" ? (

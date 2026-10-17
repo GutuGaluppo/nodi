@@ -770,36 +770,29 @@ h1 {
   transform: none;
 }
 
-[data-tooltip] {
-  position: relative;
-}
-
-[data-tooltip]::after {
-  position: absolute;
-  top: calc(100% + 7px);
-  left: 50%;
-  z-index: 10;
+.tooltip-layer {
+  position: fixed;
+  z-index: 1000;
   padding: 3px 7px;
   border-radius: var(--radius-sm);
   color: var(--color-surface);
   background: var(--color-text);
-  content: attr(data-tooltip);
   font-size: 0.68rem;
   font-weight: 550;
   line-height: 1.3;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -2px);
-  transition:
-    opacity var(--transition-fast),
-    transform var(--transition-fast);
   white-space: nowrap;
+  pointer-events: none;
+  animation: tooltip-in var(--transition-fast) both;
 }
 
-[data-tooltip]:hover::after,
-[data-tooltip]:focus-visible::after {
-  opacity: 1;
-  transform: translate(-50%, 0);
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .settings-popover button {
