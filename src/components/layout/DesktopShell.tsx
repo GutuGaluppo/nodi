@@ -24,8 +24,8 @@ interface DesktopShellProps {
   editorPaneRef: Ref<HTMLElement>;
   focusEditor: boolean;
   onEditorFocused: () => void;
-  activeView: "notes" | "trash";
-  onNavigate: (view: "notes" | "trash") => void;
+  activeView: "notes" | "private" | "trash";
+  onNavigate: (view: "notes" | "private" | "trash") => void;
   selectedNotebookId: string | null;
   onSelectNotebook: (id: string) => void;
   selectedTagId: string | null;
@@ -130,6 +130,15 @@ function DesktopShell({
             <button
               className="nav-item"
               type="button"
+              aria-current={activeView === "private" ? "page" : undefined}
+              onClick={() => onNavigate("private")}
+            >
+              <Icon name="lock" />
+              <span>Private notes</span>
+            </button>
+            <button
+              className="nav-item"
+              type="button"
               aria-current={activeView === "trash" ? "page" : undefined}
               onClick={() => onNavigate("trash")}
             >
@@ -203,7 +212,7 @@ function DesktopShell({
         noteId={selectedNoteId}
         focusEditor={focusEditor}
         onEditorFocused={onEditorFocused}
-        view={activeView}
+        view={activeView === "trash" ? "trash" : "notes"}
         onNoteRemoved={onNoteRemoved}
         onOpenNote={onSelectNote}
         activeNotebookId={activeView === "notes" ? selectedNotebookId : null}

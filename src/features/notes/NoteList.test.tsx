@@ -132,4 +132,29 @@ describe("NoteList", () => {
     expect(await screen.findByText("Untitled")).toBeInTheDocument();
     expect(screen.getByText("just the body")).toBeInTheDocument();
   });
+
+  it("loads only private notes for the Private view and marks them with a lock", async () => {
+    listNotesMock.mockResolvedValue([
+      summary({ id: "p", title: "Secret", isPrivate: true }),
+    ]);
+    render(
+      <QueryClientProvider client={createQueryClient()}>
+        <NoteList
+          view="private"
+          selectedNoteId={null}
+          onSelectNote={vi.fn()}
+          onCollapse={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Private notes" }),
+    ).toBeInTheDocument();
+    expect(listNotesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ isPrivate: true, deleted: "exclude" }),
+    );
+    const option = await screen.findByRole("option");
+    expect(option.querySelector("svg.icon")).not.toBeNull();
+  });
 });

@@ -929,6 +929,14 @@ h1 {
   text-overflow: ellipsis;
 }
 
+.note-list-item-title .icon {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-right: var(--space-1);
+  vertical-align: -0.1em;
+}
+
 .note-list-item[aria-selected="true"] .note-list-item-title {
   color: var(--color-text);
 }

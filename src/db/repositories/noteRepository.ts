@@ -87,6 +87,8 @@ export interface ListNotesInput {
   notebookId?: string | null;
   /** Restrict to notes assigned to a tag. */
   tagId?: string;
+  /** Restrict to private (locked) notes. */
+  isPrivate?: boolean;
   limit?: number;
   offset?: number;
 }
@@ -308,6 +310,10 @@ export async function listNotes(
       );
       position += 1;
       values.push(input.tagId);
+    }
+
+    if (input.isPrivate) {
+      clauses.push("is_private = 1");
     }
 
     const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";

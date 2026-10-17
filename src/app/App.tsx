@@ -36,7 +36,9 @@ function Workspace({
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
 }) {
-  const [activeView, setActiveView] = useState<"notes" | "trash">("notes");
+  const [activeView, setActiveView] = useState<"notes" | "private" | "trash">(
+    "notes",
+  );
   const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(
     null,
   );
@@ -67,7 +69,7 @@ function Workspace({
     setEditorFocusRequest(null);
   }, []);
 
-  const handleNavigate = useCallback((view: "notes" | "trash") => {
+  const handleNavigate = useCallback((view: "notes" | "private" | "trash") => {
     setActiveView(view);
     setSelectedNotebookId(null);
     setSelectedTagId(null);
