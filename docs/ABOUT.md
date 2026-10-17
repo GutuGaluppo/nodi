@@ -558,3 +558,25 @@ A handwritten list in English came back with Portuguese suggestions ("compelindo
 "Nota de imagem" now prepares an image or PDF for Handwriting OCR instead of reading it on the Mac. After you agree to send the file, a separate NODI service counts its pages and shows the credits it will use; only a second confirmation transcribes it. The text comes back unchanged, to copy, edit, export as TXT or save as a note, with the original kept outside the database. Handwriting OCR answers in Markdown, so in the note `# Title` becomes a heading, `* item` a list and `**word**` bold; the words themselves are left alone. Settings has a new "Plan and usage" page with the Free, Essential, Plus and Pro plans and the 10-page pack, and the landing page lists the same prices. Search inside images still uses Apple Vision on the Mac. None of it works yet: there is no deployed service, no sign-in, no payments and no written permission from Handwriting OCR, so the buttons say so and nothing can be bought.
 
 ![NODI after OCR-006](about/screenshots/ocr-006-handwriting.png)
+
+## 069 — OCR-007 Transcription with gpt-5.4
+
+**Completed:** October 4, 2026
+
+On a test branch, "Nota de imagem" now sends the image or PDF to OpenAI's gpt-5.4 instead of Handwriting OCR, to compare a general model with a dedicated service. The model is told to copy every word as written, keep the lines, and mark an unreadable word with [?] rather than guess. Its answer comes back in one call, so if anything goes wrong, even a server restart, the page is given back. HEIC and TIFF photos are converted to JPEG on the server, and WEBP is accepted. The privacy text now says what OpenAI keeps: nothing for training, safety logs for up to 30 days. It is still unavailable until there is an OpenAI key, sign-in and payments.
+
+## 070 — OCR-008 Choosing the reading effort
+
+**Completed:** October 5, 2026
+
+Tests with gpt-5.4 failed above "medium" reasoning effort: the model's thinking counts toward its answer budget, and that budget, along with the time limit, was sized for the fastest reading. Both now grow with the effort. The transcription window now lets you choose the effort before sending: Rápido, Leve, Equilibrado, Cuidadoso or Máximo, for 1, 1, 2, 3 or 5 credits per page. Each choice shows its cost, and once the pages are counted, the total and how much more it costs than Rápido. The server charges what you chose and gives it all back if the transcription fails. The window was also tidied up: the explanations moved behind a ? next to the title, and choosing a file is now one large area you can click, drop onto or paste into, with a preview of the file you picked.
+
+<!-- screenshot: about/screenshots/ocr-008-reading-effort.png -->
+
+## 071 — OCR-009 Wrapped lines and check marks
+
+**Completed:** October 5, 2026
+
+The same handwritten list read by gpt-5.4 and by Handwriting OCR differed in layout, not in words: gpt-5.4 kept "top-to-bottom)" on its own line because it was told to keep every line break, and left out the ticks because it was told to copy words. It is now told to join an item that only wraps onto the next line, to write a check mark as ✓ and a cross as ✗ at the end of the item they mark, and to ignore text showing through from the back of the page. This should close the gap at the cheaper efforts, without paying for more reasoning.
+
+<!-- screenshot: about/screenshots/ocr-009-wrapped-lines.png -->

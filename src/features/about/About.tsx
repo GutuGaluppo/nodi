@@ -34,6 +34,7 @@ import ocr003Screenshot from "../../../docs/about/screenshots/ocr-003-image-to-n
 import ocr004Screenshot from "../../../docs/about/screenshots/ocr-004-doubtful-words.png";
 import ocr005Screenshot from "../../../docs/about/screenshots/ocr-005-better-suggestions.png";
 import ocr006Screenshot from "../../../docs/about/screenshots/ocr-006-handwriting.png";
+// import ocr007Screenshot from "../../../docs/about/screenshots/ocr-007-gpt-transcription.png";
 import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
 import privRec004Screenshot from "../../../docs/about/screenshots/priv-rec-004-touch-id.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
@@ -625,6 +626,30 @@ const evolution = [
       'Image notes are prepared for Handwriting OCR: the pages and credits are shown before a separate confirmation, and the text comes back unchanged to copy, edit, export or save, its Markdown headings, lists and bold kept as formatting. Settings gains "Plan and usage". It stays unavailable until the service, payments and the provider\'s permission exist.',
     screenshot: ocr006Screenshot,
   },
+  {
+    id: "OCR-007",
+    title: "Transcription with gpt-5.4",
+    date: "October 4, 2026",
+    description:
+      "On a test branch, image notes are transcribed by OpenAI's gpt-5.4 instead of Handwriting OCR. It copies words as written and marks unreadable ones with [?]; any failure gives the page back. HEIC and TIFF are converted on the server, and WEBP is accepted.",
+    // screenshot: ocr007Screenshot,
+  },
+  {
+    id: "OCR-008",
+    title: "Choosing the reading effort",
+    date: "October 5, 2026",
+    description:
+      "Before transcribing, choose how carefully the model reads: from Rápido (1 credit per page) to Máximo (5), with the total and the difference shown before you confirm. Higher efforts no longer fail for lack of answer budget or time. Explanations now sit behind a ? next to the title, and choosing a file is one large area to click, drop or paste into.",
+    // screenshot: ocr008Screenshot,
+  },
+  {
+    id: "OCR-009",
+    title: "Wrapped lines and check marks",
+    date: "October 5, 2026",
+    description:
+      "gpt-5.4 now joins an item that only wraps onto the next line, writes check marks as ✓ and crosses as ✗, and ignores text showing through from the back of the page, matching Handwriting OCR's layout without a higher effort.",
+    // screenshot: ocr009Screenshot,
+  },
 ];
 
 function About({ onClose }: AboutProps) {
@@ -654,10 +679,12 @@ function About({ onClose }: AboutProps) {
             <div className="entry-content">
               <h2>{entry.title}</h2>
               <p>{entry.description}</p>
-              <img
-                src={entry.screenshot}
-                alt={`NODI after completing ${entry.id}: ${entry.title}`}
-              />
+              {entry.screenshot ? (
+                <img
+                  src={entry.screenshot}
+                  alt={`NODI after completing ${entry.id}: ${entry.title}`}
+                />
+              ) : null}
             </div>
           </li>
         ))}
