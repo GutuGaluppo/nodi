@@ -14,6 +14,8 @@ async function fixture(overrides = {}, shared = {}) {
   const calls = [];
   const provider = {
     model: "gpt-5.4",
+    modelFor: () => "gpt-5.4",
+    effortFor: (_plan, effort) => effort,
     transcribe: async (bytes, mime, name, pages, effort) => {
       calls.push({ bytes: bytes.toString(), mime, name, pages, effort });
       return { text: "Grap conpilence\nExact provider text" };

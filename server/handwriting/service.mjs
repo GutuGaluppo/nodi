@@ -40,7 +40,7 @@ export function createService({
   // never deliver text: it is a confirmed failure and the user is refunded.
   const running = new Map();
 
-  async function transcribe(doc, quote, effort) {
+  async function transcribe(doc, quote, effort, plan) {
     try {
       const bytes = await readFile(sourcePath(quote.id));
       let result;
@@ -52,6 +52,7 @@ export function createService({
             `nodi-${doc.id}.${quote.extension}`,
             doc.pages,
             effort,
+            plan,
           );
           break;
         } catch (error) {
@@ -137,14 +138,16 @@ export function createService({
       if (!ready) throw new ServiceError("service_unconfigured", 503);
       const user = await authenticate(request);
       if (!user?.id) throw new ServiceError("unauthenticated", 401);
-      if (path === "/v1/handwriting/usage" && request.method === "GET")
+      if (path === "/v1/handwriting/usage" && request.method === "GET") {
+        const usage = ledger.usage(user.id);
         return json({
-          ...ledger.usage(user.id),
-          model: provider.model,
-          effort: provider.effort ?? "none",
+          ...usage,
+          model: provider.modelFor(usage.plan),
+          effort: provider.effortFor(usage.plan, provider.effort ?? "none"),
           paymentsAvailable: Boolean(payments?.checkout),
           restoreAvailable: Boolean(payments?.restore),
         });
+      }
       if (path === "/v1/handwriting/quote" && request.method === "POST") {
         if (request.headers.get("X-Processing-Consent") !== "handwriting")
           throw new ServiceError("consent_required");
@@ -211,8 +214,12 @@ export function createService({
           await request.json();
         const quote = quoteFor(user.id, quoteId);
         // Higher reasoning effort costs NODI more, so it uses more credits per page.
-        const level = config.efforts.find((item) => item.id === effort);
-        if (!level) throw new ServiceError("invalid_effort");
+        if (!config.efforts.some((item) => item.id === effort))
+          throw new ServiceError("invalid_effort");
+        const plan = ledger.usage(user.id).plan;
+        // Plans on Handwriting OCR ignore reasoning effort, so they pay one credit per page.
+        const chosen = provider.effortFor(plan, effort);
+        const level = config.efforts.find((item) => item.id === chosen);
         const existing = ledger.db
           .prepare("SELECT id FROM documents WHERE user_id=? AND quote_id=?")
           .get(user.id, quoteId);
@@ -226,7 +233,7 @@ export function createService({
         );
         if (!fresh) return json({ id: doc.id, status: "pending" }, 202);
         ledger.update(doc.id, "pending");
-        running.set(doc.id, transcribe(doc, quote, effort));
+        running.set(doc.id, transcribe(doc, quote, chosen, plan));
         return json({ id: doc.id, status: "pending" }, 202);
       }
       if (path === "/v1/handwriting/documents" && request.method === "GET") {

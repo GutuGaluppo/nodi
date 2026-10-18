@@ -44,6 +44,12 @@
     { "id": "xhigh", "credits": 5 }
   ],
   "maxBytes": 20000000,
+  "transcribers": {
+    "free": "openai",
+    "essential": "openai",
+    "plus": "openai",
+    "pro": "handwriting"
+  },
   "maxPages": 70,
   "mimeTypes": [
     "application/pdf",

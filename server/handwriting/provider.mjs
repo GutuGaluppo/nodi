@@ -139,3 +139,148 @@ export class OpenAITranscriber {
     };
   }
 }
+
+const HANDWRITING_API = "https://api.handwritingocr.com/v3";
+
+/**
+ * Handwriting OCR API v3. Upload, poll until processed, then delete the
+ * document at the provider. Only the upload is retried on its own: once it has
+ * been accepted, a retry would be a second charge for the same pages.
+ */
+export class HandwritingTranscriber {
+  constructor({
+    key,
+    ledger,
+    retention = 3600,
+    fetcher = fetch,
+    wait = sleep,
+    pollMs = 3000,
+  }) {
+    if (!key) throw new ServiceError("provider_unconfigured", 503);
+    if (!Number.isInteger(retention) || retention < 300 || retention > 1209600)
+      throw new ServiceError("invalid_retention");
+    Object.assign(this, { key, ledger, retention, fetcher, wait, pollMs });
+  }
+  get model() {
+    return "handwriting-ocr";
+  }
+  // Reasoning effort does not apply: every page costs one credit.
+  get effort() {
+    return "none";
+  }
+  async request(method, path, body) {
+    await this.wait(this.ledger.providerSlot());
+    let response;
+    try {
+      response = await this.fetcher(`${HANDWRITING_API}/${path}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${this.key}`,
+          Accept: "application/json",
+        },
+        body,
+        redirect: "manual",
+        signal: AbortSignal.timeout(30000),
+      });
+    } catch {
+      throw new ProviderError("provider_timeout", 504, method === "POST");
+    }
+    if (response.status >= 300 && response.status < 400)
+      throw new ProviderError("provider_redirect", 502, method === "POST");
+    if (response.status === 429) {
+      const seconds = Number(response.headers.get("Retry-After"));
+      const delay = Math.max(
+        5000,
+        (Number.isFinite(seconds) ? seconds : 5) * 1000,
+      );
+      this.ledger.providerSlot(delay);
+      const error = new ProviderError("rate_limited", 429, true);
+      error.retryAfterMs = delay;
+      throw error;
+    }
+    // Still processing.
+    if (response.status === 202) return null;
+    if (response.status === 204) return null;
+    if (!response.ok)
+      throw new ProviderError(
+        {
+          400: "invalid_file",
+          401: "provider_auth",
+          402: "provider_credits",
+          403: "provider_unavailable",
+          415: "invalid_file",
+          422: "invalid_file",
+        }[response.status] || "provider_unavailable",
+        503,
+        response.status >= 500 && method === "POST",
+      );
+    return response.json().catch(() => {
+      throw new ProviderError("provider_response", 502);
+    });
+  }
+  async transcribe(bytes, mime, name, pages) {
+    const form = new FormData();
+    form.append("file", new Blob([bytes], { type: mime }), name);
+    form.append("action", "transcribe");
+    form.append("delete_after", String(this.retention));
+    const upload = await this.request("POST", "documents", form);
+    if (typeof upload?.id !== "string" || !/^[a-zA-Z0-9]+$/.test(upload.id))
+      throw new ProviderError("provider_response", 502);
+    const id = upload.id;
+    const deadline = Date.now() + Math.min(600000, 120000 + pages * 30000);
+    for (;;) {
+      if (Date.now() > deadline)
+        throw new ProviderError("provider_timeout", 504);
+      let document = null;
+      try {
+        document = await this.request("GET", `documents/${id}`);
+      } catch (error) {
+        if (error.code !== "rate_limited") throw error;
+        await this.wait(error.retryAfterMs);
+        continue;
+      }
+      if (document?.status === "failed")
+        throw new ProviderError("transcription_failed", 502);
+      if (document?.status === "processed") {
+        if (!Array.isArray(document.results))
+          throw new ProviderError("provider_response", 502);
+        const text = [...document.results]
+          .sort((a, b) => a.page_number - b.page_number)
+          .map((page) => page.transcript)
+          .join("\n\n");
+        // The text is kept by NODI; the provider's copy is removed now.
+        await this.request("DELETE", `documents/${id}`).catch(() => {});
+        return { text, usage: null };
+      }
+      await this.wait(this.pollMs);
+    }
+  }
+}
+
+/**
+ * Chooses the transcriber by the account's plan (`transcribers` in
+ * landing/plans.json). Plans without a route use OpenAI.
+ */
+export class TranscriptionRouter {
+  constructor({ routes, transcribers }) {
+    Object.assign(this, { routes, transcribers });
+  }
+  pick(plan) {
+    const name = this.routes[plan] ?? "openai";
+    const transcriber = this.transcribers[name];
+    if (!transcriber) throw new ServiceError("provider_unconfigured", 503);
+    return transcriber;
+  }
+  modelFor(plan) {
+    return this.pick(plan).model;
+  }
+  effortFor(plan, effort) {
+    return this.routes[plan] === "handwriting" ? "none" : effort;
+  }
+  get effort() {
+    return this.transcribers.openai?.effort ?? "none";
+  }
+  transcribe(bytes, mime, name, pages, effort, plan) {
+    return this.pick(plan).transcribe(bytes, mime, name, pages, effort);
+  }
+}

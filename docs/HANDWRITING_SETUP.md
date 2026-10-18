@@ -46,6 +46,11 @@ swiftc server/handwriting/InspectDocument.swift -o server/handwriting/.build/nod
 | `OPENAI_MODEL` | Defaults to `gpt-5.4` |
 | `OPENAI_REASONING_EFFORT` | Effort preselected in the app: `none` (default), `low`, `medium`, `high` or `xhigh`. The user chooses per transcription; credits per page come from `efforts` in `landing/plans.json` (1, 1, 2, 3, 5) |
 | `TRANSCRIPTION_LAUNCH_APPROVED` | Must remain `false` until the launch decision above |
+| `HANDWRITING_API_KEY` | Handwriting OCR key (pay as you go or subscription), server only. Enables the `handwriting` route |
+| `HANDWRITING_DELETE_AFTER` | Seconds the provider keeps its copy (300 to 1209600); the server deletes it right after reading the result |
+| `HANDWRITING_RESALE_APPROVED` | Set to `true` only after Handwriting OCR gives written resale permission. While `HANDWRITING_API_KEY` is set and this is `false`, the whole transcription service stays unavailable |
+
+Which provider serves each plan is set by `transcribers` in `landing/plans.json`: `pro` uses `handwriting`, the other plans use `openai`. Handwriting plans ignore reasoning effort and charge one credit per page.
 | `NODI_HANDWRITING_ADAPTER` | Absolute path to verified authentication/payment integrations |
 | `NODI_HANDWRITING_INSPECTOR` | Absolute path to the inspector binary (also converts HEIC/TIFF) |
 | `NODI_HANDWRITING_DATABASE` | Dedicated durable server SQLite database |

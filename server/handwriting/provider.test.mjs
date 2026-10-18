@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { Ledger } from "./ledger.mjs";
-import { INSTRUCTIONS, OpenAITranscriber } from "./provider.mjs";
+import {
+  HandwritingTranscriber,
+  INSTRUCTIONS,
+  OpenAITranscriber,
+  TranscriptionRouter,
+} from "./provider.mjs";
 
 const completed = (...texts) =>
   Response.json({
@@ -235,4 +240,155 @@ test("requires a server key and a valid model configuration", () => {
     /invalid_model/,
   );
   ledger.db.close();
+});
+
+function handwriting(fetcher) {
+  return new HandwritingTranscriber({
+    key: "handwriting-secret",
+    ledger: new Ledger(":memory:", () => 0),
+    wait: async () => {},
+    pollMs: 1,
+    fetcher,
+  });
+}
+
+test("uploads with action transcribe, waits, joins pages in order and deletes the provider copy", async () => {
+  const calls = [];
+  const responses = [
+    () => Response.json({ id: "abc123", status: "queued" }, { status: 201 }),
+    () => new Response(null, { status: 202 }),
+    () =>
+      Response.json({
+        id: "abc123",
+        status: "processed",
+        results: [
+          { page_number: 2, transcript: "second" },
+          { page_number: 1, transcript: "first" },
+        ],
+      }),
+    () => new Response(null, { status: 204 }),
+  ];
+  const transcriber = handwriting(async (url, options) => {
+    calls.push({ url, method: options.method, body: options.body });
+    return responses.shift()();
+  });
+  const result = await transcriber.transcribe(
+    Buffer.from("pdf bytes"),
+    "application/pdf",
+    "nodi-1.pdf",
+    2,
+  );
+  assert.equal(result.text, "first\n\nsecond");
+  assert.deepEqual(
+    calls.map((call) => `${call.method} ${new URL(call.url).pathname}`),
+    [
+      "POST /v3/documents",
+      "GET /v3/documents/abc123",
+      "GET /v3/documents/abc123",
+      "DELETE /v3/documents/abc123",
+    ],
+  );
+  const form = calls[0].body;
+  assert.equal(form.get("action"), "transcribe");
+  assert.equal(form.get("delete_after"), "3600");
+  assert.equal(form.get("file").name, "nodi-1.pdf");
+  assert.equal(calls[0].url, "https://api.handwritingocr.com/v3/documents");
+});
+
+test("a failed document is a confirmed failure and the upload is never repeated", async () => {
+  let uploads = 0;
+  const transcriber = handwriting(async (url, options) => {
+    if (options.method === "POST") {
+      uploads += 1;
+      return Response.json({ id: "abc123" }, { status: 201 });
+    }
+    return Response.json({ id: "abc123", status: "failed" });
+  });
+  await assert.rejects(
+    transcriber.transcribe(Buffer.from("x"), "image/png", "nodi-1.png", 1),
+    (error) => error.code === "transcription_failed" && !error.retryable,
+  );
+  assert.equal(uploads, 1);
+});
+
+test("an upload rate limit is retryable and honours Retry-After", async () => {
+  const transcriber = handwriting(
+    async () =>
+      new Response(null, { status: 429, headers: { "Retry-After": "7" } }),
+  );
+  await assert.rejects(
+    transcriber.transcribe(Buffer.from("x"), "image/png", "nodi-1.png", 1),
+    (error) =>
+      error.code === "rate_limited" &&
+      error.retryable === true &&
+      error.retryAfterMs === 7000,
+  );
+});
+
+test("an invalid key is reported without leaking it", async () => {
+  const transcriber = handwriting(
+    async () => new Response(null, { status: 401 }),
+  );
+  await assert.rejects(
+    transcriber.transcribe(Buffer.from("x"), "image/png", "nodi-1.png", 1),
+    (error) =>
+      error.code === "provider_auth" && !error.message.includes("secret"),
+  );
+});
+
+test("the router sends each plan to its configured transcriber and Handwriting ignores effort", async () => {
+  const openai = {
+    model: "gpt-5.4",
+    effort: "none",
+    transcribe: async () => ({ text: "openai" }),
+  };
+  const handwritingProvider = {
+    model: "handwriting-ocr",
+    effort: "none",
+    transcribe: async () => ({ text: "handwriting" }),
+  };
+  const router = new TranscriptionRouter({
+    routes: { free: "openai", pro: "handwriting" },
+    transcribers: { openai, handwriting: handwritingProvider },
+  });
+  assert.equal(router.modelFor("free"), "gpt-5.4");
+  assert.equal(router.modelFor("pro"), "handwriting-ocr");
+  assert.equal(router.effortFor("free", "high"), "high");
+  assert.equal(router.effortFor("pro", "high"), "none");
+  assert.equal(
+    (
+      await router.transcribe(
+        Buffer.from("x"),
+        "image/png",
+        "a.png",
+        1,
+        "none",
+        "pro",
+      )
+    ).text,
+    "handwriting",
+  );
+  assert.equal(
+    (
+      await router.transcribe(
+        Buffer.from("x"),
+        "image/png",
+        "a.png",
+        1,
+        "none",
+        "essential",
+      )
+    ).text,
+    "openai",
+  );
+});
+
+test("a route to an unconfigured transcriber is unavailable", () => {
+  const router = new TranscriptionRouter({
+    routes: { pro: "handwriting" },
+    transcribers: {},
+  });
+  assert.throws(() => router.modelFor("pro"), {
+    code: "provider_unconfigured",
+  });
 });
