@@ -20,7 +20,7 @@ Pendências para finalizar as funções do NODI e disponibilizar o download. Os 
 - [ ] **Atualização do app**: hoje é manual, via `.dmg`. O atualizador do Tauri exige chave de assinatura e teste de falha.
 - [x] **Remover o caminho de desenvolvimento** do cliente antes do build de produção. O token local e o endereço 127.0.0.1 só existem em `import.meta.env.DEV`; confirmar no build. Verificado: o `dist` de produção não contém o token de desenvolvimento nem o endereço 127.0.0.1.
 - [ ] **CSP de produção**: `connect-src` deve apontar para o domínio real do servidor.
-- [ ] **Textos legais** no app e na landing: política de privacidade e termos, incluindo o uso da OpenAI e da Handwriting OCR.
+- [ ] **Textos legais** no app e na landing: política de privacidade e termos, incluindo o uso da OpenAI e da Handwriting OCR. Atenção: os textos atuais (app e landing, 4 idiomas) citam só a OpenAI; o plano Pro envia à Handwriting OCR.
 
 ## Qualidade e validação
 
@@ -30,10 +30,10 @@ Pendências para finalizar as funções do NODI e disponibilizar o download. Os 
 - [ ] **Teste em um Mac limpo** com macOS 15 ou superior (`minimumSystemVersion`), instalando pelo `.dmg`, sem o Xcode de desenvolvimento.
 - [ ] **Compilação da Share Extension** (`share-extension/`) no `.dmg` final, com a assinatura correta.
 - [x] **Migração dos dados**: confirmar que atualizar o app preserva o banco `com.nodi.app`. Feito: o teste `upgrading_an_existing_database_keeps_its_notes` atualiza um banco da versão anterior e confirma que as notas sobrevivem. Falta só o teste manual no Mac limpo.
-- [ ] **Acessibilidade**: revisar a navegação por teclado nas telas novas (Pro, planos, revisão de transcrição).
+- [x] **Acessibilidade**: revisar a navegação por teclado nas telas novas (Pro, planos, revisão de transcrição). Revisado em 18/10/2026: o diálogo de transcrição já tinha foco, Escape e retorno de foco; a tela Plano e uso agora foca o título e fecha com Escape (com teste). Falta só um teste manual com VoiceOver.
 - [ ] **Qualidade da transcrição**: testar documentos reais (manuscritos, recibos, PDFs de várias páginas) com a Handwriting OCR e com a OpenAI, e decidir o que fica no plano base.
 
 ## Documentação
 
-- [ ] **README** e `docs/HANDWRITING_SETUP.md` atualizados com o estado final.
+- [ ] **README** e `docs/HANDWRITING_SETUP.md` atualizados com o estado final. Parcial: README com validação e provedores; o estado final depende dos itens externos.
 - [ ] **ABOUT**: uma entrada por tarefa concluída, com capturas de exemplo (conforme `AGENTS.md`).

@@ -65,6 +65,19 @@ describe("Plan and usage", () => {
     expect(client.restore).toHaveBeenCalledTimes(1);
     expect(client.usage).toHaveBeenCalledTimes(2);
   });
+  it("starts at its title and closes with Escape", async () => {
+    const onClose = vi.fn();
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <PlanUsage client={service()} onClose={onClose} />
+      </QueryClientProvider>,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Plan and usage" }),
+    ).toHaveFocus();
+    await userEvent.setup().keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
   it("opens the purchase channel in the browser from the app", async () => {
     tauri.isTauri.mockReturnValue(true);
     const client = service();

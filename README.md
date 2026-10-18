@@ -11,6 +11,15 @@ pnpm install
 pnpm tauri dev
 ```
 
+## Validation
+
+```bash
+pnpm check                                          # types, lint, tests, handwriting server tests
+cd src-tauri && cargo test --lib -- --test-threads=1   # Rust tests (serial: macOS spell checker)
+```
+
+The same checks run on every pull request through `.github/workflows/ci.yml`.
+
 ## Installation and updates
 
 See the Portuguese guide for [installing and updating NODI](docs/INSTALACAO_E_ATUALIZACAO.md) on macOS.
@@ -23,4 +32,4 @@ See the Portuguese guide for [installing and updating NODI](docs/INSTALACAO_E_AT
 
 ## Handwriting transcription
 
-The image-to-note workflow transcribes images and PDFs with OpenAI's `gpt-5.4`, with explicit consent and server-managed page credits. It remains unavailable until the authenticated service, OpenAI key, payments and launch review are configured. See [setup, implementation status and what is still needed](docs/HANDWRITING_SETUP.md).
+The image-to-note workflow transcribes images and PDFs with OpenAI's `gpt-5.4` (Handwriting OCR for the Pro plan), with explicit consent and server-managed page credits. It remains unavailable until the authenticated service, OpenAI key, payments and launch review are configured. See [setup, implementation status and what is still needed](docs/HANDWRITING_SETUP.md).

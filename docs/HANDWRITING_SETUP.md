@@ -17,6 +17,11 @@ Nothing below can be done from the codebase. Until the first three items exist, 
 7. **Pricing check against real usage.** OpenAI charges per token, not per page. The estimate below must be confirmed on the OpenAI usage dashboard after the quality test.
 8. **What to do with Handwriting OCR.** Keep, cancel or delete the Handwriting OCR key and account, and decide whether this branch replaces it on `master`.
 
+## Known gaps before launch
+
+- The privacy text in the app (`ImageToTextDialog.tsx`, `PlanUsage.tsx`) and on the landing page (`landing/index.html`, four languages) names only OpenAI. The Pro plan sends documents to Handwriting OCR, so the wording and the data-retention promises must be reviewed for that provider too.
+- Login, purchases, Pro entitlements and the Tauri updater need the external accounts listed above; see `CHECKLIST_LANCAMENTO.md`.
+
 ## Provider behaviour
 
 Verified on October 4, 2026 in OpenAI's documentation:

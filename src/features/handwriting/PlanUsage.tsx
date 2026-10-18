@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   type HandwritingClient,
   handwritingClient,
@@ -23,9 +23,14 @@ export default function PlanUsage({
     refetchOnWindowFocus: true,
     refetchInterval: client.available ? 30000 : false,
   });
+  const heading = useRef<HTMLHeadingElement>(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  // A full-page view: land on its title so keyboard and screen reader users start here.
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
   // Returning from the original checkout channel refreshes verified entitlements.
   useEffect(() => {
     const refresh = () => {
@@ -67,14 +72,22 @@ export default function PlanUsage({
   const data = usage.data;
   const selected = handwritingPlans.find((plan) => plan.id === data?.plan);
   return (
-    <main className="about-page plan-usage-page">
+    <main
+      className="about-page plan-usage-page"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onClose();
+      }}
+    >
       <header className="about-header">
         <div>
           <p className="eyebrow">SETTINGS</p>
-          <h1>Plan and usage</h1>
+          <h1 ref={heading} tabIndex={-1}>
+            Plan and usage
+          </h1>
           <p className="about-intro">
-            Pages for handwriting transcription, read by OpenAI. Your notes stay
-            on your Mac.
+            Pages for handwriting transcription, read by OpenAI or by
+            Handwriting OCR, depending on your plan. Your notes stay on your
+            Mac.
           </p>
         </div>
         <button type="button" className="text-button" onClick={onClose}>
