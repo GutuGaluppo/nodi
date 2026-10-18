@@ -152,10 +152,14 @@ test("the chosen effort sets the credits charged and reaches the provider", asyn
 
 test("a failed transcription refunds the page and deletes the source", async () => {
   const f = await fixture();
-  let fail;
+  // The job calls the provider asynchronously, so wait until it has started.
+  let started;
+  const running = new Promise((resolve) => {
+    started = resolve;
+  });
   f.provider.transcribe = () =>
     new Promise((_, reject) => {
-      fail = () => reject(new ProviderError("transcription_failed", 502));
+      started(() => reject(new ProviderError("transcription_failed", 502)));
     });
   const job = await submit(f, await getQuote(f));
   assert.equal(f.ledger.usage("u").trialRemaining, 0);
@@ -163,7 +167,7 @@ test("a failed transcription refunds the page and deletes the source", async () 
     (await (await f.call(`documents/${job.id}`)).json()).status,
     "processing",
   );
-  fail();
+  (await running)();
   await f.settle();
   assert.equal(
     (await (await f.call(`documents/${job.id}`)).json()).status,

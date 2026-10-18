@@ -541,6 +541,7 @@ The optional backend and frontend integration ports are prepared. The shipped CS
 
 - Requested by the owner, to compare a general model with a dedicated handwriting service.
 - OpenAI's business terms permit building products on the API, so the written resale permission Handwriting OCR required is no longer a blocker.
+- **Update (October 2026):** this applies only to the OpenAI plans. The Pro plan was later moved back to Handwriting OCR (OCR-010), so its written resale permission (`HANDWRITING_RESALE_APPROVED`) is again a launch blocker for Pro.
 
 ### Consequences
 

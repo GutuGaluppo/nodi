@@ -437,6 +437,64 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn upgrading_an_existing_database_keeps_its_notes() {
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .expect("in-memory database should open");
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system clock should be valid")
+            .as_nanos();
+        let older = std::env::temp_dir().join(format!(
+            "nodi-older-release-{}-{unique}",
+            std::process::id()
+        ));
+        fs::create_dir(&older).expect("temporary migration directory should be created");
+        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("migrations");
+        // An earlier release shipped only the first eight migrations.
+        for entry in fs::read_dir(&source).expect("migrations should be listed") {
+            let file = entry.expect("entry should be readable").file_name();
+            let name = file.to_string_lossy().to_string();
+            if name.as_str() < "0009" {
+                fs::copy(source.join(&file), older.join(&file)).expect("migration should copy");
+            }
+        }
+        Migrator::new(older.as_path())
+            .await
+            .expect("older migrations should be valid")
+            .run(&pool)
+            .await
+            .expect("older release should migrate");
+
+        sqlx::query("INSERT INTO notes (id, content_json, created_at, updated_at, device_id) VALUES ('keep', '{\"type\":\"doc\"}', 'now', 'now', 'd1')")
+            .execute(&pool)
+            .await
+            .expect("note should be inserted");
+
+        migration_runner()
+            .await
+            .run(&pool)
+            .await
+            .expect("the current release should upgrade the older database");
+
+        let content =
+            sqlx::query_scalar::<_, String>("SELECT content_json FROM notes WHERE id = 'keep'")
+                .fetch_one(&pool)
+                .await
+                .expect("the note should survive the upgrade");
+        assert_eq!(content, "{\"type\":\"doc\"}");
+        let applied = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM _sqlx_migrations WHERE success = 1",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("migration history should be readable");
+        assert_eq!(applied, 11);
+    }
+
+    #[tokio::test]
     async fn failed_migration_rolls_back_and_is_not_recorded() {
         let pool = SqlitePoolOptions::new()
             .max_connections(1)
