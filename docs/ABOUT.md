@@ -604,3 +604,11 @@ Shortcuts, Main menu and Tags now have a chevron in their titles that hides or s
 Tooltips used to open inside their own button, so the sidebar, the note list and the editor cut off labels at their edges, like "New stack" or "Collapse Library". They now appear in a layer above the whole window and stay inside the screen edges, whichever pane the button is in.
 
 ![NODI after UI-009: tooltips drawn above the panes](about/screenshots/ui-009-tooltips-unclipped.png)
+
+## 075 — OCR-010 Handwriting OCR for the Pro plan
+
+**Completed:** October 18, 2026
+
+Pro transcriptions now use Handwriting OCR, which reads handwriting more precisely, while the other plans keep gpt-5.4. In development, the notice now names the setting that is missing when the transcription service is not connected, instead of leaving Validate pages disabled without a reason.
+
+![NODI after OCR-010: the notes library, with example notes](about/screenshots/ocr-010-handwriting-pro.png)

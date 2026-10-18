@@ -34,6 +34,7 @@ import ocr003Screenshot from "../../../docs/about/screenshots/ocr-003-image-to-n
 import ocr004Screenshot from "../../../docs/about/screenshots/ocr-004-doubtful-words.png";
 import ocr005Screenshot from "../../../docs/about/screenshots/ocr-005-better-suggestions.png";
 import ocr006Screenshot from "../../../docs/about/screenshots/ocr-006-handwriting.png";
+import ocr010Screenshot from "../../../docs/about/screenshots/ocr-010-handwriting-pro.png";
 // import ocr007Screenshot from "../../../docs/about/screenshots/ocr-007-gpt-transcription.png";
 import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
 import privRec004Screenshot from "../../../docs/about/screenshots/priv-rec-004-touch-id.png";
@@ -652,6 +653,14 @@ const evolution = [
     description:
       "gpt-5.4 now joins an item that only wraps onto the next line, writes check marks as ✓ and crosses as ✗, and ignores text showing through from the back of the page, matching Handwriting OCR's layout without a higher effort.",
     // screenshot: ocr009Screenshot,
+  },
+  {
+    id: "OCR-010",
+    title: "Handwriting OCR for the Pro plan",
+    date: "October 18, 2026",
+    description:
+      "Pro transcriptions now use Handwriting OCR, which reads handwriting more precisely, while the other plans keep gpt-5.4. In development, the notice now names the setting that is missing when the transcription service is not connected, instead of leaving Validate pages disabled without a reason.",
+    screenshot: ocr010Screenshot,
   },
   {
     id: "PRIV-REC-005",
