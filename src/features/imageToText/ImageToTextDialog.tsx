@@ -481,6 +481,9 @@ export default function ImageToTextDialog({
           <p className="handwriting-notice" role="status">
             A transcrição ainda não está disponível. A conexão segura está sendo
             preparada.
+            {import.meta.env.DEV
+              ? " Em desenvolvimento, defina VITE_HANDWRITING_BACKEND_URL (veja docs/HANDWRITING_SETUP.md) ou inicie pelo script do servidor local."
+              : null}
           </p>
         ) : null}
         {usage.isError ? (
