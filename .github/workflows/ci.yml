@@ -15,7 +15,8 @@ concurrency:
 
 jobs:
   check:
-    runs-on: macos-15
+    # The OCR bridge (native/TextReader.swift) needs the macOS 26 SDK.
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
