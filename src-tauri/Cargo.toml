@@ -37,7 +37,6 @@ objc2-natural-language = { version = "0.3", features = ["NLEmbedding", "NLLangua
 objc2-core-spotlight = { version = "0.3", features = ["CSSearchableIndex", "CSSearchableItem", "CSSearchableItemAttributeSet", "CSSearchableItemAttributeSet_General", "CSSearchableItemAttributeSet_Documents", "block2"] }
 block2 = "0.6"
 objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSResponder"] }
-objc2-vision = { version = "0.3", features = ["VNRequest", "VNRequestHandler", "VNRecognizeTextRequest", "VNObservation", "VNTypes"] }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 whisper-rs = "0.16"

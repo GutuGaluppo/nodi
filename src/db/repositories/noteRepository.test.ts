@@ -165,6 +165,15 @@ describe("noteRepository", () => {
       expect(values).toEqual([]);
     });
 
+    it("lists only private notes when asked for the Private view", async () => {
+      const { listNotes } = await importRepository();
+      await listNotes({ isPrivate: true });
+
+      const [sql, values] = db.select.mock.calls[0];
+      expect(sql).toContain("is_private = 1");
+      expect(values).toEqual([]);
+    });
+
     it("lists only trashed notes for the Trash view", async () => {
       const { listNotes } = await importRepository();
       await listNotes({ deleted: "only" });

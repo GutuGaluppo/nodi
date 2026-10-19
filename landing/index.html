@@ -308,6 +308,17 @@
   .specs dd { margin: 0; font-size: 1.02rem; }
   dl.specs { margin: 0; }
 
+  .plans-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .plan-card, .plan-pack { padding: 24px; border: 1px solid var(--border); border-radius: var(--radius); display: grid; gap: 16px; }
+  .plan-card.featured { border-color: var(--accent); background: var(--accent-soft); }
+  .plan-price { font-size: var(--step-2); color: var(--text); }
+  .plan-price span { font-size: var(--step-0); }
+  .plan-pack { margin-top: 16px; }
+  .plan-card button, .plan-pack button { justify-self: start; cursor: default; opacity: 0.65; }
+  .plans-fine { margin-top: 24px; color: var(--muted); }
+  @media (max-width: 960px) { .plans-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 540px) { .plans-grid { grid-template-columns: minmax(0, 1fr); } }
+
   /* ---------- Install ---------- */
   .install { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 64px); align-items: start; }
   .steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; counter-reset: s; }
@@ -340,6 +351,7 @@
       <a href="#features" data-i18n="nav.features">Features</a>
       <a href="#results" data-i18n="nav.results">Results</a>
       <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+      <a href="#plans" data-i18n="nav.plans">Plans</a>
       <a href="#install" data-i18n="nav.install">Install</a>
     </nav>
     <fieldset class="langs">
@@ -548,13 +560,13 @@
       <div class="section-head" style="margin: 0;">
         <p class="eyebrow" data-i18n="privacy.eyebrow">Privacy</p>
         <h2 id="privacy-title" data-i18n="privacy.title">What NODI never does</h2>
-        <p class="lead" data-i18n="privacy.lead">There is no backend to trust, because there is no backend. And the parts that understand your notes run on your Mac.</p>
+        <p class="lead" data-i18n="privacy.lead">Local notes, voice dictation and image search run on your Mac. Optional handwriting transcription sends only the document you approve to OpenAI, through an authenticated service.</p>
       </div>
       <div>
         <ul class="never">
-          <li data-i18n="never.1">Ask you to create an account</li>
+          <li data-i18n="never.1">Require an account for local notes</li>
           <li data-i18n="never.2">Upload your notes to a server</li>
-          <li data-i18n="never.3">Send your voice, images, or notes to the cloud to be understood</li>
+          <li data-i18n="never.3">Send documents to OpenAI without your permission</li>
           <li data-i18n="never.4">Track what you write</li>
           <li data-i18n="never.5">Store private notes in readable form</li>
         </ul>
@@ -584,6 +596,38 @@
         <div><dt data-i18n="s.mac">macOS</dt><dd data-i18n="s.mac.v">Share menu · Spotlight · ⌥⌘N</dd></div>
         <div><dt data-i18n="s.voice">Voice</dt><dd data-i18n="s.voice.v">whisper.cpp with Metal, on-device · up to 1 hour</dd></div>
       </dl>
+    </div>
+  </section>
+
+  <section class="block" id="plans" aria-labelledby="plans-title">
+    <div class="wrap">
+      <div class="section-head"><p class="eyebrow" data-i18n="nav.plans">Plans</p><h2 id="plans-title" data-i18n="plans.title">Pages for handwriting transcription</h2><p class="lead" data-i18n="plans.lead">Optional image and PDF transcription. Review, edit, copy and export the text as TXT before saving a note.</p></div>
+      <!-- HANDWRITING PLANS START -->
+<div class="plans-grid"><article class="plan-card">
+<h3>Free</h3><p class="plan-price">€0.00</p>
+<p data-i18n="plans.trial">1 page to try, no subscription required. Once only.</p>
+<button class="btn" type="button" disabled data-i18n="plans.unavailable">Not available yet</button>
+</article>
+<article class="plan-card">
+<h3>Essential</h3><p class="plan-price">€4.99<span data-i18n="plans.month">/month</span></p>
+<p data-plan-pages="10">10 pages per monthly billing cycle</p>
+<button class="btn" type="button" disabled data-i18n="plans.unavailable">Not available yet</button>
+</article>
+<article class="plan-card featured">
+<h3>Plus</h3><p class="plan-price">€9.99<span data-i18n="plans.month">/month</span></p>
+<p data-plan-pages="30">30 pages per monthly billing cycle</p>
+<button class="btn" type="button" disabled data-i18n="plans.unavailable">Not available yet</button>
+</article>
+<article class="plan-card">
+<h3>Pro</h3><p class="plan-price">€19.99<span data-i18n="plans.month">/month</span></p>
+<p data-plan-pages="70">70 pages per monthly billing cycle</p>
+<button class="btn" type="button" disabled data-i18n="plans.unavailable">Not available yet</button>
+</article></div>
+<article class="plan-pack"><h3>One-time pack</h3><p>€4.99 · <span data-i18n="plans.pack">10 additional pages, valid for 12 months</span></p><button class="btn" type="button" disabled data-i18n="plans.unavailable">Not available yet</button></article>
+<!-- HANDWRITING PLANS END -->
+      <p class="plans-fine" data-i18n="plans.rules">One image or page uses one credit with the fastest reading effort; more careful reading uses up to five. Monthly pages reset on the billing cycle date, without rollover. Additional pages stay available after cancellation until they expire. Cancel through your original purchase channel. Final prices and taxes are confirmed at checkout.</p>
+      <p class="plans-fine" role="status" data-i18n="plans.launch">Transcription and purchases are not available yet. Launch depends on secure accounts and payment configuration.</p>
+      <p class="plans-fine" data-i18n="plans.privacy">With your permission, selected documents are read by an OpenAI model, which does not train on them and may keep safety logs for up to 30 days. Your approved notes stay on your Mac. Always review the transcription.</p>
     </div>
   </section>
 
@@ -625,6 +669,17 @@
 (() => {
   const I18N = {
     en: {
+      "nav.plans": "Plans",
+      "plans.title": "Pages for handwriting transcription",
+      "plans.lead": "Optional image and PDF transcription. Review, edit, copy and export the text as TXT before saving a note.",
+      "plans.month": "/month",
+      "plans.pages": "{pages} pages per monthly billing cycle",
+      "plans.trial": "1 page to try, no subscription required. Once only.",
+      "plans.pack": "10 additional pages, valid for 12 months",
+      "plans.unavailable": "Not available yet",
+      "plans.rules": "One image or page uses one credit with the fastest reading effort; more careful reading uses up to five. Monthly pages reset on the billing cycle date, without rollover. Additional pages stay available after cancellation until they expire. Cancel through your original purchase channel. Final prices and taxes are confirmed at checkout.",
+      "plans.launch": "Transcription and purchases are not available yet. Launch depends on secure accounts and payment configuration.",
+      "plans.privacy": "With your permission, selected documents are read by an OpenAI model, which does not train on them and may keep safety logs for up to 30 days. Your approved notes stay on your Mac. Always review the transcription.",
       "nav.features": "Features", "nav.results": "Results", "nav.privacy": "Privacy", "nav.install": "Install",
       "hero.eyebrow": "Local-first notes for macOS",
       "hero.title": "Your notes live <em>here.</em> Nowhere else.",
@@ -661,9 +716,9 @@
       "r3.title": "Light ↔ dark", "r3.body": "The same note in both themes. Drag the handle, or focus it and use the arrow keys: light on the left, dark on the right.",
       "r3.before": "Light", "r3.after": "Dark", "r3.aria": "Compare light and dark themes",
       "privacy.eyebrow": "Privacy", "privacy.title": "What NODI never does",
-      "privacy.lead": "There is no backend to trust, because there is no backend. And the parts that understand your notes run on your Mac.",
-      "never.1": "Ask you to create an account", "never.2": "Upload your notes to a server",
-      "never.3": "Send your voice, images, or notes to the cloud to be understood", "never.4": "Track what you write",
+      "privacy.lead": "Local notes, voice dictation and image search run on your Mac. Optional handwriting transcription sends only the document you approve to OpenAI, through an authenticated service.",
+      "never.1": "Require an account for local notes", "never.2": "Upload your notes to a server",
+      "never.3": "Send documents to OpenAI without your permission", "never.4": "Track what you write",
       "privacy.where": "Everything lives in one file you can back up yourself:",
       "specs.eyebrow": "Under the hood", "specs.title": "Built with boring, durable parts",
       "s.platform": "Platform", "s.platform.v": "macOS 15 Sequoia or later", "s.app": "App",
@@ -703,6 +758,17 @@
       items: ["call the printer", "review the contract", "send the invoice"]
     },
     pt: {
+      "nav.plans": "Planos",
+      "plans.title": "Páginas para transcrição de manuscritos",
+      "plans.lead": "Transcrição opcional de imagens e PDFs. Revise, edite, copie e exporte o texto como TXT antes de salvar uma nota.",
+      "plans.month": "/mês",
+      "plans.pages": "{pages} páginas por ciclo mensal de cobrança",
+      "plans.trial": "1 página para experimentar, sem assinatura. Uma única vez.",
+      "plans.pack": "10 páginas adicionais, válidas por 12 meses",
+      "plans.unavailable": "Ainda indisponível",
+      "plans.rules": "Uma imagem ou página usa um crédito na leitura mais rápida; leituras mais cuidadosas usam até cinco. As páginas mensais renovam na data de cobrança, sem acumular. Páginas adicionais continuam disponíveis após cancelar, até expirar. Cancele pelo canal original da compra. Preços finais e impostos são confirmados no checkout.",
+      "plans.launch": "Transcrições e compras ainda não estão disponíveis. O lançamento depende de contas seguras e pagamentos configurados.",
+      "plans.privacy": "Com sua autorização, os documentos selecionados são lidos por um modelo da OpenAI, que não os usa para treinar e pode manter registros de segurança por até 30 dias. As notas aprovadas ficam no seu Mac. Revise sempre a transcrição.",
       "nav.features": "Recursos", "nav.results": "Resultados", "nav.privacy": "Privacidade", "nav.install": "Instalar",
       "hero.eyebrow": "Notas locais para macOS",
       "hero.title": "Suas notas moram <em>aqui.</em> Em nenhum outro lugar.",
@@ -739,9 +805,9 @@
       "r3.title": "Claro ↔ escuro", "r3.body": "A mesma nota nos dois temas. Arraste o controle, ou foque nele e use as setas do teclado: claro à esquerda, escuro à direita.",
       "r3.before": "Claro", "r3.after": "Escuro", "r3.aria": "Comparar os temas claro e escuro",
       "privacy.eyebrow": "Privacidade", "privacy.title": "O que o NODI nunca faz",
-      "privacy.lead": "Não há backend em que confiar, porque não há backend. E tudo o que entende suas notas roda no seu Mac.",
-      "never.1": "Pedir que você crie uma conta", "never.2": "Enviar suas notas para um servidor",
-      "never.3": "Mandar sua voz, imagens ou notas para a nuvem para serem entendidas", "never.4": "Rastrear o que você escreve",
+      "privacy.lead": "Notas locais, ditado e busca em imagens rodam no seu Mac. A transcrição opcional de manuscritos envia à OpenAI apenas o documento que você aprovar, por um serviço autenticado.",
+      "never.1": "Exigir conta para notas locais", "never.2": "Enviar suas notas para um servidor",
+      "never.3": "Enviar documentos à OpenAI sem sua autorização", "never.4": "Rastrear o que você escreve",
       "privacy.where": "Tudo fica em um único arquivo, que você mesmo pode copiar como backup:",
       "specs.eyebrow": "Por dentro", "specs.title": "Feito com peças simples e duráveis",
       "s.platform": "Plataforma", "s.platform.v": "macOS 15 Sequoia ou posterior", "s.app": "App",
@@ -781,6 +847,17 @@
       items: ["ligar para a gráfica", "revisar o contrato", "enviar a fatura"]
     },
     es: {
+      "nav.plans": "Planes",
+      "plans.title": "Páginas para transcripción de manuscritos",
+      "plans.lead": "Transcripción opcional de imágenes y PDF. Revisa, edita, copia y exporta el texto como TXT antes de guardar una nota.",
+      "plans.month": "/mes",
+      "plans.pages": "{pages} páginas por ciclo mensual de facturación",
+      "plans.trial": "1 página para probar, sin suscripción. Una sola vez.",
+      "plans.pack": "10 páginas adicionales, válidas durante 12 meses",
+      "plans.unavailable": "Aún no disponible",
+      "plans.rules": "Una imagen o página usa un crédito con la lectura más rápida; lecturas más cuidadosas usan hasta cinco. Las páginas mensuales se renuevan en la fecha de facturación, sin acumularse. Las páginas adicionales siguen disponibles tras cancelar hasta su vencimiento. Cancela desde el canal original de compra. El precio final y los impuestos se confirman en el pago.",
+      "plans.launch": "Las transcripciones y compras aún no están disponibles. El lanzamiento depende de cuentas seguras y pagos configurados.",
+      "plans.privacy": "Con tu permiso, un modelo de OpenAI lee los documentos seleccionados; no los usa para entrenar y puede conservar registros de seguridad hasta 30 días. Las notas aprobadas permanecen en tu Mac. Revisa siempre la transcripción.",
       "nav.features": "Funciones", "nav.results": "Resultados", "nav.privacy": "Privacidad", "nav.install": "Instalar",
       "hero.eyebrow": "Notas locales para macOS",
       "hero.title": "Tus notas viven <em>aquí.</em> En ningún otro lugar.",
@@ -817,9 +894,9 @@
       "r3.title": "Claro ↔ oscuro", "r3.body": "La misma nota en ambos temas. Arrastra el control, o enfócalo y usa las flechas del teclado: claro a la izquierda, oscuro a la derecha.",
       "r3.before": "Claro", "r3.after": "Oscuro", "r3.aria": "Comparar los temas claro y oscuro",
       "privacy.eyebrow": "Privacidad", "privacy.title": "Lo que NODI nunca hace",
-      "privacy.lead": "No hay backend en el que confiar, porque no hay backend. Y lo que entiende tus notas se ejecuta en tu Mac.",
-      "never.1": "Pedirte que crees una cuenta", "never.2": "Subir tus notas a un servidor",
-      "never.3": "Enviar tu voz, tus imágenes o tus notas a la nube para entenderlas", "never.4": "Rastrear lo que escribes",
+      "privacy.lead": "Las notas locales, el dictado y la búsqueda en imágenes funcionan en tu Mac. La transcripción opcional de manuscritos envía a OpenAI solo el documento que apruebes, mediante un servicio autenticado.",
+      "never.1": "Exigir una cuenta para notas locales", "never.2": "Subir tus notas a un servidor",
+      "never.3": "Enviar documentos a OpenAI sin tu permiso", "never.4": "Rastrear lo que escribes",
       "privacy.where": "Todo vive en un único archivo del que puedes hacer copia tú mismo:",
       "specs.eyebrow": "Por dentro", "specs.title": "Hecho con piezas sencillas y duraderas",
       "s.platform": "Plataforma", "s.platform.v": "macOS 15 Sequoia o posterior", "s.app": "App",
@@ -859,6 +936,17 @@
       items: ["call the printer", "review the contract", "send the invoice"]
     },
     de: {
+      "nav.plans": "Tarife",
+      "plans.title": "Seiten für Handschrift-Transkription",
+      "plans.lead": "Optionale Transkription von Bildern und PDFs. Prüfe, bearbeite, kopiere und exportiere den Text als TXT, bevor du eine Notiz speicherst.",
+      "plans.month": "/Monat",
+      "plans.pages": "{pages} Seiten pro monatlichem Abrechnungszeitraum",
+      "plans.trial": "1 Seite zum Ausprobieren, ohne Abonnement. Einmalig.",
+      "plans.pack": "10 zusätzliche Seiten, 12 Monate gültig",
+      "plans.unavailable": "Noch nicht verfügbar",
+      "plans.rules": "Ein Bild oder eine Seite verbraucht beim schnellsten Lesen einen Credit, sorgfältigeres Lesen bis zu fünf. Monatliche Seiten werden am Abrechnungstag ohne Übertrag erneuert. Zusätzliche Seiten bleiben nach Kündigung bis zum Ablauf verfügbar. Kündige über den ursprünglichen Kaufkanal. Endpreise und Steuern werden beim Bezahlen bestätigt.",
+      "plans.launch": "Transkriptionen und Käufe sind noch nicht verfügbar. Der Start setzt sichere Konten und eingerichtete Zahlungen voraus.",
+      "plans.privacy": "Mit deiner Zustimmung liest ein Modell von OpenAI die ausgewählten Dokumente; es trainiert nicht damit und kann Sicherheitsprotokolle bis zu 30 Tage aufbewahren. Bestätigte Notizen bleiben auf deinem Mac. Prüfe jede Transkription.",
       "nav.features": "Funktionen", "nav.results": "Ergebnisse", "nav.privacy": "Datenschutz", "nav.install": "Installation",
       "hero.eyebrow": "Lokale Notizen für macOS",
       "hero.title": "Deine Notizen wohnen <em>hier.</em> Nirgendwo sonst.",
@@ -895,9 +983,9 @@
       "r3.title": "Hell ↔ dunkel", "r3.body": "Dieselbe Notiz in beiden Modi. Zieh den Regler oder fokussiere ihn und nutze die Pfeiltasten: links hell, rechts dunkel.",
       "r3.before": "Hell", "r3.after": "Dunkel", "r3.aria": "Hellen und dunklen Modus vergleichen",
       "privacy.eyebrow": "Datenschutz", "privacy.title": "Was NODI niemals tut",
-      "privacy.lead": "Es gibt kein Backend, dem du vertrauen musst, weil es kein Backend gibt. Und was deine Notizen versteht, läuft auf deinem Mac.",
-      "never.1": "Dich ein Konto anlegen lassen", "never.2": "Deine Notizen auf einen Server hochladen",
-      "never.3": "Deine Stimme, Bilder oder Notizen zum Verstehen in die Cloud schicken", "never.4": "Verfolgen, was du schreibst",
+      "privacy.lead": "Lokale Notizen, Diktat und Bildsuche laufen auf deinem Mac. Die optionale Handschrift-Transkription sendet nur das von dir bestätigte Dokument über einen authentifizierten Dienst an OpenAI.",
+      "never.1": "Ein Konto für lokale Notizen verlangen", "never.2": "Deine Notizen auf einen Server hochladen",
+      "never.3": "Dokumente ohne deine Zustimmung an OpenAI senden", "never.4": "Verfolgen, was du schreibst",
       "privacy.where": "Alles liegt in einer einzigen Datei, die du selbst sichern kannst:",
       "specs.eyebrow": "Unter der Haube", "specs.title": "Gebaut aus einfachen, langlebigen Teilen",
       "s.platform": "Plattform", "s.platform.v": "macOS 15 Sequoia oder neuer", "s.app": "App",
@@ -963,6 +1051,7 @@
     document.querySelectorAll("[data-i18n-html]").forEach((el) => { const v = dict[el.dataset.i18nHtml]; if (v) el.innerHTML = v; });
     document.querySelectorAll("[data-i18n-alt]").forEach((el) => { const v = dict[el.dataset.i18nAlt]; if (v) el.alt = v; });
     document.querySelectorAll("[data-i18n-aria]").forEach((el) => { const v = dict[el.dataset.i18nAria]; if (v) el.setAttribute("aria-label", v); });
+    document.querySelectorAll("[data-plan-pages]").forEach((el) => { el.textContent = dict["plans.pages"].replace("{pages}", el.dataset.planPages); });
     document.getElementById("said").textContent = dict.said;
     const list = document.getElementById("said-list");
     list.replaceChildren(...dict.items.map((t) => { const li = document.createElement("li"); li.textContent = t; return li; }));

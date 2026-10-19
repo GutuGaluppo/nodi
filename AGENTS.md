@@ -15,3 +15,4 @@
 - Accessibility is mandatory.
 - Run the project validation command before completion.
 - At the end of every implementation task, capture the current NODI window and add a permanent chronological entry to the in-app ABOUT page. Never replace an older screenshot.
+- ABOUT screenshots must ALWAYS show adapted notes (generic example content prepared for the capture). NEVER show the owner's personal notes, titles, notebooks, tags, or any real data. If the window currently shows personal content, prepare adapted example notes first, or skip the capture and ask before adding the entry. Discard any capture that shows personal content.

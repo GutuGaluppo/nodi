@@ -30,8 +30,16 @@ import note002Screenshot from "../../../docs/about/screenshots/note-002-notes-li
 import note003Screenshot from "../../../docs/about/screenshots/note-003-new-note.png";
 import ocr001Screenshot from "../../../docs/about/screenshots/ocr-001-image-text.png";
 import ocr002Screenshot from "../../../docs/about/screenshots/ocr-002-searchable-images.png";
+import ocr003Screenshot from "../../../docs/about/screenshots/ocr-003-image-to-note.png";
+import ocr004Screenshot from "../../../docs/about/screenshots/ocr-004-doubtful-words.png";
+import ocr005Screenshot from "../../../docs/about/screenshots/ocr-005-better-suggestions.png";
+import ocr006Screenshot from "../../../docs/about/screenshots/ocr-006-handwriting.png";
+import ocr010Screenshot from "../../../docs/about/screenshots/ocr-010-handwriting-pro.png";
+// import ocr007Screenshot from "../../../docs/about/screenshots/ocr-007-gpt-transcription.png";
 import privRec001Screenshot from "../../../docs/about/screenshots/priv-rec-001-recovery-key.png";
 import privRec004Screenshot from "../../../docs/about/screenshots/priv-rec-004-touch-id.png";
+import privRec005Screenshot from "../../../docs/about/screenshots/priv-rec-005-private-notes-view.png";
+import privRec006Screenshot from "../../../docs/about/screenshots/priv-rec-006-collapsible-sidebar.png";
 import privacy001Screenshot from "../../../docs/about/screenshots/privacy-001-private-notes.png";
 import privacy002Screenshot from "../../../docs/about/screenshots/privacy-002-encrypted-private-notes.png";
 import privacy003Screenshot from "../../../docs/about/screenshots/privacy-003-network-lockdown.png";
@@ -56,6 +64,7 @@ import ui005Screenshot from "../../../docs/about/screenshots/ui-005-reference-si
 import ui006Screenshot from "../../../docs/about/screenshots/ui-006-system-section.png";
 import ui007Screenshot from "../../../docs/about/screenshots/ui-007-settings-relocated.png";
 import ui008Screenshot from "../../../docs/about/screenshots/ui-008-compact-lists.png";
+import ui009Screenshot from "../../../docs/about/screenshots/ui-009-tooltips-unclipped.png";
 import voiceAud001Screenshot from "../../../docs/about/screenshots/voice-aud-001-keep-recording.png";
 import voiceAud002Screenshot from "../../../docs/about/screenshots/voice-aud-002-timed-transcript.png";
 import voiceAud003Screenshot from "../../../docs/about/screenshots/voice-aud-003-playback.png";
@@ -589,6 +598,94 @@ const evolution = [
       "Private notes can open with Touch ID, or the Mac's password, through a key sealed by this Mac's Secure Enclave. It also resets a forgotten password, and it is off until you turn it on.",
     screenshot: privRec004Screenshot,
   },
+  {
+    id: "OCR-003",
+    title: "Notes from images",
+    date: "September 30, 2026",
+    description:
+      '"Nota de imagem" (⌘⇧P) turns a photo into a note: the text is read on this Mac with Apple\'s Vision framework, shown next to the image with its confidence for review, and becomes a note only when approved, with the image kept in it.',
+    screenshot: ocr003Screenshot,
+  },
+  {
+    id: "OCR-004",
+    title: "Better image reading",
+    date: "September 30, 2026",
+    description:
+      "Images are read with the macOS 26 document reader when available and laid out by position: prices stay beside their items, side notes join their line, and bullets become lists. Instead of a misleading score, the review lists doubtful words with the spell checker's guesses.",
+    screenshot: ocr004Screenshot,
+  },
+  {
+    id: "OCR-005",
+    title: "Suggestions that match the image",
+    date: "September 30, 2026",
+    description:
+      'Doubtful words are guessed in the language of their line, not always Portuguese, and suggestions start with what Vision read in the word\'s place on its other attempts: "Grap" suggests "Group".',
+    screenshot: ocr005Screenshot,
+  },
+  {
+    id: "OCR-006",
+    title: "Handwriting and plans",
+    date: "October 2, 2026",
+    description:
+      'Image notes are prepared for Handwriting OCR: the pages and credits are shown before a separate confirmation, and the text comes back unchanged to copy, edit, export or save, its Markdown headings, lists and bold kept as formatting. Settings gains "Plan and usage". It stays unavailable until the service, payments and the provider\'s permission exist.',
+    screenshot: ocr006Screenshot,
+  },
+  {
+    id: "OCR-007",
+    title: "Transcription with gpt-5.4",
+    date: "October 4, 2026",
+    description:
+      "On a test branch, image notes are transcribed by OpenAI's gpt-5.4 instead of Handwriting OCR. It copies words as written and marks unreadable ones with [?]; any failure gives the page back. HEIC and TIFF are converted on the server, and WEBP is accepted.",
+    // screenshot: ocr007Screenshot,
+  },
+  {
+    id: "OCR-008",
+    title: "Choosing the reading effort",
+    date: "October 5, 2026",
+    description:
+      "Before transcribing, choose how carefully the model reads: from Rápido (1 credit per page) to Máximo (5), with the total and the difference shown before you confirm. Higher efforts no longer fail for lack of answer budget or time. Explanations now sit behind a ? next to the title, and choosing a file is one large area to click, drop or paste into.",
+    // screenshot: ocr008Screenshot,
+  },
+  {
+    id: "OCR-009",
+    title: "Wrapped lines and check marks",
+    date: "October 5, 2026",
+    description:
+      "gpt-5.4 now joins an item that only wraps onto the next line, writes check marks as ✓ and crosses as ✗, and ignores text showing through from the back of the page, matching Handwriting OCR's layout without a higher effort.",
+    // screenshot: ocr009Screenshot,
+  },
+  {
+    id: "OCR-010",
+    title: "Handwriting OCR for the Pro plan",
+    date: "October 18, 2026",
+    description:
+      "Pro transcriptions now use Handwriting OCR, which reads handwriting more precisely, while the other plans keep gpt-5.4. In development, the notice now names the setting that is missing when the transcription service is not connected, instead of leaving Validate pages disabled without a reason.",
+    screenshot: ocr010Screenshot,
+  },
+  {
+    id: "PRIV-REC-005",
+    title: "A sidebar view for private notes",
+    date: "October 17, 2026",
+    description:
+      "Private notes have their own item in the main menu, listing only the locked notes, and each one shows a lock beside its title. Opening a private note still asks for the password or Touch ID.",
+    screenshot: privRec005Screenshot,
+  },
+  {
+    id: "PRIV-REC-006",
+    title: "Collapsible sidebar sections",
+    date: "October 17, 2026",
+    description:
+      "Shortcuts, Main menu and Tags collapse from their titles, and the choice is remembered. Sidebar tooltips open inward so their full text stays visible.",
+    screenshot: privRec006Screenshot,
+  },
+  {
+    id: "UI-009",
+    title: "Tooltips that are never cut off",
+    date: "October 17, 2026",
+    description:
+      "Tooltips now appear above the whole window and stay inside the screen edges, so labels in the sidebar, the note list and the editor are never clipped.",
+    screenshot: ui009Screenshot,
+  },
 ];
 
 function About({ onClose }: AboutProps) {
@@ -618,10 +715,12 @@ function About({ onClose }: AboutProps) {
             <div className="entry-content">
               <h2>{entry.title}</h2>
               <p>{entry.description}</p>
-              <img
-                src={entry.screenshot}
-                alt={`NODI after completing ${entry.id}: ${entry.title}`}
-              />
+              {entry.screenshot ? (
+                <img
+                  src={entry.screenshot}
+                  alt={`NODI after completing ${entry.id}: ${entry.title}`}
+                />
+              ) : null}
             </div>
           </li>
         ))}

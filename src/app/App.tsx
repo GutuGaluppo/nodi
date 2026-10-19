@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import DesktopShell from "../components/layout/DesktopShell";
+import TooltipLayer from "../components/ui/TooltipLayer";
 import About from "../features/about/About";
 import AttachmentSweeper from "../features/attachments/AttachmentSweeper";
 import { captureToNote } from "../features/capture/captureNote";
 import { useCaptureEvents } from "../features/capture/useCaptureEvents";
+import PlanUsage from "../features/handwriting/PlanUsage";
 import ImageTextIndexer from "../features/images/ImageTextIndexer";
+import ImageToTextDialog from "../features/imageToText/ImageToTextDialog";
 import MirrorSync from "../features/mirror/MirrorSync";
 import { useCreateNote } from "../features/notes/useCreateNote";
 import YourData from "../features/privacy/YourData";
@@ -24,21 +27,26 @@ import {
 function Workspace({
   onOpenAbout,
   onOpenYourData,
+  onOpenPlanUsage,
   theme,
   onThemeChange,
 }: {
   onOpenAbout: () => void;
   onOpenYourData: () => void;
+  onOpenPlanUsage: () => void;
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
 }) {
-  const [activeView, setActiveView] = useState<"notes" | "trash">("notes");
+  const [activeView, setActiveView] = useState<"notes" | "private" | "trash">(
+    "notes",
+  );
   const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(
     null,
   );
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchInitialQuery, setSearchInitialQuery] = useState("");
+  const [imageNoteOpen, setImageNoteOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [editorFocusRequest, setEditorFocusRequest] = useState<string | null>(
     null,
@@ -62,7 +70,7 @@ function Workspace({
     setEditorFocusRequest(null);
   }, []);
 
-  const handleNavigate = useCallback((view: "notes" | "trash") => {
+  const handleNavigate = useCallback((view: "notes" | "private" | "trash") => {
     setActiveView(view);
     setSelectedNotebookId(null);
     setSelectedTagId(null);
@@ -107,6 +115,12 @@ function Workspace({
         setSearchOpen(true);
       },
     },
+    {
+      id: "image-note",
+      keys: ["mod", "shift", "p"],
+      label: "Nota de imagem",
+      action: () => setImageNoteOpen(true),
+    },
   ]);
 
   return (
@@ -116,9 +130,11 @@ function Workspace({
         onThemeChange={onThemeChange}
         onOpenAbout={onOpenAbout}
         onOpenYourData={onOpenYourData}
+        onOpenPlanUsage={onOpenPlanUsage}
         onCreateNote={() => {
           void handleCreateNote();
         }}
+        onCreateImageNote={() => setImageNoteOpen(true)}
         selectedNoteId={selectedNoteId}
         onSelectNote={handleSelectNote}
         editorPaneRef={editorPaneRef}
@@ -161,12 +177,30 @@ function Workspace({
           }}
         />
       ) : null}
+      {imageNoteOpen ? (
+        <ImageToTextDialog
+          notebookId={activeView === "notes" ? selectedNotebookId : null}
+          onClose={() => setImageNoteOpen(false)}
+          onOpenPlanUsage={() => {
+            setImageNoteOpen(false);
+            onOpenPlanUsage();
+          }}
+          onCreated={(noteId) => {
+            setImageNoteOpen(false);
+            if (activeView === "trash") handleNavigate("notes");
+            setSelectedTagId(null);
+            setSelectedNoteId(noteId);
+          }}
+        />
+      ) : null}
     </>
   );
 }
 
 function App() {
-  const [page, setPage] = useState<"workspace" | "about" | "data">("workspace");
+  const [page, setPage] = useState<"workspace" | "about" | "data" | "plan">(
+    "workspace",
+  );
   const [theme, setTheme] = useState<ThemePreference>(getStoredThemePreference);
 
   useEffect(() => {
@@ -182,8 +216,11 @@ function App() {
       <ImageTextIndexer />
       <RelatedNotesIndexer />
       <SpotlightSync />
+      <TooltipLayer />
       {page === "about" ? (
         <About onClose={() => setPage("workspace")} />
+      ) : page === "plan" ? (
+        <PlanUsage onClose={() => setPage("workspace")} />
       ) : page === "data" ? (
         <YourData onClose={() => setPage("workspace")} />
       ) : (
@@ -192,6 +229,7 @@ function App() {
           onThemeChange={setTheme}
           onOpenAbout={() => setPage("about")}
           onOpenYourData={() => setPage("data")}
+          onOpenPlanUsage={() => setPage("plan")}
         />
       )}
     </AppProviders>

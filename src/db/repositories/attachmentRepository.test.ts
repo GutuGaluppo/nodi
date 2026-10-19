@@ -47,6 +47,15 @@ describe("attachmentRepository", () => {
     expect(attachment.noteId).toBe("note-1");
   });
 
+  it("keeps an id chosen by the caller", async () => {
+    const { createAttachment } = await import("./attachmentRepository");
+
+    const attachment = await createAttachment({ ...input, id: "chosen-id" });
+
+    expect(attachment.id).toBe("chosen-id");
+    expect(db.execute.mock.calls[0][1][0]).toBe("chosen-id");
+  });
+
   it.each([
     "../secrets.txt",
     "attachments/../../etc/passwd",

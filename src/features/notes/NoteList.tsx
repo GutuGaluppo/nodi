@@ -4,7 +4,7 @@ import NoteListItem from "./NoteListItem";
 import { useNotes } from "./useNotes";
 
 interface NoteListProps {
-  view: "notes" | "trash";
+  view: "notes" | "private" | "trash";
   selectedNoteId: string | null;
   onSelectNote: (id: string) => void;
   onCollapse: () => void;
@@ -29,12 +29,15 @@ function NoteList({
   const title =
     view === "trash"
       ? "Trash"
-      : (notebookName ?? (notebookId ? "Notebook" : "Notes"));
+      : view === "private"
+        ? "Private notes"
+        : (notebookName ?? (notebookId ? "Notebook" : "Notes"));
   const displayTitle = tagName ? `# ${tagName}` : title;
   const notes = useNotes({
     deleted: view === "trash" ? "only" : "exclude",
     ...(view === "notes" && notebookId ? { notebookId } : {}),
     ...(view === "notes" && tagId ? { tagId } : {}),
+    ...(view === "private" ? { isPrivate: true } : {}),
   });
   const itemRefs = useRef(new Map<string, HTMLDivElement>());
 
@@ -84,7 +87,12 @@ function NoteList({
           <span className="item-count">
             <span aria-hidden="true">{count}</span>
             <span className="visually-hidden">
-              {count} {view === "trash" ? "trashed notes" : "notes"}
+              {count}{" "}
+              {view === "trash"
+                ? "trashed notes"
+                : view === "private"
+                  ? "private notes"
+                  : "notes"}
             </span>
           </span>
           <button
@@ -102,7 +110,13 @@ function NoteList({
 
       {notes.isPending ? (
         <div className="pane-status" role="status">
-          Loading {view === "trash" ? "Trash" : "your notes"}…
+          Loading{" "}
+          {view === "trash"
+            ? "Trash"
+            : view === "private"
+              ? "private notes"
+              : "your notes"}
+          …
         </div>
       ) : notes.isError ? (
         <div className="pane-status" role="alert">
@@ -120,14 +134,20 @@ function NoteList({
       ) : count === 0 ? (
         <div className="pane-empty-state">
           <p className="empty-state-title">
-            {view === "trash" ? "Trash is empty" : "No notes yet"}
+            {view === "trash"
+              ? "Trash is empty"
+              : view === "private"
+                ? "No private notes yet"
+                : "No notes yet"}
           </p>
           <p>
             {view === "trash"
               ? "Deleted notes will appear here."
-              : notebookId || tagId
-                ? "Notes moved to this notebook will appear here."
-                : "Your notes will appear here as the library takes shape."}
+              : view === "private"
+                ? "Notes you lock will appear here."
+                : notebookId || tagId
+                  ? "Notes moved to this notebook will appear here."
+                  : "Your notes will appear here as the library takes shape."}
           </p>
         </div>
       ) : (

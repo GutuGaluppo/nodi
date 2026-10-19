@@ -276,6 +276,46 @@ pub fn import_image_paths(root: &Path, paths: &[PathBuf]) -> ImageImport {
     result
 }
 
+/// Keeps an approved Handwriting source outside SQLite. Server validation is
+/// authoritative; this local check prevents mislabeled files and oversized IPC.
+pub fn store_handwriting_bytes(root: &Path, bytes: &[u8]) -> Result<StoredAttachment, String> {
+    if bytes.is_empty() || bytes.len() > 20_000_000 {
+        return Err("the document must contain between 1 byte and 20 MB".into());
+    }
+    let format = if bytes.starts_with(b"%PDF-") {
+        Some(("application/pdf", "pdf"))
+    } else if bytes.starts_with(b"II\x2a\x00") || bytes.starts_with(b"MM\x00\x2a") {
+        Some(("image/tiff", "tiff"))
+    } else {
+        sniff_image(bytes)
+    };
+    let (mime, extension) = format.ok_or("unsupported Handwriting document format")?;
+    let staging = root.join(STAGING_DIR);
+    fs::create_dir_all(&staging).map_err(|err| err.to_string())?;
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let sequence = IMPORT_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let temporary = staging.join(format!("handwriting-{unique:x}-{sequence:x}.tmp"));
+    fs::write(&temporary, bytes).map_err(|err| err.to_string())?;
+    store_file(root, &temporary, &format!("document.{extension}"), mime).map_err(|err| {
+        let _ = fs::remove_file(&temporary);
+        err.to_string()
+    })
+}
+
+#[tauri::command]
+pub fn import_handwriting_bytes(
+    app: AppHandle,
+    request: Request<'_>,
+) -> Result<StoredAttachment, String> {
+    let InvokeBody::Raw(bytes) = request.body() else {
+        return Err("expected the document bytes".into());
+    };
+    store_handwriting_bytes(&root(&app)?, bytes)
+}
+
 /// Imports a pasted image, sent as the raw request body.
 #[tauri::command]
 pub fn import_image_bytes(
@@ -365,6 +405,23 @@ mod tests {
         ));
         fs::create_dir_all(&dir).expect("temporary root should be created");
         dir
+    }
+
+    #[test]
+    fn handwriting_sources_are_stored_separately_and_validate_limits() {
+        let root = temp_root("handwriting");
+        let pdf = store_handwriting_bytes(&root, b"%PDF-1.7\noriginal").unwrap();
+        assert_eq!(pdf.mime_type, "application/pdf");
+        let again = store_handwriting_bytes(&root, b"%PDF-1.7\noriginal").unwrap();
+        assert_eq!(pdf, again);
+        let tiff = store_handwriting_bytes(&root, b"II\x2a\x00original").unwrap();
+        assert_eq!(tiff.mime_type, "image/tiff");
+        let webp = store_handwriting_bytes(&root, b"RIFFxxxxWEBPVP8 original").unwrap();
+        assert_eq!(webp.mime_type, "image/webp");
+        assert!(store_handwriting_bytes(&root, b"not a document").is_err());
+        assert!(store_handwriting_bytes(&root, b"").is_err());
+        assert!(store_handwriting_bytes(&root, &vec![0; 20_000_001]).is_err());
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

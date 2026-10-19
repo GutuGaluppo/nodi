@@ -1,4 +1,5 @@
 import type { Ref } from "react";
+import Icon from "../../components/ui/Icon";
 import type { NoteSummary } from "../../db/repositories/noteRepository";
 import { formatRelativeTime } from "../../lib/dates/relativeTime";
 
@@ -40,7 +41,10 @@ function NoteListItem({
         }
       }}
     >
-      <span className="note-list-item-title">{title}</span>
+      <span className="note-list-item-title">
+        {note.isPrivate ? <Icon name="lock" /> : null}
+        {title}
+      </span>
       {preview === "" ? null : (
         <span className="note-list-item-preview">{preview}</span>
       )}

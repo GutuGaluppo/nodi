@@ -10,20 +10,26 @@ import ShortcutSection from "../../features/shortcuts/ShortcutSection";
 import TagSection from "../../features/tags/TagSection";
 import { useTags } from "../../features/tags/tagQueries";
 import Icon from "../ui/Icon";
+import {
+  SidebarSectionToggle,
+  useSidebarSectionCollapsed,
+} from "./SidebarSection";
 
 interface DesktopShellProps {
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
   onOpenAbout: () => void;
   onOpenYourData: () => void;
+  onOpenPlanUsage: () => void;
   onCreateNote: () => void;
+  onCreateImageNote: () => void;
   selectedNoteId: string | null;
   onSelectNote: (id: string) => void;
   editorPaneRef: Ref<HTMLElement>;
   focusEditor: boolean;
   onEditorFocused: () => void;
-  activeView: "notes" | "trash";
-  onNavigate: (view: "notes" | "trash") => void;
+  activeView: "notes" | "private" | "trash";
+  onNavigate: (view: "notes" | "private" | "trash") => void;
   selectedNotebookId: string | null;
   onSelectNotebook: (id: string) => void;
   selectedTagId: string | null;
@@ -37,7 +43,9 @@ function DesktopShell({
   onThemeChange,
   onOpenAbout,
   onOpenYourData,
+  onOpenPlanUsage,
   onCreateNote,
+  onCreateImageNote,
   selectedNoteId,
   onSelectNote,
   editorPaneRef,
@@ -53,6 +61,8 @@ function DesktopShell({
   onOpenSavedSearch,
 }: DesktopShellProps) {
   const [libraryCollapsed, setLibraryCollapsed] = useState(false);
+  const [mainMenuCollapsed, toggleMainMenu] =
+    useSidebarSectionCollapsed("mainMenu");
   const notebooks = useNotebooks();
   const selectedNotebookName = notebooks.data?.find(
     (notebook) => notebook.id === selectedNotebookId,
@@ -85,6 +95,16 @@ function DesktopShell({
           New note
         </button>
 
+        <button
+          className="image-note-button"
+          type="button"
+          aria-keyshortcuts="Meta+Shift+P"
+          onClick={onCreateImageNote}
+        >
+          <Icon name="image" />
+          Nota de imagem
+        </button>
+
         <div className="sidebar-scroll-area">
           <ShortcutSection
             onOpenNote={(id) => {
@@ -97,31 +117,48 @@ function DesktopShell({
           <SavedSearchSection onOpen={onOpenSavedSearch} />
 
           <nav className="primary-navigation" aria-label="Primary navigation">
-            <p className="section-label">Main menu</p>
-            <button
-              className="nav-item"
-              type="button"
-              aria-current={
-                activeView === "notes" &&
-                selectedNotebookId === null &&
-                selectedTagId === null
-                  ? "page"
-                  : undefined
-              }
-              onClick={() => onNavigate("notes")}
-            >
-              <Icon name="note" />
-              <span>Notes</span>
-            </button>
-            <button
-              className="nav-item"
-              type="button"
-              aria-current={activeView === "trash" ? "page" : undefined}
-              onClick={() => onNavigate("trash")}
-            >
-              <Icon name="trash" />
-              <span>Trash</span>
-            </button>
+            <SidebarSectionToggle
+              id="main-menu-toggle"
+              controlsId="main-menu-items"
+              label="Main menu"
+              collapsed={mainMenuCollapsed}
+              onToggle={toggleMainMenu}
+            />
+            <div id="main-menu-items" hidden={mainMenuCollapsed}>
+              <button
+                className="nav-item"
+                type="button"
+                aria-current={
+                  activeView === "notes" &&
+                  selectedNotebookId === null &&
+                  selectedTagId === null
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => onNavigate("notes")}
+              >
+                <Icon name="note" />
+                <span>Notes</span>
+              </button>
+              <button
+                className="nav-item"
+                type="button"
+                aria-current={activeView === "private" ? "page" : undefined}
+                onClick={() => onNavigate("private")}
+              >
+                <Icon name="lock" />
+                <span>Private notes</span>
+              </button>
+              <button
+                className="nav-item"
+                type="button"
+                aria-current={activeView === "trash" ? "page" : undefined}
+                onClick={() => onNavigate("trash")}
+              >
+                <Icon name="trash" />
+                <span>Trash</span>
+              </button>
+            </div>
           </nav>
 
           <NotebookSection
@@ -153,6 +190,9 @@ function DesktopShell({
               <span>Settings</span>
             </summary>
             <div className="settings-popover">
+              <button type="button" onClick={onOpenPlanUsage}>
+                Plan and usage
+              </button>
               <button type="button" onClick={onOpenYourData}>
                 Your data
               </button>
@@ -186,7 +226,7 @@ function DesktopShell({
         noteId={selectedNoteId}
         focusEditor={focusEditor}
         onEditorFocused={onEditorFocused}
-        view={activeView}
+        view={activeView === "trash" ? "trash" : "notes"}
         onNoteRemoved={onNoteRemoved}
         onOpenNote={onSelectNote}
         activeNotebookId={activeView === "notes" ? selectedNotebookId : null}

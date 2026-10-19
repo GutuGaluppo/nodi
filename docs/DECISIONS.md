@@ -396,3 +396,156 @@ only notes of the same language.
   already a requirement for the Share extension.
 - The prompt itself cannot be automated: sealing, bad input and support
   detection are tested natively, and the prompt was checked by hand.
+
+## D-012 — Image-to-note reuses Vision OCR and attachment storage
+
+**Date:** September 30, 2026
+**Task:** OCR-003 Notes from images (`IMAGE_TO_TEXT_SPEC.md`)
+**Status:** Accepted
+
+### Decision
+
+- Text is read by the existing Apple Vision recognizer through a new
+  `read_image_text` command that also returns the mean line confidence.
+  The spec's tesseract.js, sharp and uuid are not added.
+- The image is stored by the existing attachment import (type sniffing, 50 MB
+  limit) before reading. It becomes an attachment of the new note only when
+  the text is approved; an abandoned image is removed by the launch sweep.
+- Provenance lives in the existing tables: the `attachments` row links the
+  source image to the note, and `attachment_text` keeps what Vision read (so
+  the background indexer does not read it again). No `notes.metadata` column
+  or migration is added.
+- A read that takes over 30 seconds is retried once, then reported.
+
+### Rationale
+
+- tesseract.js downloads its language data from a CDN by default, which would
+  be a cloud dependency, and adds ~14 MB; Vision is already on every Mac and
+  already tested in NODI. sharp is a Node library and cannot run in the
+  webview; Vision reads large images directly.
+- A metadata column would duplicate what the attachment tables already record.
+
+### Consequences
+
+- Image-to-note works only on macOS, like the rest of OCR.
+- There is no in-app camera capture yet; photos come from the file picker or
+  the clipboard (including Continuity Camera images pasted from an iPhone).
+- Whether the person edited the text is not stored.
+
+## D-013 — Image text is laid out from line geometry and checked for spelling
+
+**Date:** September 30, 2026
+**Task:** OCR-004 Better image reading
+**Status:** Accepted (supersedes the confidence score of D-012)
+
+### Decision
+
+- Recognition moves to `src-tauri/native/TextReader.swift`, compiled with
+  Keyguard.swift into one static library. On macOS 26 and later it uses
+  Vision's `RecognizeDocumentsRequest`, which groups lines into paragraphs;
+  earlier systems keep `VNRecognizeTextRequest`. The `objc2-vision` crate is
+  removed.
+- Both return lines with their positions; `text_layout.rs` joins lines at
+  the same height that do not overlap sideways into one row (a price and its
+  item, a word written to the side), makes blocks from the reader's
+  paragraphs or from vertical gaps, and turns rows starting with a bullet or
+  an arrow into `- ` list items. The background indexer uses the same text.
+- The review no longer shows a confidence score. Vision reports 100% on
+  handwriting it misreads. Instead, the Mac's spell checker (pt_BR, offline)
+  lists doubtful words with its guesses; a guess written elsewhere in the text
+  comes first. Nothing is replaced unless the person picks a guess.
+- In the reviewed text, a blank line separates paragraphs and `- ` starts a
+  bullet item; the note gets real paragraphs, line breaks and bullet lists.
+
+### Rationale
+
+- Measured on a photo of two handwritten sticky notes
+  (`tests/fixtures/ocr-handwritten-notes.jpg`): fixing the recognition
+  language changed nothing, and image scaling changed results erratically. The
+  document reader fixed about a quarter of the misread words and all of the
+  script confusion ("o tempo" had come back in Cyrillic). The spell checker
+  flagged exactly the remaining misreadings, often with the right guess.
+- Geometry fixes what both readers get wrong about receipts: the document
+  reader returns the price column after the item column.
+
+### Consequences
+
+- Words that are valid English are not flagged, unless a guess appears in the
+  text ("manus" beside "menus").
+- Handwriting is still imperfect; the doubtful-word list points the person to
+  what to check rather than claiming a score.
+
+## D-014 — Doubtful words are suggested from other readings, in the line's language
+
+**Date:** September 30, 2026
+**Task:** OCR-005 Suggestions that match the image
+**Status:** Accepted (refines D-013)
+
+### Decision
+
+- The spell checker guesses in the language of each doubtful word's line
+  (`NLLanguageRecognizer`, Portuguese or English); only when that is unclear
+  does it guess in both. A word is doubtful when neither language knows it,
+  as before.
+- Vision's other readings of each line are kept per word. The document
+  reader gives one reading per line, so on macOS 26 `RecognizeTextRequest`
+  and `VNRecognizeTextRequest` also read the image (about half a second
+  more), and their readings are matched to lines by position. Readings with
+  as many words are paired word by word; otherwise a single differing word is.
+- Suggestions are ranked by how many sources agree: the word's own guesses,
+  and each other reading, as itself when it is a word and by its guesses.
+- The text itself is still the document reader's first reading.
+
+### Rationale
+
+- Measured on a handwritten English list (`tests/fixtures/ocr-handwritten-list.jpg`):
+  Portuguese guesses were wrong for every English word. With these changes
+  the first suggestion is right for "Layat", "Grap", "doubful", "lamework"
+  and "ty".
+- Choosing, per line, the reading with the fewest unknown words was tried and
+  rejected: it traded misreadings for real words that are wrong ("spell"
+  became "sell", "img" became "im").
+
+### Consequences
+
+- Real words that are misread ("sell" for "spell") are still not flagged.
+- Words Vision gets badly wrong in every reading ("compidance" for
+  "confidence") may have no good suggestion.
+
+## D-015 — Handwriting uses an optional authenticated service
+
+**Date:** October 2, 2026
+**Task:** OCR-006 Handwriting and plans
+**Status:** Prepared; live/commercial availability depends on external configuration
+
+The image-to-note command now prepares an image or PDF for Handwriting OCR, with consent, a server-validated page quote and separate credit confirmation. Apple Vision still performs local image search indexing. This is an explicit exception to V1's offline-only feature scope requested through `HANDWRITING_IMPLEMENTATION_EN.md`; no cloud service has been provisioned or deployed.
+
+The shared provider key belongs only on a separately deployed authenticated server. Its SQLite ledger atomically reserves credits, deduplicates submissions and verified purchases, preserves pending reservations through uncertain timeouts, and consumes earliest-expiring pages first. Notes remain local Tiptap JSON, and attachment bytes stay outside the desktop database. No shared key is shipped, no fake purchases grant benefits, and no accounts are required for local notes.
+
+The optional backend and frontend integration ports are prepared. The shipped CSP remains closed until a specific authenticated backend is configured and reviewed. Paid launch also requires verified checkout product/tax settings and written provider permission for resale. See `HANDWRITING_SETUP.md` for the applied retention/failure policies, integration contracts and remaining launch dependencies.
+
+## D-016 — Handwriting transcription uses OpenAI's gpt-5.4 (test branch)
+
+**Date:** October 4, 2026
+**Task:** OCR-007 gpt-5.4 transcription (`test/gpt-5.4-transcription`)
+**Status:** Experimental; replaces the Handwriting OCR provider of D-015 on this branch only
+
+### Decision
+
+- The optional server transcribes with `gpt-5.4` through the Responses API, called with `fetch` (no SDK), `store: false` and verbatim-transcription instructions. The key stays on the server.
+- The answer arrives only on its own call, so the job runs inside the server and every failure, including a restart mid-job, refunds the user's pages. The reconciliation of unknown uploads from D-015 is gone.
+- HEIC and TIFF, which the model does not read, are re-encoded as JPEG by the native inspector; WEBP is now accepted.
+- The resale flag becomes `TRANSCRIPTION_LAUNCH_APPROVED`. Page credits, plans, consent, quotes and the ledger are unchanged.
+
+### Rationale
+
+- Requested by the owner, to compare a general model with a dedicated handwriting service.
+- OpenAI's business terms permit building products on the API, so the written resale permission Handwriting OCR required is no longer a blocker.
+- **Update (October 2026):** this applies only to the OpenAI plans. The Pro plan was later moved back to Handwriting OCR (OCR-010), so its written resale permission (`HANDWRITING_RESALE_APPROVED`) is again a launch blocker for Pro.
+
+### Consequences
+
+- OpenAI may keep abuse-monitoring logs for up to 30 days unless Zero Data Retention is approved; the privacy text says so instead of promising deletion after one hour.
+- An AI model can misread or invent words despite the instructions; the review step and the `[?]` marker remain essential.
+- Cost is per token (about US$0.01–0.02 per page, unconfirmed) rather than per page.
+- No live transcription has run yet: there is no OpenAI key. See `HANDWRITING_SETUP.md`, "What depends on you".

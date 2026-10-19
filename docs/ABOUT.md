@@ -526,3 +526,89 @@ The Spotlight row on the "Your data" page read its on/off setting through a quer
 Private notes can now open with Touch ID. Turned on in "Your data" with the private-notes password, it seals a copy of the notes' key with this Mac's Secure Enclave; macOS then asks for Touch ID, or the Mac's password when Touch ID is not set up. The sealed copy works on no other Mac. Touch ID can also reset a forgotten password, next to the recovery key. It is off by default, because anyone who can pass Touch ID on the Mac can then open private notes.
 
 ![NODI during PRIV-REC-004: a private note offering Touch ID](about/screenshots/priv-rec-004-touch-id.png)
+
+## 065 — OCR-003 Notes from images
+
+**Completed:** September 30, 2026
+
+A new "Nota de imagem" entry in the sidebar, also on ⌘⇧P, turns a photo of a receipt, a whiteboard or a page into a note. Choose or paste an image and NODI reads its text on this Mac with Apple's Vision framework, with nothing sent anywhere. The text appears next to the image with a confidence score, and a warning when it is low, so it can be corrected, read again or dropped. Nothing is saved until "Gerar nota": the note gets one paragraph per line, keeps the image as an attachment, and the image's words are already searchable.
+
+![NODI after OCR-003: the "Nota de imagem" entry in the sidebar](about/screenshots/ocr-003-image-to-note.png)
+
+## 066 — OCR-004 Better image reading
+
+**Completed:** September 30, 2026
+
+A photo of handwritten sticky notes showed where reading went wrong: every line became its own paragraph, a word written to the side landed alone, "o tempo" came back in Cyrillic, and the confidence score said 100% throughout. On macOS 26, NODI now uses Vision's document reader, which reads handwriting better and knows paragraphs. Lines are then laid out by position, so a price stays beside its item and a side note joins its line, and bullets and arrows become list items. The score is gone; instead, the review lists the words the Mac's spell checker doubts, with its guesses, and a guess already written elsewhere in the note comes first. Nothing changes until you pick one. The photo is now a test case.
+
+![NODI after OCR-004: reviewing handwritten notes with doubtful words listed](about/screenshots/ocr-004-doubtful-words.png)
+
+## 067 — OCR-005 Suggestions that match the image
+
+**Completed:** September 30, 2026
+
+A handwritten list in English came back with Portuguese suggestions ("compelindo" for "conpilence", "Lata" for "Layat"), because the spell checker only guessed in Portuguese. Guesses now follow the language of each line. NODI also keeps what Vision read in each word's place on its other attempts, from two more readers, and offers those first: "Grap" suggests "Group", "lamework" suggests "framework". A suggestion that both the spell checker and another reading agree on comes first. The photo is now a test case. Handwriting is still read imperfectly; words that are real but wrong, like "sell" for "spell", are not flagged.
+
+![NODI after OCR-005](about/screenshots/ocr-005-better-suggestions.png)
+
+## 068 — OCR-006 Handwriting and plans
+
+**Completed:** October 2, 2026
+
+"Nota de imagem" now prepares an image or PDF for Handwriting OCR instead of reading it on the Mac. After you agree to send the file, a separate NODI service counts its pages and shows the credits it will use; only a second confirmation transcribes it. The text comes back unchanged, to copy, edit, export as TXT or save as a note, with the original kept outside the database. Handwriting OCR answers in Markdown, so in the note `# Title` becomes a heading, `* item` a list and `**word**` bold; the words themselves are left alone. Settings has a new "Plan and usage" page with the Free, Essential, Plus and Pro plans and the 10-page pack, and the landing page lists the same prices. Search inside images still uses Apple Vision on the Mac. None of it works yet: there is no deployed service, no sign-in, no payments and no written permission from Handwriting OCR, so the buttons say so and nothing can be bought.
+
+![NODI after OCR-006](about/screenshots/ocr-006-handwriting.png)
+
+## 069 — OCR-007 Transcription with gpt-5.4
+
+**Completed:** October 4, 2026
+
+On a test branch, "Nota de imagem" now sends the image or PDF to OpenAI's gpt-5.4 instead of Handwriting OCR, to compare a general model with a dedicated service. The model is told to copy every word as written, keep the lines, and mark an unreadable word with [?] rather than guess. Its answer comes back in one call, so if anything goes wrong, even a server restart, the page is given back. HEIC and TIFF photos are converted to JPEG on the server, and WEBP is accepted. The privacy text now says what OpenAI keeps: nothing for training, safety logs for up to 30 days. It is still unavailable until there is an OpenAI key, sign-in and payments.
+
+## 070 — OCR-008 Choosing the reading effort
+
+**Completed:** October 5, 2026
+
+Tests with gpt-5.4 failed above "medium" reasoning effort: the model's thinking counts toward its answer budget, and that budget, along with the time limit, was sized for the fastest reading. Both now grow with the effort. The transcription window now lets you choose the effort before sending: Rápido, Leve, Equilibrado, Cuidadoso or Máximo, for 1, 1, 2, 3 or 5 credits per page. Each choice shows its cost, and once the pages are counted, the total and how much more it costs than Rápido. The server charges what you chose and gives it all back if the transcription fails. The window was also tidied up: the explanations moved behind a ? next to the title, and choosing a file is now one large area you can click, drop onto or paste into, with a preview of the file you picked.
+
+<!-- screenshot: about/screenshots/ocr-008-reading-effort.png -->
+
+## 071 — OCR-009 Wrapped lines and check marks
+
+**Completed:** October 5, 2026
+
+The same handwritten list read by gpt-5.4 and by Handwriting OCR differed in layout, not in words: gpt-5.4 kept "top-to-bottom)" on its own line because it was told to keep every line break, and left out the ticks because it was told to copy words. It is now told to join an item that only wraps onto the next line, to write a check mark as ✓ and a cross as ✗ at the end of the item they mark, and to ignore text showing through from the back of the page. This should close the gap at the cheaper efforts, without paying for more reasoning.
+
+<!-- screenshot: about/screenshots/ocr-009-wrapped-lines.png -->
+
+## 072 — PRIV-REC-005 A sidebar view for private notes
+
+**Completed:** October 17, 2026
+
+Private notes now have their own item in the main menu, between Notes and Trash, that lists only the locked notes. Each private note also shows a small lock next to its title in every list, so it is easy to spot before opening it. Opening a private note still asks for the password or Touch ID.
+
+![NODI after PRIV-REC-005: the Private notes item in the sidebar and a lock beside a private note title](about/screenshots/priv-rec-005-private-notes-view.png)
+
+## 073 — PRIV-REC-006 Collapsible sidebar sections
+
+**Completed:** October 17, 2026
+
+Shortcuts, Main menu and Tags now have a chevron in their titles that hides or shows each section, so a long sidebar can be trimmed to what you need. NODI remembers which sections are collapsed on this Mac. The tooltip on the sidebar's "New stack" button, and on the other buttons near the edge, now opens inward, so its full text is always visible.
+
+![NODI after PRIV-REC-006: sidebar sections with collapse chevrons](about/screenshots/priv-rec-006-collapsible-sidebar.png)
+
+## 074 — UI-009 Tooltips that are never cut off
+
+**Completed:** October 17, 2026
+
+Tooltips used to open inside their own button, so the sidebar, the note list and the editor cut off labels at their edges, like "New stack" or "Collapse Library". They now appear in a layer above the whole window and stay inside the screen edges, whichever pane the button is in.
+
+![NODI after UI-009: tooltips drawn above the panes](about/screenshots/ui-009-tooltips-unclipped.png)
+
+## 075 — OCR-010 Handwriting OCR for the Pro plan
+
+**Completed:** October 18, 2026
+
+Pro transcriptions now use Handwriting OCR, which reads handwriting more precisely, while the other plans keep gpt-5.4. In development, the notice now names the setting that is missing when the transcription service is not connected, instead of leaving Validate pages disabled without a reason.
+
+![NODI after OCR-010: the notes library, with example notes](about/screenshots/ocr-010-handwriting-pro.png)

@@ -1,4 +1,8 @@
 import { type FormEvent, useState } from "react";
+import {
+  SidebarSectionToggle,
+  useSidebarSectionCollapsed,
+} from "../../components/layout/SidebarSection";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Icon from "../../components/ui/Icon";
 import type { Tag } from "../../db/repositories/tagRepository";
@@ -23,6 +27,7 @@ function TagSection({ selectedTagId, onSelectTag }: TagSectionProps) {
   const [draftName, setDraftName] = useState("");
   const [renaming, setRenaming] = useState<Tag | null>(null);
   const [deleting, setDeleting] = useState<Tag | null>(null);
+  const [collapsed, toggleCollapsed] = useSidebarSectionCollapsed("tags");
 
   function reset() {
     setEditing(false);
@@ -46,11 +51,15 @@ function TagSection({ selectedTagId, onSelectTag }: TagSectionProps) {
   const data = tags.data ?? [];
 
   return (
-    <section className="tag-section" aria-labelledby="tags-label">
+    <section className="tag-section" aria-labelledby="tags-toggle">
       <header className="sidebar-section-header">
-        <p className="section-label sidebar-section-label" id="tags-label">
-          Tags
-        </p>
+        <SidebarSectionToggle
+          id="tags-toggle"
+          controlsId="tags-items"
+          label="Tags"
+          collapsed={collapsed}
+          onToggle={toggleCollapsed}
+        />
         <button
           className="sidebar-icon-button"
           type="button"
@@ -66,78 +75,80 @@ function TagSection({ selectedTagId, onSelectTag }: TagSectionProps) {
         </button>
       </header>
 
-      {editing ? (
-        <form className="notebook-form" onSubmit={submit}>
-          <input
-            aria-label={renaming ? "Tag name" : "New tag name"}
-            value={draftName}
-            placeholder="Tag name"
-            ref={(element) => element?.focus()}
-            onChange={(event) => setDraftName(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") reset();
-            }}
-          />
-          <div className="notebook-form-actions">
-            <button className="small-action" type="submit">
-              Save
-            </button>
-            <button className="small-action" type="button" onClick={reset}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      ) : null}
-
-      {tags.isPending ? (
-        <p className="sidebar-status">Loading…</p>
-      ) : data.length === 0 && !editing ? (
-        <p className="sidebar-status">No tags yet</p>
-      ) : (
-        <ul className="tag-list">
-          {data.map((tag) => (
-            <li key={tag.id}>
-              <button
-                className="tag-name"
-                type="button"
-                aria-label={`# ${tag.name}`}
-                aria-current={selectedTagId === tag.id ? "page" : undefined}
-                onClick={() => onSelectTag(tag.id)}
-              >
-                <Icon name="tag" />
-                <span>{tag.name}</span>
+      <div id="tags-items" hidden={collapsed}>
+        {editing ? (
+          <form className="notebook-form" onSubmit={submit}>
+            <input
+              aria-label={renaming ? "Tag name" : "New tag name"}
+              value={draftName}
+              placeholder="Tag name"
+              ref={(element) => element?.focus()}
+              onChange={(event) => setDraftName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") reset();
+              }}
+            />
+            <div className="notebook-form-actions">
+              <button className="small-action" type="submit">
+                Save
               </button>
-              <span className="tag-row-actions">
-                <button
-                  type="button"
-                  aria-label={`Rename tag ${tag.name}`}
-                  onClick={() => {
-                    reset();
-                    setEditing(true);
-                    setDraftName(tag.name);
-                    setRenaming(tag);
-                  }}
-                >
-                  <Icon name="edit" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Delete tag ${tag.name}`}
-                  onClick={() => setDeleting(tag)}
-                >
-                  <Icon name="trash" />
-                </button>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+              <button className="small-action" type="button" onClick={reset}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : null}
 
-      {error ? (
-        <p className="sidebar-error" role="alert">
-          {error.message}
-        </p>
-      ) : null}
+        {tags.isPending ? (
+          <p className="sidebar-status">Loading…</p>
+        ) : data.length === 0 && !editing ? (
+          <p className="sidebar-status">No tags yet</p>
+        ) : (
+          <ul className="tag-list">
+            {data.map((tag) => (
+              <li key={tag.id}>
+                <button
+                  className="tag-name"
+                  type="button"
+                  aria-label={`# ${tag.name}`}
+                  aria-current={selectedTagId === tag.id ? "page" : undefined}
+                  onClick={() => onSelectTag(tag.id)}
+                >
+                  <Icon name="tag" />
+                  <span>{tag.name}</span>
+                </button>
+                <span className="tag-row-actions">
+                  <button
+                    type="button"
+                    aria-label={`Rename tag ${tag.name}`}
+                    onClick={() => {
+                      reset();
+                      setEditing(true);
+                      setDraftName(tag.name);
+                      setRenaming(tag);
+                    }}
+                  >
+                    <Icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete tag ${tag.name}`}
+                    onClick={() => setDeleting(tag)}
+                  >
+                    <Icon name="trash" />
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {error ? (
+          <p className="sidebar-error" role="alert">
+            {error.message}
+          </p>
+        ) : null}
+      </div>
       {deleting ? (
         <ConfirmDialog
           title={`Delete tag “${deleting.name}”?`}
